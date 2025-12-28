@@ -1,0 +1,165 @@
+/* Create Transaction Modal Styles */
+
+.transaction-screen {
+    @apply flex h-screen bg-background;
+}
+
+.transaction-sidebar-spacer {
+    @apply w-64;
+}
+
+.transaction-main {
+    @apply flex-1 overflow-auto;
+}
+
+.transaction-header {
+    @apply sticky top-0 z-10 bg-background border-b border-border;
+}
+
+.transaction-header-content {
+    @apply max-w-4xl mx-auto px-6 py-4;
+}
+
+.transaction-header-inner {
+    @apply flex items-center gap-3;
+}
+
+.transaction-back-btn {
+    @apply rounded-full;
+}
+
+.transaction-title {
+    @apply text-2xl;
+}
+
+.transaction-content {
+    @apply max-w-4xl mx-auto p-6 space-y-6;
+}
+
+.receipt-upload-card {
+    @apply p-6 space-y-4;
+}
+
+.receipt-upload-content {
+    @apply text-center space-y-3;
+}
+
+.receipt-icon-container {
+    @apply flex justify-center;
+}
+
+.receipt-icon-wrapper {
+    @apply w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center;
+}
+
+.receipt-icon {
+    @apply w-8 h-8 text-primary;
+}
+
+.receipt-title {
+    @apply text-base;
+}
+
+.receipt-description {
+    @apply text-sm text-muted-foreground;
+}
+
+.receipt-upload-label {
+    @apply block;
+}
+
+.receipt-upload-input {
+    @apply hidden;
+}
+
+.receipt-upload-btn {
+    @apply w-full;
+}
+
+.transaction-form {
+    @apply space-y-4;
+}
+
+.transaction-form-card {
+    @apply p-6 space-y-6;
+}
+
+.form-field {
+    @apply space-y-2;
+}
+
+.form-label {
+    @apply text-sm text-muted-foreground;
+}
+
+.form-input {
+    @apply h-12 bg-input-background border-0 text-lg;
+}
+
+.form-textarea {
+    @apply min-h-20 bg-input-background border-0 resize-none;
+}
+
+.type-toggle-grid {
+    @apply grid grid-cols-2 gap-3;
+}
+
+.type-toggle-income {
+    @apply bg-chart-2 hover:bg-chart-2/90 font-semibold;
+}
+
+.type-toggle-expense {
+    @apply font-semibold;
+}
+
+.category-grid {
+    @apply grid grid-cols-3 gap-2;
+}
+
+.category-button {
+    @apply p-3 rounded-lg border-2 transition-all;
+}
+
+.category-button-active {
+    @apply border-primary bg-primary/5;
+}
+
+.category-button-inactive {
+    @apply border-border hover:border-primary/50;
+}
+
+.category-content {
+    @apply flex flex-col items-center gap-2;
+}
+
+.category-color {
+    @apply w-8 h-8 rounded-full;
+}
+
+.category-name {
+    @apply text-xs;
+}
+
+.date-input-wrapper {
+    @apply relative;
+}
+
+.date-input {
+    @apply h-12 bg-input-background border-0 text-lg cursor-pointer;
+}
+
+.date-icon {
+    @apply w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none;
+}
+
+.calendar-popover {
+    @apply w-auto p-0;
+}
+
+.error-message {
+    @apply p-3 rounded-lg bg-destructive/10 text-destructive text-sm;
+}
+
+.submit-button {
+    @apply w-full h-12 bg-primary hover:bg-primary/90;
+}
