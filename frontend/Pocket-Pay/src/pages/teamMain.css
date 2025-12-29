@@ -1,0 +1,557 @@
+/* src/pages/teamMain.css */
+/* 페이지 전체 – 배경/폰트는 index.css에서 온 토큰 사용 */
+.tm-page {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* 상단/좌측에 최상위 레이아웃 들어올 걸 생각해서 여백만 */
+.tm-main {
+  padding: 32px 48px 48px;
+}
+
+.tm-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* =========================
+   상단 요약 카드 영역
+   ========================= */
+
+.tm-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+
+  /* 🔹 카드 + 거래추가 버튼 모두 세로 중앙 정렬 */
+  align-items: center;
+}
+
+.tm-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  flex: 1;
+}
+
+.tm-summary-card {
+  background: var(--card);
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.03);
+  min-height: 120px; /* 카드 높이 고정 느낌 */
+}
+
+.tm-summary-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tm-summary-label {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.tm-summary-amount {
+  font-size: 1.875rem; /* 약 30px */
+  font-weight: 600;
+}
+
+.tm-summary-amount-expense {
+  color: var(--destructive);
+}
+
+/* 아이콘 – 연한 색 동그라미 안에 지갑/그래프 */
+.tm-summary-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.tm-summary-icon--income {
+  background: color-mix(in oklab, var(--primary) 15%, #ffffff);
+  color: color-mix(in oklab, var(--primary) 80%, #000);
+}
+
+.tm-summary-icon--expense {
+  background: color-mix(in oklab, var(--destructive) 12%, #ffffff);
+  color: var(--destructive);
+}
+
+/* 거래 추가 버튼 – 피그마 초록 버튼 느낌 */
+.tm-add-btn {
+  padding: 10px 24px;
+  border-radius: 999px;
+  border: none;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.35);
+  transition: background 0.15s ease, box-shadow 0.15s ease,
+    transform 0.1s ease;
+
+  /* 🔹 행 가운데에 고정 */
+  align-self: center;
+}
+
+.tm-add-btn:hover {
+  background: color-mix(in oklab, var(--primary) 90%, #0000);
+  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.4);
+  transform: translateY(-1px);
+}
+
+.tm-add-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.3);
+}
+
+.tm-add-btn-plus {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* =========================
+   거래 내역 섹션
+   ========================= */
+
+.tm-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tm-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tm-list-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* 거래 내역 제목 / 테이블 정렬 미세 조정 */
+
+/* 위 카드들과 간격 조금 띄우기 */
+.tm-list-section {
+  margin-top: 32px;
+}
+
+/* 제목을 카드 안 텍스트랑 왼쪽 맞추기 (카드 padding 28px 기준) */
+.tm-list-title {
+  padding-left: 28px;
+}
+
+/* 테이블 카드 – 기존 스타일 유지하면서 위에만 살짝 간격 */
+.tm-table-wrapper {
+  margin-top: 8px;
+}
+
+/* 첫 번째 컬럼(거래처) 시작 위치를 '거래 내역' 제목과 맞추기 */
+.tm-table th:first-child,
+.tm-table td:first-child {
+  padding-left: 28px;
+}
+
+/* =========================
+   거래 0개일 때 – 빈 상태 카드
+   ========================= */
+
+.tm-empty-card {
+  background: var(--card);
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  padding: 48px 32px 40px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.tm-empty-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--primary) 10%, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+}
+
+.tm-empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.tm-empty-desc {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin-bottom: 24px;
+}
+
+.tm-empty-btn {
+  padding: 10px 28px;
+  border-radius: 999px;
+  border: none;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.35);
+  transition: background 0.15s ease, box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+
+.tm-empty-btn:hover {
+  background: color-mix(in oklab, var(--primary) 90%, #0000);
+  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.4);
+  transform: translateY(-1px);
+}
+
+.tm-empty-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.3);
+}
+
+/* =========================
+   테이블 – 거래 1개 이상일 때
+   ========================= */
+
+.tm-table-wrapper {
+  background: var(--card);
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+/* 표 기본 */
+.tm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+/* 헤더 배경 */
+.tm-table thead {
+  background: var(--muted);
+}
+
+/* 셀 공통 스타일 */
+.tm-table th,
+.tm-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;        /* 세로 가운데 정렬 */
+}
+
+/* 헤더 기본은 왼쪽 정렬 */
+.tm-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+/* 행 hover */
+.tm-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tm-table tbody tr:hover {
+  background: color-mix(in oklab, var(--muted) 40%, #0000);
+}
+
+/* ── 열별 정렬 ───────────────── */
+
+/* 1열: 거래처(상품) – 왼쪽 */
+.tm-table th:nth-child(1),
+.tm-table td:nth-child(1) {
+  text-align: left;
+}
+
+/* 2열: 구분 – pill(지출/수입) 가운데 */
+.tm-table th:nth-child(2),
+.tm-table td:nth-child(2) {
+  text-align: center;
+}
+
+/* 3,4열: 설명 / 카테고리 – 왼쪽 */
+.tm-table th:nth-child(3),
+.tm-table td:nth-child(3),
+.tm-table th:nth-child(4),
+.tm-table td:nth-child(4) {
+  text-align: left;
+}
+
+/* 5열: 금액 – 오른쪽 정렬 + 숫자 간격 일정하게 */
+.tm-table th:nth-child(5),
+.tm-table td:nth-child(5) {
+  text-align: right;
+  font-variant-numeric: tabular-nums; /* 숫자 폭 통일 */
+}
+
+/* 6열: 날짜 – 가운데 */
+.tm-table th:nth-child(6),
+.tm-table td:nth-child(6) {
+  text-align: center;
+}
+
+/* 7열: 작업 – 아이콘 가운데 */
+.tm-table th:nth-child(7),
+.tm-table td:nth-child(7) {
+  text-align: center;
+}
+
+/* 금액 색상 */
+.tm-amount-expense {
+  color: var(--destructive);
+  font-weight: 600;
+}
+
+.tm-amount-income {
+  color: color-mix(in oklab, var(--primary) 75%, #000);
+  font-weight: 600;
+}
+
+/* 구분 pill */
+.tm-chip {
+  display: inline-flex;
+  min-width: 52px;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.tm-chip--expense {
+  background: color-mix(in oklab, var(--destructive) 10%, #ffffff);
+  color: var(--destructive);
+}
+
+.tm-chip--income {
+  background: color-mix(in oklab, var(--primary) 10%, #ffffff);
+  color: color-mix(in oklab, var(--primary) 80%, #000);
+}
+
+/* 작업 아이콘 묶음 */
+.tm-actions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 아이콘 버튼 */
+.tm-icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+
+.tm-icon-btn--danger:hover {
+  background: color-mix(in oklab, var(--destructive) 10%, #ffffff);
+}
+
+.tm-icon-btn:not(.tm-icon-btn--danger):hover {
+  background: color-mix(in oklab, var(--primary) 10%, #ffffff);
+}
+
+/* 삭제 버튼 */
+.tm-delete-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+
+.tm-delete-btn:hover {
+  background: color-mix(in oklab, var(--destructive) 8%, #ffffff);
+}
+
+/* =========================
+   임시 모달 스타일
+   ========================= */
+
+.tm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.tm-modal {
+  width: 420px;
+  max-width: 90vw;
+  background: var(--card);
+  border-radius: 20px;
+  padding: 24px 24px 20px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.tm-modal-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.tm-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tm-field-row {
+  flex-direction: row;
+  gap: 12px;
+}
+
+.tm-field-half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tm-field-label {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.tm-input {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font-size: 0.875rem;
+  background: var(--input-background);
+}
+
+.tm-input:focus {
+  outline: 2px solid color-mix(in oklab, var(--primary) 40%, #0000);
+  outline-offset: 1px;
+}
+
+/* 구분 토글 */
+.tm-type-toggle {
+  display: inline-flex;
+  border-radius: 999px;
+  background: var(--muted);
+  padding: 3px;
+  gap: 4px;
+}
+
+.tm-type-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  color: var(--muted-foreground);
+}
+
+.tm-type-btn--active-expense {
+  background: color-mix(in oklab, var(--destructive) 10%, #ffffff);
+  color: var(--destructive-foreground);
+}
+
+.tm-type-btn--active-income {
+  background: color-mix(in oklab, var(--primary) 20%, #ffffff);
+  color: color-mix(in oklab, var(--primary) 70%, #000);
+}
+
+/* 모달 하단 버튼 */
+.tm-modal-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.tm-modal-btn {
+  min-width: 96px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tm-modal-btn--secondary {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.tm-modal-btn--primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* =========================
+   반응형 – 좁은 화면일 때
+   ========================= */
+
+@media (max-width: 880px) {
+  .tm-main {
+    padding: 24px 16px 32px;
+  }
+
+  .tm-summary-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tm-add-btn {
+    align-self: flex-end;
+    margin-top: 8px;
+  }
+
+  .tm-summary-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
