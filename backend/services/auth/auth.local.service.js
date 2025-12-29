@@ -30,18 +30,18 @@ const loginLocal = async ({ email, password }) => {
         email,
         provider: "local",
     });
-    console.log("USER FOUND:", !!user);
+
     if (!user) {
         throw new Error("존재하지 않는 사용자");
     }
-    console.log("BEFORE COMPARE");
+
     const match = await comparePassword(password, user.password);
     if (!match) {
         throw new Error("비밀번호 불일치");
     }
-    console.log("BEFORE COMPARE");
+
     const token = issueToken(user);
-    console.log("TOKEN ISSUED");
+
     return { user, token };
 };
 
