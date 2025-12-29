@@ -1,0 +1,71 @@
+/* Create Team Modal Styles */
+
+.team-modal-container {
+  @apply w-full max-w-md bg-background p-6;
+}
+
+.team-modal-header {
+  @apply flex items-center justify-between mb-6;
+}
+
+.team-modal-title {
+  @apply text-2xl;
+}
+
+.team-modal-close-btn {
+  @apply rounded-full;
+}
+
+.team-modal-form {
+  @apply space-y-6;
+}
+
+.form-field {
+  @apply space-y-2 relative;
+}
+
+.form-label {
+  @apply text-sm text-muted-foreground;
+}
+
+.form-input-primary {
+  @apply h-12 bg-input-background border-2 border-transparent text-lg transition-colors;
+  @apply focus:border-green-400 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0;
+}
+
+.form-textarea-primary {
+  @apply min-h-24 bg-input-background border-2 border-transparent resize-none transition-colors;
+  @apply focus:border-green-400 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0;
+}
+
+.error-tooltip-container {
+  @apply absolute left-1/2 -translate-x-1/2 top-full mt-2 z-10;
+}
+
+.error-tooltip {
+  @apply relative bg-gray-800 text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap shadow-lg;
+}
+
+.error-tooltip-content {
+  @apply flex items-center gap-2;
+}
+
+.error-tooltip-icon {
+  @apply flex-shrink-0 w-5 h-5 bg-orange-500 rounded flex items-center justify-center font-bold text-xs;
+}
+
+.error-tooltip-arrow {
+  @apply absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-gray-800 rotate-45;
+}
+
+.button-group {
+  @apply grid grid-cols-2 gap-3;
+}
+
+.button-cancel {
+  @apply h-12;
+}
+
+.button-submit {
+  @apply h-12 bg-primary hover:bg-primary/90;
+}
