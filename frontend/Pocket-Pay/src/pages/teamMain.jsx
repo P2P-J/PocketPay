@@ -1,6 +1,7 @@
 // src/pages/teamMain.jsx
 import React, { useMemo, useState } from "react";
 import "./teamMain.css";
+import { CreateTransactionModal } from "../components/modals/createTransactionModal";
 
 const TRANSACTION_TYPE = {
   INCOME: "income",
@@ -192,10 +193,11 @@ export default function TeamMain() {
         </div>
       </main>
 
+  
       {showModal && (
-        <AddTransactionModal
+        <CreateTransactionModal
           form={form}
-          mode={editingId ? "edit" : "create"} // ✅ 모드 구분
+          mode={editingId ? "edit" : "create"}
           onChange={handleChangeField}
           onClose={handleCloseModal}
           onSubmit={handleSubmit}
@@ -297,142 +299,6 @@ function EmptyState({ onAddClick }) {
         <span className="tm-add-btn-plus">＋</span>
         거래 추가하기
       </button>
-    </div>
-  );
-}
-
-/* =========================
-   임시 모달 컴포넌트
-   ========================= */
-
-function AddTransactionModal({ form, onChange, onClose, onSubmit, mode }) {
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    onChange(name, value);
-  };
-
-  const handleTypeChange = (type) => {
-    onChange("type", type);
-  };
-
-  const isEdit = mode === "edit";
-
-  return (
-    <div className="tm-modal-backdrop">
-      <div className="tm-modal">
-        <h3 className="tm-modal-title">
-          {isEdit ? "거래 수정" : "거래 추가 (임시 모달)"}
-        </h3>
-        <form onSubmit={onSubmit}>
-          <div className="tm-modal-body">
-            <div className="tm-field">
-              <label className="tm-field-label">거래처(상품)</label>
-              <input
-                className="tm-input"
-                name="merchant"
-                value={form.merchant}
-                onChange={handleChange}
-                placeholder="예: 회식, 스타벅스 강남점"
-              />
-            </div>
-
-            <div className="tm-field tm-field-row">
-              <div className="tm-field-half">
-                <span className="tm-field-label">구분</span>
-                <div className="tm-type-toggle">
-                  <button
-                    type="button"
-                    className={
-                      "tm-type-btn " +
-                      (form.type === TRANSACTION_TYPE.EXPENSE
-                        ? "tm-type-btn--active-expense"
-                        : "")
-                    }
-                    onClick={() => handleTypeChange(TRANSACTION_TYPE.EXPENSE)}
-                  >
-                    지출
-                  </button>
-                  <button
-                    type="button"
-                    className={
-                      "tm-type-btn " +
-                      (form.type === TRANSACTION_TYPE.INCOME
-                        ? "tm-type-btn--active-income"
-                        : "")
-                    }
-                    onClick={() => handleTypeChange(TRANSACTION_TYPE.INCOME)}
-                  >
-                    수입
-                  </button>
-                </div>
-              </div>
-
-              <div className="tm-field-half">
-                <label className="tm-field-label">금액</label>
-                <input
-                  className="tm-input"
-                  name="amount"
-                  type="number"
-                  value={form.amount}
-                  onChange={handleChange}
-                  placeholder="예: 150000"
-                />
-              </div>
-            </div>
-
-            <div className="tm-field">
-              <label className="tm-field-label">설명</label>
-              <input
-                className="tm-input"
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder="예: 동아리 회식"
-              />
-            </div>
-
-            <div className="tm-field tm-field-row">
-              <div className="tm-field-half">
-                <label className="tm-field-label">카테고리</label>
-                <input
-                  className="tm-input"
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  placeholder="예: 식비, 회식 등"
-                />
-              </div>
-
-              <div className="tm-field-half">
-                <label className="tm-field-label">날짜</label>
-                <input
-                  className="tm-input"
-                  name="date"
-                  type="date"
-                  value={form.date}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="tm-modal-footer">
-            <button
-              type="button"
-              className="tm-modal-btn tm-modal-btn--secondary"
-              onClick={onClose}
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              className="tm-modal-btn tm-modal-btn--primary"
-            >
-              {isEdit ? "수정하기" : "저장하기"}
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
   );
 }
