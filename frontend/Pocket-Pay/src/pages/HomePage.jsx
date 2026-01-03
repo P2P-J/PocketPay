@@ -1,4 +1,4 @@
-import { Button } from "./ui/button";
+import { Button } from "../components/ui/button";
 import { useTeamStore } from "../store/teamStore";
 import { useAuthStore } from "../store/authStore";
 import {
@@ -8,16 +8,18 @@ import {
   TrendingUp,
   TrendingDown,
   Wallet,
-} from "lucide-react@0.487.0";
+} from "lucide-react";
 import { formatCurrency } from "../utils/format";
 import { useEffect, useState } from "react";
 import { localStorageUtil } from "../utils/localStorage";
+import { CreateTeamModal } from "../components/modals/createTeamModal";
 
 export function LandingPage({ onEnterApp }) {
   const { teams, setCurrentTeam, loadLocalTeams } = useTeamStore();
   const { user, logout } = useAuthStore();
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [selectedTeamTransactions, setSelectedTeamTransactions] = useState([]);
+  const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
 
   useEffect(() => {
     loadLocalTeams();
@@ -79,6 +81,13 @@ export function LandingPage({ onEnterApp }) {
 
   return (
     <div className="flex h-screen bg-background">
+      {/* Create Team Modal */}
+      {showCreateTeamModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <CreateTeamModal onClose={() => setShowCreateTeamModal(false)} />
+        </div>
+      )}
+
       {/* Left Sidebar */}
       <div className="w-64 bg-card border-r border-border flex flex-col">
         {/* Logo */}
@@ -159,7 +168,10 @@ export function LandingPage({ onEnterApp }) {
                   <br />첫 번째 팀을 만들어보세요
                 </p>
               </div>
-              <Button onClick={onEnterApp} className="mt-4">
+              <Button
+                onClick={() => setShowCreateTeamModal(true)}
+                className="mt-4"
+              >
                 시작하기
               </Button>
             </div>
