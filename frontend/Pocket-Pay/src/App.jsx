@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "./store/authStore";
 import { useTeamStore } from "./store/teamStore";
+import { LandingPage } from "./pages/HomePage";
 import { AuthScreen } from "./components/AuthScreen";
-import { CreateTeamModal } from "./components/CreateTeamModal";
+import { CreateTeamModal } from "./components/modals/createTeamModal";
 import { MainLayout } from "./components/MainLayout";
 import { DashboardContent } from "./components/DashboardContent";
 import { MonthlyContent } from "./components/MonthlyContent";
@@ -15,7 +16,7 @@ export default function App() {
   const { user, accessToken, loading, checkAuth } = useAuthStore();
   const { currentTeam, loadLocalTeams, fetchTeams, fetchCategories } =
     useTeamStore();
-  const [currentScreen, setCurrentScreen] = useState("main");
+  const [currentScreen, setCurrentScreen] = useState("homepage"); // 기본을 homepage로 변경
   const [currentTab, setCurrentTab] = useState("home");
   const [showAuth, setShowAuth] = useState(false);
   const [showCreateTeam, setShowCreateTeam] = useState(false);
@@ -47,6 +48,16 @@ export default function App() {
           <p className="text-muted-foreground">로딩 중...</p>
         </div>
       </div>
+    );
+  }
+
+  // HomePage 화면
+  if (currentScreen === "homepage") {
+    return (
+      <>
+        <LandingPage onEnterApp={() => setCurrentScreen("main")} />
+        <Toaster />
+      </>
     );
   }
 
