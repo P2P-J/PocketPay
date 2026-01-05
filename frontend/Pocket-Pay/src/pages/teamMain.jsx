@@ -12,14 +12,21 @@ const TRANSACTION_TYPE = {
 
 const CATEGORY_LABELS = {
   meal: "식비",
-  membership: "회비",
   transport: "교통비",
   traffic: "교통비",
+  supplies: "비품",
   item: "비품",
+  rent: "장소대관",
   place: "장소대관",
   etc: "기타",
+
+
+  membership: "회비",
+  donation: "후원금",
   sponsor: "후원금",
   event: "행사수입",
+
+  "etc-income": "기타수입",   
   otherIncome: "기타수입",
 };
 

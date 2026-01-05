@@ -24,22 +24,25 @@
    ========================= */
 
 .tm-summary-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-
-  /* 🔹 카드 + 거래추가 버튼 모두 세로 중앙 정렬 */
-  align-items: center;
+  /* 레이아웃 역할만 – flex 안 써도 됨 */
+  width: 100%;
+  margin-bottom: 24px;
 }
 
+/* 카드 3개를 한 줄에 */
 .tm-summary-cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-  flex: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
 }
 
+/* 각 카드 폭을 균등하게 나누기 */
 .tm-summary-card {
+  flex: 1 1 0;
+  min-width: 0;
+
   background: var(--card);
   border-radius: 24px;
   border: 1px solid var(--border);
@@ -48,7 +51,7 @@
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.03);
-  min-height: 120px; /* 카드 높이 고정 느낌 */
+  min-height: 120px;
 }
 
 .tm-summary-texts {
