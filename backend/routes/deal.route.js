@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const dealController = require("../controllers/deal.controller");
+const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
+
+router.use(loginUserVerify);
 
 router.post("/register", dealController.registerDeal);
 
