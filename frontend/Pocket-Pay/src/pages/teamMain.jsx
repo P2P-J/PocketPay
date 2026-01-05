@@ -301,11 +301,31 @@ export default function TeamMain({ onBack }) {
               {/* 상단 요약 카드 영역 */}
               <section className="tm-summary-row">
                 <div className="tm-summary-cards">
-                  {/* ✅ 이번달 수입 카드 */}
+                  {/* 현재 잔액 카드 */}
+                  <div className="tm-summary-card">
+                    <div className="tm-summary-texts">
+                      <div className="tm-summary-label">현재 잔액</div>
+                      <div
+                        className="tm-summary-amount"
+                        style={{ color: "#3b82f6" }}
+                      >
+                        {currentBalance >= 0 ? "" : "-"}
+                        {Math.abs(currentBalance).toLocaleString()}원
+                      </div>
+                    </div>
+                    <div className="tm-summary-icon tm-summary-icon--income">
+                      📊
+                    </div>
+                  </div>
+
+                  {/* 이번달 수입 카드 */}
                   <div className="tm-summary-card">
                     <div className="tm-summary-texts">
                       <div className="tm-summary-label">이번달 수입</div>
-                      <div className="tm-summary-amount">
+                      <div
+                        className="tm-summary-amount"
+                        style={{ color: "#22c55e" }}
+                      >
                         {monthlyIncome.toLocaleString()}원
                       </div>
                     </div>
@@ -314,25 +334,14 @@ export default function TeamMain({ onBack }) {
                     </div>
                   </div>
 
-                  {/* ✅ 현재 잔액 카드 */}
-                  <div className="tm-summary-card">
-                    <div className="tm-summary-texts">
-                      <div className="tm-summary-label">현재 잔액</div>
-                      <div className="tm-summary-amount">
-                        {currentBalance >= 0 ? "" : "-"}
-                        {Math.abs(currentBalance).toLocaleString()}원
-                      </div>
-                    </div>
-                    <div className="tm-summary-icon tm-summary-icon--income">
-                      💰
-                    </div>
-                  </div>
-
-                  {/* ✅ 이번주 지출 카드 */}
+                  {/* 이번주 지출 카드 */}
                   <div className="tm-summary-card">
                     <div className="tm-summary-texts">
                       <div className="tm-summary-label">이번주 지출</div>
-                      <div className="tm-summary-amount tm-summary-amount-expense">
+                      <div
+                        className="tm-summary-amount tm-summary-amount-expense"
+                        style={{ color: "#ef4444" }}
+                      >
                         {weeklyExpense.toLocaleString()}원
                       </div>
                     </div>

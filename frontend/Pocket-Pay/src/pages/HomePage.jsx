@@ -168,39 +168,59 @@ export function LandingPage({ onEnterApp }) {
                   <div className="space-y-3">
                     <h2 className="text-lg">이번 달 요약</h2>
                     <div className="grid grid-cols-3 gap-4">
-                      {/* Total Expense */}
-                      <div className="bg-card border border-border rounded-xl p-4 space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <TrendingDown className="w-4 h-4" />총 지출
+                      {/* Balance */}
+                      <div className="bg-card border border-border rounded-xl p-4 flex justify-between items-center">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Wallet className="w-4 h-4" />
+                            잔액
+                          </div>
+                          <div
+                            className="text-2xl font-bold"
+                            style={{ color: "#3b82f6" }}
+                          >
+                            {balance >= 0 ? "+" : ""}
+                            {formatCurrency(balance)}
+                          </div>
                         </div>
-                        <div className="text-2xl text-red-500">
-                          {formatCurrency(totalExpense)}
+                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl">
+                          📊
                         </div>
                       </div>
 
                       {/* Total Income */}
-                      <div className="bg-card border border-border rounded-xl p-4 space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <TrendingUp className="w-4 h-4" />총 수입
+                      <div className="bg-card border border-border rounded-xl p-4 flex justify-between items-center">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <TrendingUp className="w-4 h-4" />총 수입
+                          </div>
+                          <div
+                            className="text-2xl font-bold"
+                            style={{ color: "#22c55e" }}
+                          >
+                            {formatCurrency(totalIncome)}
+                          </div>
                         </div>
-                        <div className="text-2xl text-blue-500">
-                          {formatCurrency(totalIncome)}
+                        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-2xl">
+                          📈
                         </div>
                       </div>
 
-                      {/* Balance */}
-                      <div className="bg-card border border-border rounded-xl p-4 space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Wallet className="w-4 h-4" />
-                          잔액
+                      {/* Total Expense */}
+                      <div className="bg-card border border-border rounded-xl p-4 flex justify-between items-center">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <TrendingDown className="w-4 h-4" />총 지출
+                          </div>
+                          <div
+                            className="text-2xl font-bold"
+                            style={{ color: "#ef4444" }}
+                          >
+                            {formatCurrency(totalExpense)}
+                          </div>
                         </div>
-                        <div
-                          className={`text-2xl ${
-                            balance >= 0 ? "text-primary" : "text-red-500"
-                          }`}
-                        >
-                          {balance >= 0 ? "+" : ""}
-                          {formatCurrency(balance)}
+                        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-2xl">
+                          📉
                         </div>
                       </div>
                     </div>
