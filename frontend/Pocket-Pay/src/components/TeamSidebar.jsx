@@ -1,0 +1,81 @@
+import { Button } from "./ui/button";
+import { useTeamStore } from "../store/teamStore";
+import { useAuthStore } from "../store/authStore";
+import { LogOut, Wallet } from "lucide-react";
+
+export function TeamSidebar({ selectedTeamId, onTeamSelect, onCreateTeam }) {
+  const { teams } = useTeamStore();
+  const { user, logout } = useAuthStore();
+
+  return (
+    <div className="w-64 bg-card border-r border-border flex flex-col">
+      {/* Logo */}
+      <div className="p-6 border-b border-border">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+            ₩
+          </div>
+          <h1 className="text-xl">작은모임</h1>
+        </div>
+      </div>
+
+      {/* User Section */}
+      {user && (
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm">
+                {user.name?.[0] || user.email[0].toUpperCase()}
+              </div>
+              <span className="text-sm">{user.name || user.email}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={logout}
+              className="h-8 w-8"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Team List */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-2">
+          {teams.map((team) => (
+            <button
+              key={team.id}
+              onClick={() => onTeamSelect(team.id)}
+              className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                selectedTeamId === team.id
+                  ? "bg-primary/10 border-2 border-primary"
+                  : "hover:bg-muted"
+              }`}
+            >
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${
+                  team.color || "bg-primary"
+                }`}
+                style={{ backgroundColor: team.color }}
+              >
+                {team.name[0]}
+              </div>
+              <span className="text-sm">{team.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Create Team Button */}
+      {onCreateTeam && (
+        <div className="p-4 border-t border-border">
+          <Button onClick={onCreateTeam} className="w-full">
+            + 새 모임 만들기
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}

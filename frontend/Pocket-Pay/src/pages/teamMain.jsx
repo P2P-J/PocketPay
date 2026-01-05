@@ -2,8 +2,16 @@
 import React, { useMemo, useState, useEffect } from "react";
 import "./teamMain.css";
 import { CreateTransactionModal } from "../components/modals/createTransactionModal";
+import { CreateTeamModal } from "../components/modals/createTeamModal";
 import { useTeamStore } from "../store/teamStore";
 import { localStorageUtil } from "../utils/localStorage";
+import { TeamSidebar } from "../components/TeamSidebar";
+import { NavigationBar } from "../components/NavigationBar";
+import { AddTransactionScreen } from "../components/AddTransactionScreen";
+import { MonthlyContent } from "../components/MonthlyContent";
+import { ReportContent } from "../components/ReportContent";
+import { SettingsContent } from "../components/SettingsContent";
+import { AuthScreen } from "../components/AuthScreen";
 
 const TRANSACTION_TYPE = {
   INCOME: "income",
@@ -20,11 +28,19 @@ const INITIAL_FORM = {
 };
 
 export default function TeamMain({ onBack }) {
-  const { currentTeam } = useTeamStore();
+  const { currentTeam, setCurrentTeam, teams } = useTeamStore();
   const [transactions, setTransactions] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("transactions");
   const [form, setForm] = useState(INITIAL_FORM);
   const [editingId, setEditingId] = useState(null);
+
+  // 팀 선택 핸들러
+  const handleTeamSelect = (teamId) => {
+    setCurrentTeam(teamId);
+  };
 
   // 컴포넌트 마운트 시 localStorage에서 거래 내역 로드
   useEffect(() => {
@@ -174,91 +190,95 @@ export default function TeamMain({ onBack }) {
   };
 
   return (
-    <div className="tm-page">
-      <main className="tm-main">
-        <div className="tm-inner">
-          {/* 뒤로가기 버튼 */}
-          {onBack && (
-            <div style={{ marginBottom: "1rem" }}>
-              <button
-                type="button"
-                onClick={onBack}
-                style={{
-                  padding: "0.5rem 1rem",
-                  backgroundColor: "#f3f4f6",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "0.5rem",
-                  cursor: "pointer",
-                  fontSize: "0.875rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                ← 홈으로 돌아가기
-              </button>
-            </div>
-          )}
+    <div className="flex h-screen bg-background">
+      {/* Left Sidebar */}
+      <TeamSidebar
+        selectedTeamId={currentTeam?.id}
+        onTeamSelect={handleTeamSelect}
+        onCreateTeam={() => setShowCreateTeamModal(true)}
+      />
 
-          {/* 상단 요약 카드 영역 */}
-          <section className="tm-summary-row">
-            <div className="tm-summary-cards">
-              {/* 현재 잔액 카드 */}
-              <div className="tm-summary-card">
-                <div className="tm-summary-texts">
-                  <div className="tm-summary-label">현재 잔액</div>
-                  <div className="tm-summary-amount">
-                    {currentBalance >= 0 ? "" : "-"}
-                    {Math.abs(currentBalance).toLocaleString()}원
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Navigation Bar */}
+        <NavigationBar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onAuthClick={() => setShowAuthModal(true)}
+          onBack={onBack}
+        />
+
+        <main className="flex-1 overflow-y-auto">
+          {/* Render content based on active tab */}
+          {activeTab === "transactions" ? (
+            <div className="tm-inner">
+              {/* 상단 요약 카드 영역 */}
+              <section className="tm-summary-row">
+                <div className="tm-summary-cards">
+                  {/* 현재 잔액 카드 */}
+                  <div className="tm-summary-card">
+                    <div className="tm-summary-texts">
+                      <div className="tm-summary-label">현재 잔액</div>
+                      <div className="tm-summary-amount">
+                        {currentBalance >= 0 ? "" : "-"}
+                        {Math.abs(currentBalance).toLocaleString()}원
+                      </div>
+                    </div>
+                    <div className="tm-summary-icon tm-summary-icon--income">
+                      💰
+                    </div>
+                  </div>
+
+                  {/* 이번주 지출 카드 */}
+                  <div className="tm-summary-card">
+                    <div className="tm-summary-texts">
+                      <div className="tm-summary-label">이번주 지출</div>
+                      <div className="tm-summary-amount tm-summary-amount-expense">
+                        {weeklyExpense.toLocaleString()}원
+                      </div>
+                    </div>
+                    <div className="tm-summary-icon tm-summary-icon--expense">
+                      📉
+                    </div>
                   </div>
                 </div>
-                <div className="tm-summary-icon tm-summary-icon--income">
-                  💰
-                </div>
-              </div>
+              </section>
 
-              {/* 이번주 지출 카드 */}
-              <div className="tm-summary-card">
-                <div className="tm-summary-texts">
-                  <div className="tm-summary-label">이번주 지출</div>
-                  <div className="tm-summary-amount tm-summary-amount-expense">
-                    {weeklyExpense.toLocaleString()}원
-                  </div>
+              {/* 거래 내역 + 상단 거래 추가 버튼 */}
+              <section className="tm-list-section">
+                <div className="tm-list-header">
+                  <h2 className="tm-list-title">거래 내역</h2>
+                  {/* ✅ 여기 버튼이 "거래 내역"과 같은 줄 */}
+                  <button
+                    type="button"
+                    className="tm-add-btn"
+                    onClick={handleOpenCreateModal}
+                  >
+                    <span className="tm-add-btn-plus">＋</span>
+                    거래 추가
+                  </button>
                 </div>
-                <div className="tm-summary-icon tm-summary-icon--expense">
-                  📉
-                </div>
-              </div>
+
+                {hasTransactions ? (
+                  <TransactionTable
+                    transactions={transactions}
+                    onDelete={handleDelete}
+                    onEdit={handleOpenEditModal} // ✏️ 수정 콜백 넘기기
+                  />
+                ) : (
+                  <EmptyState onAddClick={handleOpenCreateModal} />
+                )}
+              </section>
             </div>
-          </section>
-
-          {/* 거래 내역 + 상단 거래 추가 버튼 */}
-          <section className="tm-list-section">
-            <div className="tm-list-header">
-              <h2 className="tm-list-title">거래 내역</h2>
-              {/* ✅ 여기 버튼이 “거래 내역”과 같은 줄 */}
-              <button
-                type="button"
-                className="tm-add-btn"
-                onClick={handleOpenCreateModal}
-              >
-                <span className="tm-add-btn-plus">＋</span>
-                거래 추가
-              </button>
-            </div>
-
-            {hasTransactions ? (
-              <TransactionTable
-                transactions={transactions}
-                onDelete={handleDelete}
-                onEdit={handleOpenEditModal} // ✏️ 수정 콜백 넘기기
-              />
-            ) : (
-              <EmptyState onAddClick={handleOpenCreateModal} />
-            )}
-          </section>
-        </div>
-      </main>
+          ) : activeTab === "monthly" ? (
+            <MonthlyContent />
+          ) : activeTab === "report" ? (
+            <ReportContent />
+          ) : activeTab === "settings" ? (
+            <SettingsContent />
+          ) : null}
+        </main>
+      </div>
 
       {showModal && (
         <CreateTransactionModal
@@ -268,6 +288,22 @@ export default function TeamMain({ onBack }) {
           onClose={handleCloseModal}
           onSubmit={handleSubmit}
         />
+      )}
+
+      {/* Create Team Modal */}
+      {showCreateTeamModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <CreateTeamModal onClose={() => setShowCreateTeamModal(false)} />
+        </div>
+      )}
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <AuthScreen onClose={() => setShowAuthModal(false)} />
+          </div>
+        </div>
       )}
     </div>
   );
