@@ -1,4 +1,5 @@
 const { signupLocal, loginLocal } = require("../services/auth/auth.local.service");
+const { loginOauth } = require("../services/auth/auth.oauth.service");
 
 const signupLocalController = async (req, res) => {
     try {
@@ -38,7 +39,7 @@ const loginLocalController = async (req, res) => {
         const { user, token } = await loginLocal({ email, password });
 
         res.status(200).json({
-            id: user._id,
+            id: user._id.toString(),
             email: user.email,
             name: user.name,
             provider: user.provider,
@@ -51,7 +52,18 @@ const loginLocalController = async (req, res) => {
     }
 };
 
+const loginOauthController = async (req, res) => {
+    try {
+        
+    } catch (err) {
+        res.status(400).json({
+            message: err.message,
+        });
+    }
+};
+
 module.exports = {
     signupLocalController,
     loginLocalController,
+    loginOauthController,
 };
