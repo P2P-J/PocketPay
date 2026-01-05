@@ -4,8 +4,8 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-const RECEIPT_API_URL = process.env.APIGW_URL;
-const RECEIPT_SECRET_KEY = process.env.SECRET_KEY;
+const RECEIPT_API_URL = process.env.DOCUMENT_APIGW_URL;
+const RECEIPT_SECRET_KEY = process.env.DOCUMENT_SECRET_KEY;
 const GENERAL_API_URL = process.env.GENERAL_APIGW_URL;
 const GENERAL_SECRET_KEY = process.env.GENERAL_SECRET_KEY;
 
