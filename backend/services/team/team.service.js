@@ -1,4 +1,4 @@
-const { Team, User } = require("../../models/index");
+const { Team, User, Deal } = require("../../models/index");
 
 // 팀 등록 POST /team
 exports.createTeam = async (userId, { name, description }) => {
@@ -52,6 +52,7 @@ exports.updateTeam = async (teamId, userId, data) => {
     Object.assign(team, data);
 
     await team.save();
+    return team;
 };
 
 // 팀 삭제 DELETE /team/:id
@@ -63,7 +64,10 @@ exports.deleteTeam = async (teamId, userId) => {
 
     if (!team) {
         throw new Error("팀 혹은 권한이 없습니다.");
-    };
+    }
+
+    // 팀 삭제 시 관련 Deal도 함께 삭제
+    await Deal.deleteMany({ teamId: teamId });
 };
 
 // 팀원 초대 POST /team/:id/invite
@@ -77,7 +81,7 @@ exports.inviteMember = async (teamId, ownerId, email) => {
         throw new Error("팀 혹은 권한이 없습니다.");
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, provider: "local" });
 
     if (!user) {
         throw new Error("초대할 사용자를 찾을 수 없습니다.");
@@ -97,4 +101,5 @@ exports.inviteMember = async (teamId, ownerId, email) => {
     });
 
     await team.save();
+    return team;
 }
