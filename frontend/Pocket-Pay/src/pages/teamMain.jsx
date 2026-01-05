@@ -28,13 +28,12 @@ const CATEGORY_LABELS = {
   place: "장소대관",
   etc: "기타",
 
-
   membership: "회비",
   donation: "후원금",
   sponsor: "후원금",
   event: "행사수입",
 
-  "etc-income": "기타수입",   
+  "etc-income": "기타수입",
   otherIncome: "기타수입",
 };
 
@@ -42,7 +41,6 @@ const getCategoryLabel = (value) => {
   if (!value || value === "-") return "-";
   return CATEGORY_LABELS[value] || value;
 };
-
 
 const formatDateLocal = (date) => {
   const y = date.getFullYear();
@@ -53,23 +51,18 @@ const formatDateLocal = (date) => {
 
 const todayString = () => formatDateLocal(new Date());
 
-
 const normalizeDateString = (raw) => {
   if (!raw) return todayString();
 
-  
   if (typeof raw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
     return raw;
   }
 
- 
   const d = raw instanceof Date ? raw : new Date(raw);
   if (Number.isNaN(d.getTime())) return todayString();
 
- 
   return formatDateLocal(d);
 };
-
 
 const toDateObject = (raw) => {
   if (!raw) return new Date();
@@ -122,7 +115,7 @@ export default function TeamMain({ onBack }) {
         description: tx.description || "-",
         category: tx.category_id || "-",
         amount: Number(tx.price) || 0,
-       
+
         date: normalizeDateString(rawDate),
       };
     });
@@ -143,10 +136,10 @@ export default function TeamMain({ onBack }) {
       description: tx.description === "-" ? "" : tx.description,
       category_id: tx.category === "-" ? "" : tx.category,
       price: tx.amount,
-      
+
       transaction_date: tx.date,
       team_id: currentTeam.id,
-      created_at: new Date().toISOString(), 
+      created_at: new Date().toISOString(),
     }));
 
     localStorageUtil.set(
@@ -182,9 +175,7 @@ export default function TeamMain({ onBack }) {
         const d = new Date(t.date);
         if (Number.isNaN(d.getTime())) return false;
 
-        return (
-          d.getFullYear() === currentYear && d.getMonth() === currentMonth
-        );
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
       })
       .reduce((acc, t) => acc + t.amount, 0);
   }, [transactions]);
@@ -257,7 +248,7 @@ export default function TeamMain({ onBack }) {
       description: form.description.trim() || "-",
       category: form.category.trim() || "-",
       amount: amountNum,
-      
+
       date: normalizeDateString(form.date),
     };
 
@@ -286,48 +277,44 @@ export default function TeamMain({ onBack }) {
   };
 
   return (
-    <div className="tm-page">
-      <main className="tm-main">
-        <div className="tm-inner">
-          {/* 뒤로가기 버튼 */}
-          {onBack && (
-            <div style={{ marginBottom: "1rem" }}>
-              <button
-                type="button"
-                onClick={onBack}
-                style={{
-                  padding: "0.5rem 1rem",
-                  backgroundColor: "#f3f4f6",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "0.5rem",
-                  cursor: "pointer",
-                  fontSize: "0.875rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                ← 홈으로 돌아가기
-              </button>
-            </div>
-          )}
+    <div className="flex h-screen bg-background">
+      {/* Left Sidebar */}
+      <TeamSidebar
+        selectedTeamId={currentTeam?.id}
+        onTeamSelect={handleTeamSelect}
+        onCreateTeam={() => setShowCreateTeamModal(true)}
+      />
 
-          {/* 상단 요약 카드 영역 */}
-          <section className="tm-summary-row">
-            <div className="tm-summary-cards">
-              {/* 현재 잔액 카드 */}
-              <div className="tm-summary-card">
-                <div className="tm-summary-texts">
-                  <div className="tm-summary-label">현재 잔액</div>
-                  <div className="tm-summary-amount">
-                    {currentBalance >= 0 ? "" : "-"}
-                    {Math.abs(currentBalance).toLocaleString()}원
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Navigation Bar */}
+        <NavigationBar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onAuthClick={() => setShowAuthModal(true)}
+          onBack={onBack}
+        />
+
+        <main className="flex-1 overflow-y-auto">
+          {/* Render content based on active tab */}
+          {activeTab === "transactions" ? (
+            <div className="tm-inner">
+              {/* 상단 요약 카드 영역 */}
+              <section className="tm-summary-row">
+                <div className="tm-summary-cards">
+                  {/* 현재 잔액 카드 */}
+                  <div className="tm-summary-card">
+                    <div className="tm-summary-texts">
+                      <div className="tm-summary-label">현재 잔액</div>
+                      <div className="tm-summary-amount">
+                        {currentBalance >= 0 ? "" : "-"}
+                        {Math.abs(currentBalance).toLocaleString()}원
+                      </div>
+                    </div>
+                    <div className="tm-summary-icon tm-summary-icon--income">
+                      💰
+                    </div>
                   </div>
-                </div>
-                <div className="tm-summary-icon tm-summary-icon--income">
-                  💰
-                </div>
-              </div>
 
                   {/* 이번주 지출 카드 */}
                   <div className="tm-summary-card">
@@ -344,33 +331,41 @@ export default function TeamMain({ onBack }) {
                 </div>
               </section>
 
-          {/* 거래 내역 + 상단 거래 추가 버튼 */}
-          <section className="tm-list-section">
-            <div className="tm-list-header">
-              <h2 className="tm-list-title">거래 내역</h2>
-              {/* ✅ 여기 버튼이 “거래 내역”과 같은 줄 */}
-              <button
-                type="button"
-                className="tm-add-btn"
-                onClick={handleOpenCreateModal}
-              >
-                <span className="tm-add-btn-plus">＋</span>
-                거래 추가
-              </button>
-            </div>
+              {/* 거래 내역 + 상단 거래 추가 버튼 */}
+              <section className="tm-list-section">
+                <div className="tm-list-header">
+                  <h2 className="tm-list-title">거래 내역</h2>
+                  {/* ✅ 여기 버튼이 “거래 내역”과 같은 줄 */}
+                  <button
+                    type="button"
+                    className="tm-add-btn"
+                    onClick={handleOpenCreateModal}
+                  >
+                    <span className="tm-add-btn-plus">＋</span>
+                    거래 추가
+                  </button>
+                </div>
 
-            {hasTransactions ? (
-              <TransactionTable
-                transactions={transactions}
-                onDelete={handleDelete}
-                onEdit={handleOpenEditModal} // ✏️ 수정 콜백 넘기기
-              />
-            ) : (
-              <EmptyState onAddClick={handleOpenCreateModal} />
-            )}
-          </section>
-        </div>
-      </main>
+                {hasTransactions ? (
+                  <TransactionTable
+                    transactions={transactions}
+                    onDelete={handleDelete}
+                    onEdit={handleOpenEditModal} // ✏️ 수정 콜백 넘기기
+                  />
+                ) : (
+                  <EmptyState onAddClick={handleOpenCreateModal} />
+                )}
+              </section>
+            </div>
+          ) : activeTab === "monthly" ? (
+            <MonthlyContent />
+          ) : activeTab === "report" ? (
+            <ReportContent />
+          ) : activeTab === "settings" ? (
+            <SettingsContent />
+          ) : null}
+        </main>
+      </div>
 
       {showModal && (
         <CreateTransactionModal
