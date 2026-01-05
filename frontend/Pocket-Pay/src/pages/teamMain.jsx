@@ -1,7 +1,9 @@
 // src/pages/teamMain.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import "./teamMain.css";
 import { CreateTransactionModal } from "../components/modals/createTransactionModal";
+import { useTeamStore } from "../store/teamStore";
+import { localStorageUtil } from "../utils/localStorage";
 
 const TRANSACTION_TYPE = {
   INCOME: "income",
@@ -17,11 +19,53 @@ const INITIAL_FORM = {
   date: "",
 };
 
-export default function TeamMain() {
+export default function TeamMain({ onBack }) {
+  const { currentTeam } = useTeamStore();
   const [transactions, setTransactions] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
-  const [editingId, setEditingId] = useState(null); // ✅ 수정 중인지 구분하는 상태
+  const [editingId, setEditingId] = useState(null);
+
+  // 컴포넌트 마운트 시 localStorage에서 거래 내역 로드
+  useEffect(() => {
+    if (currentTeam) {
+      const savedTransactions =
+        localStorageUtil.get(`transactions-${currentTeam.id}`) || [];
+      // HomePage 형식을 teamMain 형식으로 변환
+      const convertedTransactions = savedTransactions.map((tx) => ({
+        id: tx.id || Date.now(),
+        merchant: tx.store_name || "",
+        type: tx.type,
+        description: tx.description || "-",
+        category: tx.category_id || "-",
+        amount: tx.price || 0,
+        date: tx.transaction_date || new Date().toISOString().slice(0, 10),
+      }));
+      setTransactions(convertedTransactions);
+    }
+  }, [currentTeam]);
+
+  // transactions가 변경될 때마다 localStorage에 저장
+  useEffect(() => {
+    if (currentTeam && transactions.length >= 0) {
+      // teamMain 형식을 HomePage 형식으로 변환하여 저장
+      const convertedTransactions = transactions.map((tx) => ({
+        id: tx.id,
+        store_name: tx.merchant,
+        type: tx.type,
+        description: tx.description === "-" ? "" : tx.description,
+        category_id: tx.category === "-" ? "" : tx.category,
+        price: tx.amount,
+        transaction_date: tx.date,
+        team_id: currentTeam.id,
+        created_at: new Date().toISOString(),
+      }));
+      localStorageUtil.set(
+        `transactions-${currentTeam.id}`,
+        convertedTransactions
+      );
+    }
+  }, [transactions, currentTeam]);
 
   const hasTransactions = transactions.length > 0;
 
@@ -133,6 +177,29 @@ export default function TeamMain() {
     <div className="tm-page">
       <main className="tm-main">
         <div className="tm-inner">
+          {/* 뒤로가기 버튼 */}
+          {onBack && (
+            <div style={{ marginBottom: "1rem" }}>
+              <button
+                type="button"
+                onClick={onBack}
+                style={{
+                  padding: "0.5rem 1rem",
+                  backgroundColor: "#f3f4f6",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "0.5rem",
+                  cursor: "pointer",
+                  fontSize: "0.875rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                ← 홈으로 돌아가기
+              </button>
+            </div>
+          )}
+
           {/* 상단 요약 카드 영역 */}
           <section className="tm-summary-row">
             <div className="tm-summary-cards">
@@ -193,7 +260,6 @@ export default function TeamMain() {
         </div>
       </main>
 
-  
       {showModal && (
         <CreateTransactionModal
           form={form}

@@ -2,22 +2,16 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "./store/authStore";
 import { useTeamStore } from "./store/teamStore";
 import { LandingPage } from "./pages/HomePage";
+import TeamMain from "./pages/teamMain";
 import { AuthScreen } from "./components/AuthScreen";
 import { CreateTeamModal } from "./components/modals/createTeamModal";
-import { MainLayout } from "./components/MainLayout";
-import { DashboardContent } from "./components/DashboardContent";
-import { MonthlyContent } from "./components/MonthlyContent";
-import { ReportContent } from "./components/ReportContent";
-import { SettingsContent } from "./components/SettingsContent";
-import { AddTransactionScreen } from "./components/AddTransactionScreen";
 import { Toaster } from "./components/ui/sonner";
 
 export default function App() {
   const { user, accessToken, loading, checkAuth } = useAuthStore();
   const { currentTeam, loadLocalTeams, fetchTeams, fetchCategories } =
     useTeamStore();
-  const [currentScreen, setCurrentScreen] = useState("homepage"); // 기본을 homepage로 변경
-  const [currentTab, setCurrentTab] = useState("home");
+  const [currentScreen, setCurrentScreen] = useState("homepage");
   const [showAuth, setShowAuth] = useState(false);
   const [showCreateTeam, setShowCreateTeam] = useState(false);
 
@@ -55,22 +49,23 @@ export default function App() {
   if (currentScreen === "homepage") {
     return (
       <>
-        <LandingPage onEnterApp={() => setCurrentScreen("main")} />
+        <LandingPage onEnterApp={() => setCurrentScreen("team-main")} />
         <Toaster />
       </>
     );
   }
 
-  // 거래 추가 화면일 때는 레이아웃 없이 전체 화면
-  if (currentScreen === "add-transaction") {
+  // TeamMain 화면 (거래 관리)
+  if (currentScreen === "team-main") {
     return (
       <>
-        <AddTransactionScreen onBack={() => setCurrentScreen("main")} />
+        <TeamMain onBack={() => setCurrentScreen("homepage")} />
         <Toaster />
       </>
     );
   }
 
+  // 기본 화면 (필요시 추가)
   return (
     <>
       {/* 팀 생성 모달 */}
@@ -88,26 +83,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* 메인 레이아웃 */}
-      <MainLayout
-        currentTab={currentTab}
-        onTabChange={setCurrentTab}
-        onCreateTeam={() => setShowCreateTeam(true)}
-        onShowAuth={() => setShowAuth(true)}
-      >
-        {currentTab === "home" && (
-          <DashboardContent
-            onAddTransaction={() => setCurrentScreen("add-transaction")}
-          />
-        )}
-
-        {currentTab === "monthly" && <MonthlyContent />}
-
-        {currentTab === "report" && <ReportContent />}
-
-        {currentTab === "settings" && <SettingsContent />}
-      </MainLayout>
 
       <Toaster />
     </>
