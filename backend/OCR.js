@@ -4,8 +4,8 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-const RECEIPT_API_URL = process.env.DOCUMENT_APIGW_URL;
-const RECEIPT_SECRET_KEY = process.env.DOCUMENT_SECRET_KEY;
+const RECEIPT_API_URL = process.env.APIGW_URL;
+const RECEIPT_SECRET_KEY = process.env.SECRET_KEY;
 const GENERAL_API_URL = process.env.GENERAL_APIGW_URL;
 const GENERAL_SECRET_KEY = process.env.GENERAL_SECRET_KEY;
 
@@ -132,6 +132,7 @@ function extractReceiptData(receiptResult, fullText) {
     price = parsePrice(receipt.totalPrice.price.text);
   }
 
+  // Receipt API 가격이 비정상적으로 낮으면(100 미만) fullText에서 재추출
   if (price < 100 && fullText) {
     const flatText = fullText.replace(/\n/g, " ").replace(/\s+/g, " ");
     const cleanText = flatText.replace(
@@ -188,6 +189,7 @@ function extractReceiptData(receiptResult, fullText) {
 
   if (receipt.paymentInfo?.date?.formatted) {
     const { year, month, day } = receipt.paymentInfo.date.formatted;
+    // year가 비어있지 않은 경우에만 사용
     if (year && year.length >= 2) {
       rawDate = `${year}-${month}-${day}`;
     }
@@ -195,6 +197,7 @@ function extractReceiptData(receiptResult, fullText) {
     rawDate = receipt.paymentInfo.date.text;
   }
 
+  // rawDate가 없거나 불완전한 경우(year가 없는 경우) fullText에서 추출
   if ((!rawDate || rawDate.startsWith("-")) && fullText) {
     const datePatterns = [
       /(?:거\s*래\s*일\s*시|날\s*짜|일\s*시)[:\s]*([\d]{2,4}[-./][\d]{1,2}[-./][\d]{1,2})/,
@@ -231,7 +234,7 @@ async function main() {
   const staticFolder = path.join(__dirname, "static");
   const results = [];
 
-  const testFiles = [1, 20];
+  const testFiles = [27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39];
   for (let idx = 0; idx < testFiles.length; idx++) {
     const i = testFiles[idx];
     const imagePath = path.join(staticFolder, `${i}.jpg`);
@@ -246,23 +249,13 @@ async function main() {
 
     if (receiptResult) {
       const extractedData = extractReceiptData(receiptResult, fullText);
-      results.push({
-        번호: results.length + 1,
-        ...extractedData,
-      });
+      results.push(extractedData);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
-  console.table(results, [
-    "번호",
-    "상호명",
-    "구분",
-    "사업자번호",
-    "상품가격",
-    "날짜",
-  ]);
+  console.table(results, ["상호명", "구분", "사업자번호", "상품가격", "날짜"]);
 }
 
 main().catch(console.error);
