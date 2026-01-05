@@ -18,6 +18,67 @@ const TRANSACTION_TYPE = {
   EXPENSE: "expense",
 };
 
+const CATEGORY_LABELS = {
+  meal: "식비",
+  transport: "교통비",
+  traffic: "교통비",
+  supplies: "비품",
+  item: "비품",
+  rent: "장소대관",
+  place: "장소대관",
+  etc: "기타",
+
+
+  membership: "회비",
+  donation: "후원금",
+  sponsor: "후원금",
+  event: "행사수입",
+
+  "etc-income": "기타수입",   
+  otherIncome: "기타수입",
+};
+
+const getCategoryLabel = (value) => {
+  if (!value || value === "-") return "-";
+  return CATEGORY_LABELS[value] || value;
+};
+
+
+const formatDateLocal = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+const todayString = () => formatDateLocal(new Date());
+
+
+const normalizeDateString = (raw) => {
+  if (!raw) return todayString();
+
+  
+  if (typeof raw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return raw;
+  }
+
+ 
+  const d = raw instanceof Date ? raw : new Date(raw);
+  if (Number.isNaN(d.getTime())) return todayString();
+
+ 
+  return formatDateLocal(d);
+};
+
+
+const toDateObject = (raw) => {
+  if (!raw) return new Date();
+  if (raw instanceof Date) return raw;
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return new Date();
+  return d;
+};
+
 const INITIAL_FORM = {
   merchant: "",
   type: TRANSACTION_TYPE.EXPENSE,
@@ -42,45 +103,56 @@ export default function TeamMain({ onBack }) {
     setCurrentTeam(teamId);
   };
 
-  // 컴포넌트 마운트 시 localStorage에서 거래 내역 로드
+  // =====================
+  // 거래 내역 로드
+  // =====================
   useEffect(() => {
-    if (currentTeam) {
-      const savedTransactions =
-        localStorageUtil.get(`transactions-${currentTeam.id}`) || [];
-      // HomePage 형식을 teamMain 형식으로 변환
-      const convertedTransactions = savedTransactions.map((tx) => ({
-        id: tx.id || Date.now(),
+    if (!currentTeam) return;
+
+    const savedTransactions =
+      localStorageUtil.get(`transactions-${currentTeam.id}`) || [];
+
+    const convertedTransactions = savedTransactions.map((tx, index) => {
+      const rawDate = tx.transaction_date ?? tx.date;
+
+      return {
+        id: tx.id ?? Date.now() + index,
         merchant: tx.store_name || "",
         type: tx.type,
         description: tx.description || "-",
         category: tx.category_id || "-",
-        amount: tx.price || 0,
-        date: tx.transaction_date || new Date().toISOString().slice(0, 10),
-      }));
-      setTransactions(convertedTransactions);
-    }
+        amount: Number(tx.price) || 0,
+       
+        date: normalizeDateString(rawDate),
+      };
+    });
+
+    setTransactions(convertedTransactions);
   }, [currentTeam]);
 
-  // transactions가 변경될 때마다 localStorage에 저장
+  // =====================
+  // 거래 내역 저장
+  // =====================
   useEffect(() => {
-    if (currentTeam && transactions.length >= 0) {
-      // teamMain 형식을 HomePage 형식으로 변환하여 저장
-      const convertedTransactions = transactions.map((tx) => ({
-        id: tx.id,
-        store_name: tx.merchant,
-        type: tx.type,
-        description: tx.description === "-" ? "" : tx.description,
-        category_id: tx.category === "-" ? "" : tx.category,
-        price: tx.amount,
-        transaction_date: tx.date,
-        team_id: currentTeam.id,
-        created_at: new Date().toISOString(),
-      }));
-      localStorageUtil.set(
-        `transactions-${currentTeam.id}`,
-        convertedTransactions
-      );
-    }
+    if (!currentTeam || transactions.length < 0) return;
+
+    const convertedTransactions = transactions.map((tx) => ({
+      id: tx.id,
+      store_name: tx.merchant,
+      type: tx.type,
+      description: tx.description === "-" ? "" : tx.description,
+      category_id: tx.category === "-" ? "" : tx.category,
+      price: tx.amount,
+      
+      transaction_date: tx.date,
+      team_id: currentTeam.id,
+      created_at: new Date().toISOString(), 
+    }));
+
+    localStorageUtil.set(
+      `transactions-${currentTeam.id}`,
+      convertedTransactions
+    );
   }, [transactions, currentTeam]);
 
   const hasTransactions = transactions.length > 0;
@@ -96,7 +168,28 @@ export default function TeamMain({ onBack }) {
     [transactions]
   );
 
-  // 이번주 지출 (임시: 모든 지출 합계)
+  // 이번달 수입 합계
+  const monthlyIncome = useMemo(() => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+
+    return transactions
+      .filter((t) => {
+        if (t.type !== TRANSACTION_TYPE.INCOME) return false;
+        if (!t.date) return false;
+
+        const d = new Date(t.date);
+        if (Number.isNaN(d.getTime())) return false;
+
+        return (
+          d.getFullYear() === currentYear && d.getMonth() === currentMonth
+        );
+      })
+      .reduce((acc, t) => acc + t.amount, 0);
+  }, [transactions]);
+
+  // 이번주 지출 (지금은 전체 지출 합계)
   const weeklyExpense = useMemo(
     () =>
       transactions
@@ -105,14 +198,22 @@ export default function TeamMain({ onBack }) {
     [transactions]
   );
 
-  // ✅ 새 거래 추가용 모달 열기
+  // =====================
+  // 모달 열기/닫기 + 폼 변경
+  // =====================
+
+  // 새 거래 추가
   const handleOpenCreateModal = () => {
-    setForm(INITIAL_FORM);
+    setForm({
+      ...INITIAL_FORM,
+      // ✅ 모달 쪽에서 Date 객체를 쓰는 경우 대비
+      date: new Date(),
+    });
     setEditingId(null);
     setShowModal(true);
   };
 
-  // ✅ 기존 거래 수정용 모달 열기
+  // 기존 거래 수정
   const handleOpenEditModal = (tx) => {
     setForm({
       merchant: tx.merchant,
@@ -120,7 +221,8 @@ export default function TeamMain({ onBack }) {
       description: tx.description === "-" ? "" : tx.description,
       category: tx.category === "-" ? "" : tx.category,
       amount: String(tx.amount),
-      date: tx.date, // 여기서는 그냥 저장된 문자열 그대로 사용
+      // ✅ 저장돼 있는 문자열을 Date 객체로 변환해서 모달에 넘김
+      date: toDateObject(tx.date),
     });
     setEditingId(tx.id);
     setShowModal(true);
@@ -139,7 +241,7 @@ export default function TeamMain({ onBack }) {
     }));
   };
 
-  // ✅ 추가 + 수정 둘 다 이 함수에서 처리
+  // 추가 + 수정 공통 처리
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -155,23 +257,17 @@ export default function TeamMain({ onBack }) {
       description: form.description.trim() || "-",
       category: form.category.trim() || "-",
       amount: amountNum,
-      date: form.date || new Date().toISOString().slice(0, 10),
+      
+      date: normalizeDateString(form.date),
     };
 
     if (editingId) {
-      // ✏️ 수정 모드
+      // 수정 모드
       setTransactions((prev) =>
-        prev.map((t) =>
-          t.id === editingId
-            ? {
-                ...t,
-                ...baseTx,
-              }
-            : t
-        )
+        prev.map((t) => (t.id === editingId ? { ...t, ...baseTx } : t))
       );
     } else {
-      // ➕ 추가 모드
+      // 추가 모드
       const newTx = {
         id: Date.now(),
         ...baseTx,
@@ -190,44 +286,48 @@ export default function TeamMain({ onBack }) {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Left Sidebar */}
-      <TeamSidebar
-        selectedTeamId={currentTeam?.id}
-        onTeamSelect={handleTeamSelect}
-        onCreateTeam={() => setShowCreateTeamModal(true)}
-      />
+    <div className="tm-page">
+      <main className="tm-main">
+        <div className="tm-inner">
+          {/* 뒤로가기 버튼 */}
+          {onBack && (
+            <div style={{ marginBottom: "1rem" }}>
+              <button
+                type="button"
+                onClick={onBack}
+                style={{
+                  padding: "0.5rem 1rem",
+                  backgroundColor: "#f3f4f6",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "0.5rem",
+                  cursor: "pointer",
+                  fontSize: "0.875rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                ← 홈으로 돌아가기
+              </button>
+            </div>
+          )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Navigation Bar */}
-        <NavigationBar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onAuthClick={() => setShowAuthModal(true)}
-          onBack={onBack}
-        />
-
-        <main className="flex-1 overflow-y-auto">
-          {/* Render content based on active tab */}
-          {activeTab === "transactions" ? (
-            <div className="tm-inner">
-              {/* 상단 요약 카드 영역 */}
-              <section className="tm-summary-row">
-                <div className="tm-summary-cards">
-                  {/* 현재 잔액 카드 */}
-                  <div className="tm-summary-card">
-                    <div className="tm-summary-texts">
-                      <div className="tm-summary-label">현재 잔액</div>
-                      <div className="tm-summary-amount">
-                        {currentBalance >= 0 ? "" : "-"}
-                        {Math.abs(currentBalance).toLocaleString()}원
-                      </div>
-                    </div>
-                    <div className="tm-summary-icon tm-summary-icon--income">
-                      💰
-                    </div>
+          {/* 상단 요약 카드 영역 */}
+          <section className="tm-summary-row">
+            <div className="tm-summary-cards">
+              {/* 현재 잔액 카드 */}
+              <div className="tm-summary-card">
+                <div className="tm-summary-texts">
+                  <div className="tm-summary-label">현재 잔액</div>
+                  <div className="tm-summary-amount">
+                    {currentBalance >= 0 ? "" : "-"}
+                    {Math.abs(currentBalance).toLocaleString()}원
                   </div>
+                </div>
+                <div className="tm-summary-icon tm-summary-icon--income">
+                  💰
+                </div>
+              </div>
 
                   {/* 이번주 지출 카드 */}
                   <div className="tm-summary-card">
@@ -244,41 +344,33 @@ export default function TeamMain({ onBack }) {
                 </div>
               </section>
 
-              {/* 거래 내역 + 상단 거래 추가 버튼 */}
-              <section className="tm-list-section">
-                <div className="tm-list-header">
-                  <h2 className="tm-list-title">거래 내역</h2>
-                  {/* ✅ 여기 버튼이 "거래 내역"과 같은 줄 */}
-                  <button
-                    type="button"
-                    className="tm-add-btn"
-                    onClick={handleOpenCreateModal}
-                  >
-                    <span className="tm-add-btn-plus">＋</span>
-                    거래 추가
-                  </button>
-                </div>
-
-                {hasTransactions ? (
-                  <TransactionTable
-                    transactions={transactions}
-                    onDelete={handleDelete}
-                    onEdit={handleOpenEditModal} // ✏️ 수정 콜백 넘기기
-                  />
-                ) : (
-                  <EmptyState onAddClick={handleOpenCreateModal} />
-                )}
-              </section>
+          {/* 거래 내역 + 상단 거래 추가 버튼 */}
+          <section className="tm-list-section">
+            <div className="tm-list-header">
+              <h2 className="tm-list-title">거래 내역</h2>
+              {/* ✅ 여기 버튼이 “거래 내역”과 같은 줄 */}
+              <button
+                type="button"
+                className="tm-add-btn"
+                onClick={handleOpenCreateModal}
+              >
+                <span className="tm-add-btn-plus">＋</span>
+                거래 추가
+              </button>
             </div>
-          ) : activeTab === "monthly" ? (
-            <MonthlyContent />
-          ) : activeTab === "report" ? (
-            <ReportContent />
-          ) : activeTab === "settings" ? (
-            <SettingsContent />
-          ) : null}
-        </main>
-      </div>
+
+            {hasTransactions ? (
+              <TransactionTable
+                transactions={transactions}
+                onDelete={handleDelete}
+                onEdit={handleOpenEditModal} // ✏️ 수정 콜백 넘기기
+              />
+            ) : (
+              <EmptyState onAddClick={handleOpenCreateModal} />
+            )}
+          </section>
+        </div>
+      </main>
 
       {showModal && (
         <CreateTransactionModal
@@ -345,7 +437,7 @@ function TransactionTable({ transactions, onDelete, onEdit }) {
                 </span>
               </td>
               <td>{t.description || "-"}</td>
-              <td>{t.category}</td>
+              <td>{getCategoryLabel(t.category)}</td>
               <td
                 className={
                   "tm-td-right " +
@@ -359,7 +451,6 @@ function TransactionTable({ transactions, onDelete, onEdit }) {
               </td>
               <td>{t.date}</td>
               <td className="tm-td-center">
-                {/* ✏️ 수정 버튼 */}
                 <button
                   type="button"
                   className="tm-delete-btn"
@@ -368,7 +459,6 @@ function TransactionTable({ transactions, onDelete, onEdit }) {
                 >
                   ✏️
                 </button>
-                {/* 🗑 삭제 버튼 */}
                 <button
                   type="button"
                   className="tm-delete-btn"
