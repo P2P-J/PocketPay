@@ -212,7 +212,6 @@ export default function TeamMain({ onBack }) {
       description: tx.description === "-" ? "" : tx.description,
       category: tx.category === "-" ? "" : tx.category,
       amount: String(tx.amount),
-      // ✅ 저장돼 있는 문자열을 Date 객체로 변환해서 모달에 넘김
       date: toDateObject(tx.date),
     });
     setEditingId(tx.id);
@@ -302,7 +301,20 @@ export default function TeamMain({ onBack }) {
               {/* 상단 요약 카드 영역 */}
               <section className="tm-summary-row">
                 <div className="tm-summary-cards">
-                  {/* 현재 잔액 카드 */}
+                  {/* ✅ 이번달 수입 카드 */}
+                  <div className="tm-summary-card">
+                    <div className="tm-summary-texts">
+                      <div className="tm-summary-label">이번달 수입</div>
+                      <div className="tm-summary-amount">
+                        {monthlyIncome.toLocaleString()}원
+                      </div>
+                    </div>
+                    <div className="tm-summary-icon tm-summary-icon--income">
+                      📈
+                    </div>
+                  </div>
+
+                  {/* ✅ 현재 잔액 카드 */}
                   <div className="tm-summary-card">
                     <div className="tm-summary-texts">
                       <div className="tm-summary-label">현재 잔액</div>
@@ -316,7 +328,7 @@ export default function TeamMain({ onBack }) {
                     </div>
                   </div>
 
-                  {/* 이번주 지출 카드 */}
+                  {/* ✅ 이번주 지출 카드 */}
                   <div className="tm-summary-card">
                     <div className="tm-summary-texts">
                       <div className="tm-summary-label">이번주 지출</div>
@@ -335,7 +347,6 @@ export default function TeamMain({ onBack }) {
               <section className="tm-list-section">
                 <div className="tm-list-header">
                   <h2 className="tm-list-title">거래 내역</h2>
-                  {/* ✅ 여기 버튼이 “거래 내역”과 같은 줄 */}
                   <button
                     type="button"
                     className="tm-add-btn"
@@ -350,7 +361,7 @@ export default function TeamMain({ onBack }) {
                   <TransactionTable
                     transactions={transactions}
                     onDelete={handleDelete}
-                    onEdit={handleOpenEditModal} // ✏️ 수정 콜백 넘기기
+                    onEdit={handleOpenEditModal}
                   />
                 ) : (
                   <EmptyState onAddClick={handleOpenCreateModal} />
