@@ -1,4 +1,5 @@
 const dealService = require("../services/deal/deal.service");
+const Team = require("../models/Team.model");
 
 const registerDeal = async (req, res) => {
   try {
@@ -13,11 +14,17 @@ const registerDeal = async (req, res) => {
       teamId,
     } = req.body;
 
-    // 로그인한 사용자 ID인데 그 Auth middleware가 req.user에 정보를 담아준다고 가정
-    const userId = req.user ? req.user.userId : null;
+    const userId = req.user.userId;
 
-    if (!userId) {
-      return res.status(401).json({ message: "로그인 필요" });
+    const team = await Team.findOne({
+      _id: teamId,
+      "members.user": userId,
+    });
+
+    if (!team) {
+      return res
+        .status(403)
+        .json({ message: "해당 팀에 접근 권한이 없습니다." });
     }
 
     const newDeal = await dealService.createDeal({
@@ -41,10 +48,23 @@ const registerDeal = async (req, res) => {
 const getDealDetail = async (req, res) => {
   try {
     const { dealId } = req.params;
+    const userId = req.user.userId;
+
     const deal = await dealService.getDealDetail(dealId);
 
     if (!deal) {
       return res.status(404).json({ message: "영수증을 찾을 수 없습니다." });
+    }
+
+    const team = await Team.findOne({
+      _id: deal.teamId,
+      "members.user": userId,
+    });
+
+    if (!team) {
+      return res
+        .status(403)
+        .json({ message: "해당 팀에 접근 권한이 없습니다." });
     }
 
     return res.status(200).json({ data: deal });
@@ -56,18 +76,27 @@ const getDealDetail = async (req, res) => {
 
 const getMonthlyDeals = async (req, res) => {
   try {
-    const { year, month } = req.query; // 대충 뭐 GET /deal/monthly?year=2024&month=1 이런식?
-    const userId = req.user ? req.user.userId : null;
+    const { year, month, teamId } = req.query;
+    const userId = req.user.userId;
 
-    if (!userId) {
-      return res.status(401).json({ message: "로그인이 필요합니다." });
+    if (!year || !month || !teamId) {
+      return res
+        .status(400)
+        .json({ message: "teamId, 연도, 월을 입력해주세요." });
     }
 
-    if (!year || !month) {
-      return res.status(400).json({ message: "연도와 월을 입력해주세요." });
+    const team = await Team.findOne({
+      _id: teamId,
+      "members.user": userId,
+    });
+
+    if (!team) {
+      return res
+        .status(403)
+        .json({ message: "해당 팀에 접근 권한이 없습니다." });
     }
 
-    const deals = await dealService.getMonthlyDeals(userId, year, month);
+    const deals = await dealService.getMonthlyDeals(teamId, year, month);
     return res.status(200).json({ data: deals });
   } catch (error) {
     console.error(error);
@@ -79,13 +108,23 @@ const updateDeal = async (req, res) => {
   try {
     const { dealId } = req.params;
     const updateData = req.body;
+    const userId = req.user.userId;
 
     const deal = await dealService.getDealDetail(dealId);
     if (!deal) {
       return res.status(404).json({ message: "영수증을 찾을 수 없습니다." });
     }
 
-    // 권한 관련 검사 필요할듯(teamId 이용해서 해당 팀 멤버인지 등)?
+    const team = await Team.findOne({
+      _id: deal.teamId,
+      "members.user": userId,
+    });
+
+    if (!team) {
+      return res
+        .status(403)
+        .json({ message: "해당 팀에 접근 권한이 없습니다." });
+    }
 
     const updatedDeal = await dealService.updateDeal(dealId, updateData);
     return res.status(200).json({ message: "수정 성공", data: updatedDeal });
@@ -98,13 +137,23 @@ const updateDeal = async (req, res) => {
 const deleteDeal = async (req, res) => {
   try {
     const { dealId } = req.params;
+    const userId = req.user.userId;
 
     const deal = await dealService.getDealDetail(dealId);
     if (!deal) {
       return res.status(404).json({ message: "영수증을 찾을 수 없습니다." });
     }
 
-    // 권한 관련 검사 필요할듯(teamId 이용해서 해당 팀 멤버인지 등)?
+    const team = await Team.findOne({
+      _id: deal.teamId,
+      "members.user": userId,
+    });
+
+    if (!team) {
+      return res
+        .status(403)
+        .json({ message: "해당 팀에 접근 권한이 없습니다." });
+    }
 
     await dealService.deleteDeal(dealId);
     return res.status(200).json({ message: "삭제 성공" });

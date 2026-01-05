@@ -21,14 +21,14 @@ const getDealDetail = async (dealId) => {
   }
 };
 
-// // 영수증 월별조회 GET /deal/monthly?year=&month=
-const getMonthlyDeals = async (userId, year, month) => {
+// 영수증 월별조회 GET /deal/monthly?year=&month=&teamId=
+const getMonthlyDeals = async (teamId, year, month) => {
   try {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 1);
 
     const deals = await Deal.find({
-      u_id: userId, // 이거 일단 userId로 했는데 teamId로 바꿔야 됨(영수증쪽에서 userId가 굳이 필요한가...?)
+      teamId: teamId,
       date: {
         $gte: startDate,
         $lt: endDate,
