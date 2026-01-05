@@ -1,12 +1,10 @@
-"use client";
-
 import * as React from "react";
-import * as PaginationPrimitive from "@radix-ui/react-pagination@1.1.2";
+import * as PaginationPrimitive from "@radix-ui/react-pagination\";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   MoreHorizontalIcon,
-} from "lucide-react@0.487.0";
+} from "lucide-react\";
 
 import { buttonVariants } from "./button";
 import { cn } from "./utils";
