@@ -132,7 +132,7 @@ function extractReceiptData(receiptResult, fullText) {
     price = parsePrice(receipt.totalPrice.price.text);
   }
 
-  if (price < 100 && fullText) {
+  if (price === 0 && fullText) {
     const flatText = fullText.replace(/\n/g, " ").replace(/\s+/g, " ");
     const cleanText = flatText.replace(
       /(?:취소|요청|선승인)[^0-9]*[0-9,]+\s*원[^0-9]*/gi,
@@ -148,13 +148,13 @@ function extractReceiptData(receiptResult, fullText) {
       const matches = [...cleanText.matchAll(pattern)];
       for (const match of matches) {
         const extracted = parsePrice(match[1]);
-        if (extracted >= 100 && extracted < 10000000 && price < 100) {
+        if (extracted >= 100 && extracted < 10000000 && price === 0) {
           price = extracted;
         }
       }
     }
 
-    if (price < 100) {
+    if (price === 0) {
       const keywordPatterns = [
         /(?:금액|요금)[:\s]*([0-9,]+)\s*원/gi,
         /총\s*액[:\s]*([0-9,]+)/gi,
@@ -171,7 +171,7 @@ function extractReceiptData(receiptResult, fullText) {
       }
     }
 
-    if (price < 100) {
+    if (price === 0) {
       const amountPattern = /([0-9,]+)\s*원/g;
       const matches = [...cleanText.matchAll(amountPattern)];
       for (const match of matches) {
@@ -188,14 +188,12 @@ function extractReceiptData(receiptResult, fullText) {
 
   if (receipt.paymentInfo?.date?.formatted) {
     const { year, month, day } = receipt.paymentInfo.date.formatted;
-    if (year && year.length >= 2) {
-      rawDate = `${year}-${month}-${day}`;
-    }
+    rawDate = `${year}-${month}-${day}`;
   } else if (receipt.paymentInfo?.date?.text) {
     rawDate = receipt.paymentInfo.date.text;
   }
 
-  if ((!rawDate || rawDate.startsWith("-")) && fullText) {
+  if (!rawDate && fullText) {
     const datePatterns = [
       /(?:거\s*래\s*일\s*시|날\s*짜|일\s*시)[:\s]*([\d]{2,4}[-./][\d]{1,2}[-./][\d]{1,2})/,
       /(\d{4}[-./]\d{1,2}[-./]\d{1,2})/,
@@ -214,15 +212,12 @@ function extractReceiptData(receiptResult, fullText) {
   const standardizedDate = normalizeDate(rawDate);
   if (standardizedDate) date = standardizedDate;
 
-  // 사업자번호 정규화 (숫자만)
-  const rawBizNum = receipt.storeInfo?.bizNum?.text || "";
-  const normalizedBizNum = rawBizNum.replace(/[^0-9]/g, "") || "N/A";
-
   return {
+    파일명: image.name || "N/A",
     상호명: receipt.storeInfo?.name?.text || "N/A",
     구분: "지출",
-    사업자번호: normalizedBizNum,
-    상품가격: price > 0 ? price : "N/A",
+    사업자번호: receipt.storeInfo?.bizNum?.text || "N/A",
+    상품가격: price > 0 ? price.toLocaleString() : "N/A",
     날짜: date,
   };
 }
@@ -231,7 +226,7 @@ async function main() {
   const staticFolder = path.join(__dirname, "static");
   const results = [];
 
-  const testFiles = [1, 20];
+  const testFiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
   for (let idx = 0; idx < testFiles.length; idx++) {
     const i = testFiles[idx];
     const imagePath = path.join(staticFolder, `${i}.jpg`);
@@ -247,7 +242,7 @@ async function main() {
     if (receiptResult) {
       const extractedData = extractReceiptData(receiptResult, fullText);
       results.push({
-        번호: results.length + 1,
+        파일명: `${i}.jpg`,
         ...extractedData,
       });
     }
@@ -255,14 +250,7 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
-  console.table(results, [
-    "번호",
-    "상호명",
-    "구분",
-    "사업자번호",
-    "상품가격",
-    "날짜",
-  ]);
+  console.table(results);
 }
 
 main().catch(console.error);
