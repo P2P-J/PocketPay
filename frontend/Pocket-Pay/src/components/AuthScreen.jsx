@@ -5,11 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "../store/authStore";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
+// const API_BASE_URL = ...; // Removed
 
 export function AuthScreen({ onClose }) {
-  const [mode, setMode] = React.useState("select"); 
+  const [mode, setMode] = React.useState("select");
 
   const handleBackToSelect = () => setMode("select");
 
@@ -43,17 +42,11 @@ export function AuthScreen({ onClose }) {
         )}
 
         {mode === "login" && (
-          <LoginForm
-            onBack={handleBackToSelect}
-            onClose={onClose}
-          />
+          <LoginForm onBack={handleBackToSelect} onClose={onClose} />
         )}
 
         {mode === "signup" && (
-          <SignupForm
-            onBack={handleBackToSelect}
-            onClose={onClose}
-          />
+          <SignupForm onBack={handleBackToSelect} onClose={onClose} />
         )}
       </div>
     </div>
@@ -71,18 +64,10 @@ function SelectAuthMode({ onSelectLogin, onSelectSignup }) {
       </p>
 
       <div className="space-y-3">
-        <Button
-          variant="default"
-          className="w-full"
-          onClick={onSelectLogin}
-        >
+        <Button variant="default" className="w-full" onClick={onSelectLogin}>
           로그인
         </Button>
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={onSelectSignup}
-        >
+        <Button variant="outline" className="w-full" onClick={onSelectSignup}>
           회원가입
         </Button>
       </div>
@@ -94,8 +79,7 @@ function SelectAuthMode({ onSelectLogin, onSelectSignup }) {
  * 로그인 폼
  */
 function LoginForm({ onBack, onClose }) {
-  const loginStore = useAuthStore((state) => state.login);
-
+  const { login } = useAuthStore();
   const [form, setForm] = React.useState({
     email: "",
     password: "",
@@ -114,28 +98,7 @@ function LoginForm({ onBack, onClose }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/login/local`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "로그인에 실패했습니다.");
-      }
-
-      const data = await res.json();
-      const { id, email, name, provider, token } = data;
-
-      loginStore(
-        { id, email, name, provider },
-        token
-      );
-
+      await login(form.email, form.password);
       onClose?.();
     } catch (err) {
       setError(err.message || "로그인 중 오류가 발생했습니다.");
@@ -180,9 +143,7 @@ function LoginForm({ onBack, onClose }) {
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "로그인 중..." : "로그인"}
@@ -195,8 +156,7 @@ function LoginForm({ onBack, onClose }) {
  * 회원가입 폼
  */
 function SignupForm({ onBack, onClose }) {
-  const loginStore = useAuthStore((state) => state.login);
-
+  const { signup, login } = useAuthStore();
   const [form, setForm] = React.useState({
     name: "",
     email: "",
@@ -223,29 +183,11 @@ function SignupForm({ onBack, onClose }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/signup/local`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-          name: form.name,
-        }),
-      });
+      // Signup calling store
+      await signup(form.name, form.email, form.password);
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "회원가입에 실패했습니다.");
-      }
-
-      const data = await res.json();
-      const { id, email, name, provider, token } = data;
-
-      // 회원가입 성공했으면 바로 로그인 상태로 세팅
-      loginStore(
-        { id, email, name, provider },
-        token
-      );
+      // Auto login after signup
+      await login(form.email, form.password);
 
       onClose?.();
     } catch (err) {
@@ -317,9 +259,7 @@ function SignupForm({ onBack, onClose }) {
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-500">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "회원가입 중..." : "회원가입"}

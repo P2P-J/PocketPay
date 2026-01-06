@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { formatCurrency } from "../utils/format";
+import { getCategoryLabel } from "../utils/constants";
 import { useEffect, useState } from "react";
 // import { localStorageUtil } from "../utils/localStorage"; // Removed
 import { CreateTeamModal } from "../components/modals/createTeamModal";
@@ -52,7 +53,7 @@ export function LandingPage({ onEnterApp }) {
   const currentYear = new Date().getFullYear();
 
   const thisMonthTransactions = transactions.filter((t) => {
-    const date = new Date(t.transaction_date);
+    const date = new Date(t.date);
     return (
       date.getMonth() === currentMonth && date.getFullYear() === currentYear
     );
@@ -69,11 +70,7 @@ export function LandingPage({ onEnterApp }) {
   const balance = totalIncome - totalExpense;
 
   const recentTransactions = [...transactions]
-    .sort(
-      (a, b) =>
-        new Date(b.transaction_date).getTime() -
-        new Date(a.transaction_date).getTime()
-    )
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
   const handleEnterTeam = () => {
@@ -265,10 +262,10 @@ export function LandingPage({ onEnterApp }) {
                                 {transaction.store_name || "거래처 없음"}
                               </div>
                               <div className="text-sm text-muted-foreground">
-                                {new Date(
-                                  transaction.transaction_date
-                                ).toLocaleDateString("ko-KR")}{" "}
-                                · {transaction.category?.name || "미분류"}
+                                {new Date(transaction.date).toLocaleDateString(
+                                  "ko-KR"
+                                )}{" "}
+                                · {getCategoryLabel(transaction.category)}
                               </div>
                             </div>
                           </div>

@@ -186,5 +186,12 @@ export const useTeamStore = create((set, get) => ({
   // Assuming categories are static or handled differently. Previous code had fetchCategories but backend route for categories?
   // I only saw auth, deal, team routes. No category route.
   // So I will use static categories or keep empty for now.
+  // Placeholder for category fetching if backend supports it later
+  fetchCategories: async (token, teamId) => {
+    // Currently no backend endpoint for categories, relying on static defaults in Modals
+    // Or we could move static categories here
+    set({ loading: false });
+  },
+
   categories: [],
 }));

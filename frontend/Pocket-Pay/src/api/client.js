@@ -16,9 +16,11 @@ const getHeaders = () => {
 const handleResponse = async (response) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(
+    const error = new Error(
       errorData.error || errorData.message || "Something went wrong"
     );
+    error.status = response.status;
+    throw error;
   }
   return response.json();
 };

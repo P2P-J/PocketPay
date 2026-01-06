@@ -1,101 +1,86 @@
-// src/store/authStore.js
 import { create } from "zustand";
-
-const STORAGE_USER_KEY = "user";
-const STORAGE_TOKEN_KEY = "accessToken";
+import { authApi } from "../api/auth";
+import { teamApi } from "../api/team";
 
 export const useAuthStore = create((set) => ({
-  // =======================
-  // 상태
-  // =======================
-  user: null,          // { id, email, name, provider }
-  accessToken: null,   // 백엔드에서 받은 JWT 등
+  user: null,
+  accessToken: null,
   loading: false,
 
-  // =======================
-  // 상태 세터 (필요 시 직접 쓸 수 있게 남겨둠)
-  // =======================
-  setUser: (user) => {
-    set({ user });
-    try {
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
-    } catch (error) {
-      console.error("Failed to save user to localStorage:", error);
-    }
-  },
+  setUser: (user) => set({ user }),
+  setAccessToken: (token) => set({ accessToken: token }),
 
-  setAccessToken: (token) => {
-    set({ accessToken: token });
-    try {
-      localStorage.setItem(STORAGE_TOKEN_KEY, token);
-    } catch (error) {
-      console.error("Failed to save token to localStorage:", error);
-    }
-  },
-
-  // =======================
-  // 앱 처음 켰을 때 / 새로고침 후: 로그인 상태 복원
-  // =======================
-  checkAuth: () => {
+  checkAuth: async () => {
     set({ loading: true });
     try {
-      const savedUser = localStorage.getItem(STORAGE_USER_KEY);
-      const savedToken = localStorage.getItem(STORAGE_TOKEN_KEY);
+      const savedUser = localStorage.getItem("user");
+      const savedToken = localStorage.getItem("accessToken");
 
       if (savedUser && savedToken) {
+        // Optimistically set token so API client can use it
+        set({ accessToken: savedToken });
+
+        // Verify token by making a dummy authenticated call (using team list)
+        // If this fails with 401, catch block will run
+        await teamApi.getMyTeams();
+
+        // If successful, set full user state
         set({
           user: JSON.parse(savedUser),
-          accessToken: savedToken,
+          accessToken: savedToken, // Redundant but safe
           loading: false,
         });
       } else {
-        set({
-          user: null,
-          accessToken: null,
-          loading: false,
-        });
+        set({ user: null, accessToken: null, loading: false });
       }
     } catch (error) {
       console.error("Check auth error:", error);
-      set({
-        user: null,
-        accessToken: null,
-        loading: false,
-      });
+      // Only logout if 401 Unauthorized (token invalid/expired)
+      if (error.status === 401) {
+        localStorage.removeItem("user");
+        localStorage.removeItem("accessToken");
+        set({ user: null, accessToken: null, loading: false });
+      } else {
+        // For other errors (network, 500), keep the session but stop loading
+        set({ loading: false });
+      }
     }
   },
 
-  // =======================
-  // 로그아웃
-  // =======================
   logout: () => {
-    try {
-      localStorage.removeItem(STORAGE_USER_KEY);
-      localStorage.removeItem(STORAGE_TOKEN_KEY);
-    } catch (error) {
-      console.error("Logout localStorage clear error:", error);
-    }
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
     set({ user: null, accessToken: null });
   },
 
-  // =======================
-  // 로그인 성공 처리 (AuthScreen에서 호출)
-  // =======================
-  // AuthScreen에서:
-  //   const loginStore = useAuthStore((state) => state.login);
-  //   loginStore({ id, email, name, provider }, token);
-  login: (user, token) => {
-    set({
-      user,
-      accessToken: token,
-      loading: false,
-    });
-
+  login: async (email, password) => {
+    set({ loading: true });
     try {
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
-      localStorage.setItem(STORAGE_TOKEN_KEY, token);
+      const response = await authApi.login({ email, password });
+      const { token, ...user } = response;
+
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("accessToken", token);
+
+      set({ user, accessToken: token, loading: false });
+      return true;
     } catch (error) {
-      console.error("Login persist error:", error);
+      console.error("Login error:", error);
+      set({ loading: false });
+      throw error;
+    }
+  },
+
+  signup: async (name, email, password) => {
+    set({ loading: true });
+    try {
+      await authApi.signup({ name, email, password });
+      set({ loading: false });
+      return true;
+    } catch (error) {
+      console.error("Signup error:", error);
+      set({ loading: false });
+      throw error;
     }
   },
 }));
