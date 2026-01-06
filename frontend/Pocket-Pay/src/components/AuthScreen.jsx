@@ -9,7 +9,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
 export function AuthScreen({ onClose }) {
-  const [mode, setMode] = React.useState("select"); // 'select' | 'login' | 'signup'
+  const [mode, setMode] = React.useState("select"); 
 
   const handleBackToSelect = () => setMode("select");
 
