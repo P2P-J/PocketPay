@@ -14,7 +14,7 @@ export function CreateTeamModal({ onClose }) {
 
     setIsLoading(true);
     try {
-      await createTeam(null, teamName, description);
+      await createTeam(teamName, description);
       onClose();
     } catch (error) {
       console.error("Failed to create team:", error);

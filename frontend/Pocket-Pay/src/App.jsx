@@ -20,15 +20,16 @@ export default function App() {
 
   useEffect(() => {
     if (accessToken) {
-      fetchTeams(accessToken);
+      fetchTeams();
     }
   }, [accessToken]);
 
-  useEffect(() => {
-    if (accessToken && currentTeam) {
-      fetchCategories(accessToken, currentTeam.id);
-    }
-  }, [accessToken, currentTeam]);
+  // Categories are not fetched from backend - removed unnecessary effect
+  // useEffect(() => {
+  //   if (accessToken && currentTeam) {
+  //     fetchCategories(accessToken, currentTeam.id);
+  //   }
+  // }, [accessToken, currentTeam]);
 
   if (loading) {
     return (
