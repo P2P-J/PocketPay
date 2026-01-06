@@ -33,7 +33,7 @@ export function LandingPage({ onEnterApp }) {
 
   useEffect(() => {
     if (teams.length > 0 && !selectedTeamId) {
-      setSelectedTeamId(teams[0].id);
+      setSelectedTeamId(teams[0]._id);
     }
   }, [teams, selectedTeamId]);
 
@@ -45,7 +45,7 @@ export function LandingPage({ onEnterApp }) {
     }
   }, [selectedTeamId]);
 
-  const selectedTeam = teams.find((t) => t.id === selectedTeamId);
+  const selectedTeam = teams.find((t) => t._id === selectedTeamId);
 
   // 선택된 팀의 거래 내역 계산
   const transactions = storeTransactions;
@@ -61,11 +61,11 @@ export function LandingPage({ onEnterApp }) {
 
   const totalIncome = thisMonthTransactions
     .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + t.price, 0);
+    .reduce((sum, t) => sum + t.amount, 0);
 
   const totalExpense = thisMonthTransactions
     .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + t.price, 0);
+    .reduce((sum, t) => sum + t.amount, 0);
 
   const balance = totalIncome - totalExpense;
 
@@ -75,7 +75,7 @@ export function LandingPage({ onEnterApp }) {
 
   const handleEnterTeam = () => {
     if (selectedTeam) {
-      setCurrentTeam(selectedTeam.id);
+      setCurrentTeam(selectedTeam._id);
     }
     onEnterApp();
   };
@@ -255,11 +255,11 @@ export function LandingPage({ onEnterApp }) {
                                   : "bg-red-100 text-red-600"
                               }`}
                             >
-                              {transaction.store_name?.[0] || "?"}
+                              {transaction.merchant?.[0] || "?"}
                             </div>
                             <div>
                               <div className="font-medium">
-                                {transaction.store_name || "거래처 없음"}
+                                {transaction.merchant || "거래처 없음"}
                               </div>
                               <div className="text-sm text-muted-foreground">
                                 {new Date(transaction.date).toLocaleDateString(
@@ -277,7 +277,7 @@ export function LandingPage({ onEnterApp }) {
                             }`}
                           >
                             {transaction.type === "income" ? "+" : "-"}
-                            {formatCurrency(transaction.price)}
+                            {formatCurrency(transaction.amount)}
                           </div>
                         </div>
                       ))}
