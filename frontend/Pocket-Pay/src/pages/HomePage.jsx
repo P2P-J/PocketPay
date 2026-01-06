@@ -11,23 +11,24 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../utils/format";
 import { useEffect, useState } from "react";
-import { localStorageUtil } from "../utils/localStorage";
+// import { localStorageUtil } from "../utils/localStorage"; // Removed
 import { CreateTeamModal } from "../components/modals/createTeamModal";
 import { TeamSidebar } from "../components/TeamSidebar";
 import { NavigationBar } from "../components/NavigationBar";
 import { AuthScreen } from "../components/AuthScreen";
 
 export function LandingPage({ onEnterApp }) {
-  const { teams, setCurrentTeam, loadLocalTeams } = useTeamStore();
+  const {
+    teams,
+    setCurrentTeam,
+    fetchTransactions,
+    transactions: storeTransactions,
+  } = useTeamStore();
   const { user, logout } = useAuthStore();
   const [selectedTeamId, setSelectedTeamId] = useState(null);
-  const [selectedTeamTransactions, setSelectedTeamTransactions] = useState([]);
+  // const [selectedTeamTransactions, setSelectedTeamTransactions] = useState([]); // Use storeTransactions instead
   const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-
-  useEffect(() => {
-    loadLocalTeams();
-  }, []);
 
   useEffect(() => {
     if (teams.length > 0 && !selectedTeamId) {
@@ -38,16 +39,15 @@ export function LandingPage({ onEnterApp }) {
   // 선택된 팀이 바뀔 때마다 해당 팀의 거래 내역 로드
   useEffect(() => {
     if (selectedTeamId) {
-      const transactions =
-        localStorageUtil.get(`transactions-${selectedTeamId}`) || [];
-      setSelectedTeamTransactions(transactions);
+      // API call to fetch transactions
+      fetchTransactions(selectedTeamId);
     }
   }, [selectedTeamId]);
 
   const selectedTeam = teams.find((t) => t.id === selectedTeamId);
 
   // 선택된 팀의 거래 내역 계산
-  const transactions = selectedTeamTransactions;
+  const transactions = storeTransactions;
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
 

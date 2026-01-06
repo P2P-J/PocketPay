@@ -9,17 +9,13 @@ import { Toaster } from "./components/ui/sonner";
 
 export default function App() {
   const { user, accessToken, loading, checkAuth } = useAuthStore();
-  const { currentTeam, loadLocalTeams, fetchTeams, fetchCategories } =
-    useTeamStore();
+  const { currentTeam, fetchTeams, fetchCategories } = useTeamStore();
   const [currentScreen, setCurrentScreen] = useState("homepage");
   const [showAuth, setShowAuth] = useState(false);
   const [showCreateTeam, setShowCreateTeam] = useState(false);
 
   useEffect(() => {
     checkAuth();
-
-    // 로컬 팀 로드
-    loadLocalTeams();
   }, []);
 
   useEffect(() => {
