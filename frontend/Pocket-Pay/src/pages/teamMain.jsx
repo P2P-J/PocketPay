@@ -4,7 +4,7 @@ import "./teamMain.css";
 import { CreateTransactionModal } from "../components/modals/createTransactionModal";
 import { CreateTeamModal } from "../components/modals/createTeamModal";
 import { useTeamStore } from "../store/teamStore";
-import { localStorageUtil } from "../utils/localStorage";
+// import { localStorageUtil } from "../utils/localStorage"; // Removed
 import { TeamSidebar } from "../components/TeamSidebar";
 import { NavigationBar } from "../components/NavigationBar";
 import { AddTransactionScreen } from "../components/AddTransactionScreen";
@@ -82,8 +82,17 @@ const INITIAL_FORM = {
 };
 
 export default function TeamMain({ onBack }) {
-  const { currentTeam, setCurrentTeam, teams } = useTeamStore();
-  const [transactions, setTransactions] = useState([]);
+  const {
+    currentTeam,
+    setCurrentTeam,
+    teams,
+    transactions,
+    fetchTransactions,
+    createTransaction,
+    updateTransaction,
+    deleteTransaction,
+  } = useTeamStore();
+  // const [transactions, setTransactions] = useState([]); // Removed local state
   const [showModal, setShowModal] = useState(false);
   const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -99,54 +108,15 @@ export default function TeamMain({ onBack }) {
   // =====================
   // 거래 내역 로드
   // =====================
+  // =====================
+  // 거래 내역 로드 (API)
+  // =====================
   useEffect(() => {
     if (!currentTeam) return;
-
-    const savedTransactions =
-      localStorageUtil.get(`transactions-${currentTeam.id}`) || [];
-
-    const convertedTransactions = savedTransactions.map((tx, index) => {
-      const rawDate = tx.transaction_date ?? tx.date;
-
-      return {
-        id: tx.id ?? Date.now() + index,
-        merchant: tx.store_name || "",
-        type: tx.type,
-        description: tx.description || "-",
-        category: tx.category_id || "-",
-        amount: Number(tx.price) || 0,
-
-        date: normalizeDateString(rawDate),
-      };
-    });
-
-    setTransactions(convertedTransactions);
+    fetchTransactions(currentTeam.id);
   }, [currentTeam]);
 
-  // =====================
-  // 거래 내역 저장
-  // =====================
-  useEffect(() => {
-    if (!currentTeam || transactions.length < 0) return;
-
-    const convertedTransactions = transactions.map((tx) => ({
-      id: tx.id,
-      store_name: tx.merchant,
-      type: tx.type,
-      description: tx.description === "-" ? "" : tx.description,
-      category_id: tx.category === "-" ? "" : tx.category,
-      price: tx.amount,
-
-      transaction_date: tx.date,
-      team_id: currentTeam.id,
-      created_at: new Date().toISOString(),
-    }));
-
-    localStorageUtil.set(
-      `transactions-${currentTeam.id}`,
-      convertedTransactions
-    );
-  }, [transactions, currentTeam]);
+  // Removed local storage effects
 
   const hasTransactions = transactions.length > 0;
 
@@ -247,32 +217,33 @@ export default function TeamMain({ onBack }) {
       description: form.description.trim() || "-",
       category: form.category.trim() || "-",
       amount: amountNum,
-
       date: normalizeDateString(form.date),
     };
 
     if (editingId) {
       // 수정 모드
-      setTransactions((prev) =>
-        prev.map((t) => (t.id === editingId ? { ...t, ...baseTx } : t))
-      );
+      updateTransaction(editingId, baseTx)
+        .then(() => {
+          setShowModal(false);
+          setEditingId(null);
+          setForm(INITIAL_FORM);
+        })
+        .catch(alert);
     } else {
       // 추가 모드
-      const newTx = {
-        id: Date.now(),
-        ...baseTx,
-      };
-      setTransactions((prev) => [...prev, newTx]);
+      createTransaction(baseTx)
+        .then(() => {
+          setShowModal(false);
+          setEditingId(null);
+          setForm(INITIAL_FORM);
+        })
+        .catch(alert);
     }
-
-    setShowModal(false);
-    setEditingId(null);
-    setForm(INITIAL_FORM);
   };
 
   const handleDelete = (id) => {
     if (!window.confirm("이 거래를 삭제할까요?")) return;
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
+    deleteTransaction(id).catch(alert);
   };
 
   return (
@@ -464,7 +435,7 @@ function TransactionTable({ transactions, onDelete, onEdit }) {
                 {t.type === TRANSACTION_TYPE.EXPENSE ? "-" : "+"}
                 {t.amount.toLocaleString()}원
               </td>
-              <td>{t.date}</td>
+              <td>{formatDateLocal(new Date(t.date))}</td>
               <td className="tm-td-center">
                 <button
                   type="button"

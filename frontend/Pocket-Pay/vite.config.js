@@ -15,7 +15,13 @@ export default defineConfig({
     outDir: "build",
   },
   server: {
-    port: 3000,
+    port: 5173,
     open: true,
+    proxy: {
+      "/auth": "http://localhost:3000",
+      "/deal": "http://localhost:3000",
+      "/team": "http://localhost:3000",
+      "/ocr": "http://localhost:3000",
+    },
   },
 });

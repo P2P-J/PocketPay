@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { authApi } from "../api/auth";
 
 export const useAuthStore = create((set) => ({
   user: null,
@@ -39,11 +40,31 @@ export const useAuthStore = create((set) => ({
   login: async (email, password) => {
     set({ loading: true });
     try {
-      // 로그인 로직 구현
-      set({ loading: false });
+      const response = await authApi.login({ email, password });
+      const { token, ...user } = response;
+
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("accessToken", token);
+
+      set({ user, accessToken: token, loading: false });
+      return true;
     } catch (error) {
       console.error("Login error:", error);
       set({ loading: false });
+      throw error;
+    }
+  },
+
+  signup: async (name, email, password) => {
+    set({ loading: true });
+    try {
+      await authApi.signup({ name, email, password });
+      set({ loading: false });
+      return true;
+    } catch (error) {
+      console.error("Signup error:", error);
+      set({ loading: false });
+      throw error;
     }
   },
 }));
