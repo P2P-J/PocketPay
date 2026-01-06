@@ -46,10 +46,10 @@ export function TeamSidebar({ selectedTeamId, onTeamSelect, onCreateTeam }) {
         <div className="space-y-2">
           {teams.map((team) => (
             <button
-              key={team.id}
-              onClick={() => onTeamSelect(team.id)}
+              key={team._id || team.id}
+              onClick={() => onTeamSelect(team._id || team.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
-                selectedTeamId === team.id
+                selectedTeamId === (team._id || team.id)
                   ? "bg-primary/10 border-2 border-primary"
                   : "hover:bg-muted"
               }`}

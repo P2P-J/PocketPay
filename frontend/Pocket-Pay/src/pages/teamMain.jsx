@@ -89,7 +89,7 @@ export default function TeamMain({ onBack }) {
   // =====================
   useEffect(() => {
     if (!currentTeam) return;
-    fetchTransactions(currentTeam.id);
+    fetchTransactions(currentTeam._id || currentTeam.id);
   }, [currentTeam]);
 
   // Removed local storage effects
@@ -226,7 +226,7 @@ export default function TeamMain({ onBack }) {
     <div className="flex h-screen bg-background">
       {/* Left Sidebar */}
       <TeamSidebar
-        selectedTeamId={currentTeam?.id}
+        selectedTeamId={currentTeam?._id || currentTeam?.id}
         onTeamSelect={handleTeamSelect}
         onCreateTeam={() => setShowCreateTeamModal(true)}
       />
