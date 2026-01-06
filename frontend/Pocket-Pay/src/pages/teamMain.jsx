@@ -12,35 +12,11 @@ import { MonthlyContent } from "../components/MonthlyContent";
 import { ReportContent } from "../components/ReportContent";
 import { SettingsContent } from "../components/SettingsContent";
 import { AuthScreen } from "../components/AuthScreen";
-
-const TRANSACTION_TYPE = {
-  INCOME: "income",
-  EXPENSE: "expense",
-};
-
-const CATEGORY_LABELS = {
-  meal: "식비",
-  transport: "교통비",
-  traffic: "교통비",
-  supplies: "비품",
-  item: "비품",
-  rent: "장소대관",
-  place: "장소대관",
-  etc: "기타",
-
-  membership: "회비",
-  donation: "후원금",
-  sponsor: "후원금",
-  event: "행사수입",
-
-  "etc-income": "기타수입",
-  otherIncome: "기타수입",
-};
-
-const getCategoryLabel = (value) => {
-  if (!value || value === "-") return "-";
-  return CATEGORY_LABELS[value] || value;
-};
+import {
+  TRANSACTION_TYPE,
+  CATEGORY_LABELS,
+  getCategoryLabel,
+} from "../utils/constants";
 
 const formatDateLocal = (date) => {
   const y = date.getFullYear();
