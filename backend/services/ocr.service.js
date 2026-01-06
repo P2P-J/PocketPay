@@ -4,98 +4,48 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-const RECEIPT_API_URL = process.env.APIGW_URL;
-const RECEIPT_SECRET_KEY = process.env.SECRET_KEY;
+const RECEIPT_API_URL = process.env.DOCUMENT_APIGW_URL;
+const RECEIPT_SECRET_KEY = process.env.DOCUMENT_SECRET_KEY;
 const GENERAL_API_URL = process.env.GENERAL_APIGW_URL;
 const GENERAL_SECRET_KEY = process.env.GENERAL_SECRET_KEY;
 
-async function processReceipt(imagePath) {
+// 1. 공통 API 호출 함수
+async function callClovaAPI(url, secretKey, requestIdPrefix, imagePath) {
   try {
     const formData = new FormData();
     formData.append("file", fs.createReadStream(imagePath));
 
     const message = {
       version: "V2",
-      requestId: "receipt-" + Date.now(),
+      requestId: requestIdPrefix + Date.now(),
       timestamp: Date.now(),
-      images: [
-        {
-          format: "jpg",
-          name: path.basename(imagePath),
-        },
-      ],
+      images: [{ format: "jpg", name: path.basename(imagePath) }],
     };
 
     formData.append("message", JSON.stringify(message));
 
-    const response = await axios.post(RECEIPT_API_URL, formData, {
+    const response = await axios.post(url, formData, {
       headers: {
         ...formData.getHeaders(),
-        "X-OCR-SECRET": RECEIPT_SECRET_KEY,
+        "X-OCR-SECRET": secretKey,
       },
     });
-
     return response.data;
   } catch (error) {
+    console.error(`OCR API Error (${requestIdPrefix}):`, error.message);
     return null;
   }
 }
 
-async function processGeneralOCR(imagePath) {
-  try {
-    const formData = new FormData();
-    formData.append("file", fs.createReadStream(imagePath));
-
-    const message = {
-      version: "V2",
-      requestId: "general-" + Date.now(),
-      timestamp: Date.now(),
-      images: [
-        {
-          format: "jpg",
-          name: path.basename(imagePath),
-        },
-      ],
-    };
-
-    formData.append("message", JSON.stringify(message));
-
-    const response = await axios.post(GENERAL_API_URL, formData, {
-      headers: {
-        ...formData.getHeaders(),
-        "X-OCR-SECRET": GENERAL_SECRET_KEY,
-      },
-    });
-
-    return response.data;
-  } catch (error) {
-    return null;
-  }
-}
-
+// 2. 텍스트 추출
 function extractFullText(generalResult) {
-  if (
-    !generalResult ||
-    !generalResult.images ||
-    generalResult.images.length === 0
-  ) {
-    return "";
-  }
-
-  const image = generalResult.images[0];
-  if (!image.fields) return "";
-
-  return image.fields.map((field) => field.inferText).join("\n");
+  if (!generalResult?.images?.[0]?.fields) return "";
+  return generalResult.images[0].fields.map((f) => f.inferText).join("\n");
 }
 
+// 3. 데이터 파싱 로직
 function extractReceiptData(receiptResult, fullText) {
-  if (
-    !receiptResult ||
-    !receiptResult.images ||
-    receiptResult.images.length === 0
-  ) {
-    return null;
-  }
+  if (!receiptResult?.images?.[0]?.receipt?.result) return null;
 
   const image = receiptResult.images[0];
   const receipt = image.receipt.result;
@@ -111,28 +61,31 @@ function extractReceiptData(receiptResult, fullText) {
     let cleanStr = dateStr.replace(/\s/g, "");
     let match = cleanStr.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
     if (match) {
-      const month = match[2].padStart(2, "0");
-      const day = match[3].padStart(2, "0");
-      return `${match[1]}-${month}-${day}`;
+      return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(
+        2,
+        "0"
+      )}`;
     }
     match = cleanStr.match(/(\d{2})[-./](\d{1,2})[-./](\d{1,2})/);
     if (match) {
-      const month = match[2].padStart(2, "0");
-      const day = match[3].padStart(2, "0");
-      return `20${match[1]}-${month}-${day}`;
+      return `20${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(
+        2,
+        "0"
+      )}`;
     }
     return null;
   };
 
+  // 가격 1차 추출 (영수증 API 결과)
   let price = 0;
-
   if (receipt.totalPrice?.price?.formatted?.value) {
     price = parsePrice(receipt.totalPrice.price.formatted.value);
   } else if (receipt.totalPrice?.price?.text) {
     price = parsePrice(receipt.totalPrice.price.text);
   }
 
-  if (price === 0 && fullText) {
+  // 가격 보정 로직
+  if (price < 100 && fullText) {
     const flatText = fullText.replace(/\n/g, " ").replace(/\s+/g, " ");
     const cleanText = flatText.replace(
       /(?:취소|요청|선승인)[^0-9]*[0-9,]+\s*원[^0-9]*/gi,
@@ -148,13 +101,13 @@ function extractReceiptData(receiptResult, fullText) {
       const matches = [...cleanText.matchAll(pattern)];
       for (const match of matches) {
         const extracted = parsePrice(match[1]);
-        if (extracted >= 100 && extracted < 10000000 && price === 0) {
+        if (extracted >= 100 && extracted < 10000000 && price < 100) {
           price = extracted;
         }
       }
     }
 
-    if (price === 0) {
+    if (price < 100) {
       const keywordPatterns = [
         /(?:금액|요금)[:\s]*([0-9,]+)\s*원/gi,
         /총\s*액[:\s]*([0-9,]+)/gi,
@@ -171,7 +124,7 @@ function extractReceiptData(receiptResult, fullText) {
       }
     }
 
-    if (price === 0) {
+    if (price < 100) {
       const amountPattern = /([0-9,]+)\s*원/g;
       const matches = [...cleanText.matchAll(amountPattern)];
       for (const match of matches) {
@@ -183,17 +136,17 @@ function extractReceiptData(receiptResult, fullText) {
     }
   }
 
-  let date = "N/A";
+  // 날짜 추출
   let rawDate = "";
-
-  if (receipt.paymentInfo?.date?.formatted) {
+  if (receipt.paymentInfo?.date?.formatted?.year) {
     const { year, month, day } = receipt.paymentInfo.date.formatted;
     rawDate = `${year}-${month}-${day}`;
   } else if (receipt.paymentInfo?.date?.text) {
     rawDate = receipt.paymentInfo.date.text;
   }
 
-  if (!rawDate && fullText) {
+  // 날짜 보정
+  if ((!rawDate || rawDate.startsWith("-")) && fullText) {
     const datePatterns = [
       /(?:거\s*래\s*일\s*시|날\s*짜|일\s*시)[:\s]*([\d]{2,4}[-./][\d]{1,2}[-./][\d]{1,2})/,
       /(\d{4}[-./]\d{1,2}[-./]\d{1,2})/,
@@ -209,48 +162,40 @@ function extractReceiptData(receiptResult, fullText) {
     }
   }
 
-  const standardizedDate = normalizeDate(rawDate);
-  if (standardizedDate) date = standardizedDate;
+  const date = normalizeDate(rawDate);
+  const rawBizNum = receipt.storeInfo?.bizNum?.text || "";
+  const normalizedBizNum = rawBizNum.replace(/[^0-9]/g, "") || "N/A";
 
   return {
-    파일명: image.name || "N/A",
-    상호명: receipt.storeInfo?.name?.text || "N/A",
-    구분: "지출",
-    사업자번호: receipt.storeInfo?.bizNum?.text || "N/A",
-    상품가격: price > 0 ? price.toLocaleString() : "N/A",
-    날짜: date,
+    storeInfo: receipt.storeInfo?.name?.text || "N/A",
+    price: price > 0 ? price : 0,
+    date: date,
+    businessNumber: normalizedBizNum,
   };
 }
 
-async function main() {
-  const staticFolder = path.join(__dirname, "static");
-  const results = [];
+// 4. 외부에서 호출할 메인 함수 Export
+exports.processReceiptImage = async (imagePath) => {
+  // 영수증 Document OCR 우선 호출
+  const receiptResult = await callClovaAPI(
+    RECEIPT_API_URL,
+    RECEIPT_SECRET_KEY,
+    "receipt-",
+    imagePath
+  );
 
-  const testFiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
-  for (let idx = 0; idx < testFiles.length; idx++) {
-    const i = testFiles[idx];
-    const imagePath = path.join(staticFolder, `${i}.jpg`);
+  // 보조용 General OCR 호출
+  const generalResult = await callClovaAPI(
+    GENERAL_API_URL,
+    GENERAL_SECRET_KEY,
+    "general-",
+    imagePath
+  );
+  const fullText = extractFullText(generalResult);
 
-    if (!fs.existsSync(imagePath)) {
-      continue;
-    }
-
-    const receiptResult = await processReceipt(imagePath);
-    const generalResult = await processGeneralOCR(imagePath);
-    const fullText = extractFullText(generalResult);
-
-    if (receiptResult) {
-      const extractedData = extractReceiptData(receiptResult, fullText);
-      results.push({
-        파일명: `${i}.jpg`,
-        ...extractedData,
-      });
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  if (receiptResult) {
+    return extractReceiptData(receiptResult, fullText);
   }
 
-  console.table(results);
-}
-
-main().catch(console.error);
+  throw new Error("영수증 데이터를 인식할 수 없습니다.");
+};

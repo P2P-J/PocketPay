@@ -1,8 +1,8 @@
 const providers = require("./providers");
 const { User } = require("../../models");
-const { issueToken } = require("./auth.common");
+const { issueToken } = require("../../utils/jwt.util")
 
-const oauthLogin = async ({ provider, accessToken }) => {
+const loginOauth = async ({ provider, accessToken }) => {
   const providerFn = providers[provider];
   if (!providerFn) throw new Error("Unsupported provider");
 
@@ -21,4 +21,4 @@ const oauthLogin = async ({ provider, accessToken }) => {
   return { user, token };
 };
 
-module.exports = { oauthLogin };
+module.exports = { loginOauth };
