@@ -213,7 +213,7 @@ function SignupForm({ onBack, onClose }) {
           id="signup-name"
           name="name"
           type="text"
-          placeholder=" "
+          placeholder=" 찬영씨는 코드를 치면 버그가 무릎 꿇는 코드의 왕, 개발의 신이다 "
           value={form.name}
           onChange={handleChange}
           required
@@ -226,7 +226,7 @@ function SignupForm({ onBack, onClose }) {
           id="signup-email"
           name="email"
           type="email"
-          placeholder=""
+          placeholder="컴퓨터도 부팅 전에 묻는다. “찬영님 오늘은 어떤 코드를 돌려볼까요?”"
           value={form.email}
           onChange={handleChange}
           required
@@ -239,7 +239,7 @@ function SignupForm({ onBack, onClose }) {
           id="signup-password"
           name="password"
           type="password"
-          placeholder=""
+          placeholder="세상은 0과 1로 이뤄졌다지만, 그 위에는 찬영씨의 코드가 있다."
           value={form.password}
           onChange={handleChange}
           required
@@ -252,7 +252,7 @@ function SignupForm({ onBack, onClose }) {
           id="signup-password-confirm"
           name="passwordConfirm"
           type="password"
-          placeholder=""
+          placeholder="깃헙이 아니라 찬영 연대기라고 불러야 한다, 이 정도면…"
           value={form.passwordConfirm}
           onChange={handleChange}
           required

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { authApi } from "../api/auth";
-import { teamApi } from "../api/team";
+import { teamApi } from "../api/team"; // Import teamApi for checkAuth logic
 
 export const useAuthStore = create((set) => ({
   user: null,
@@ -42,6 +42,7 @@ export const useAuthStore = create((set) => ({
         set({ user: null, accessToken: null, loading: false });
       } else {
         // For other errors (network, 500), keep the session but stop loading
+        // Optional: show a toast or alert via UI, but here just stop loading
         set({ loading: false });
       }
     }
