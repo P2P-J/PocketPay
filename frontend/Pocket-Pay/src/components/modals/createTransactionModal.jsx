@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -7,11 +7,13 @@ import { Card } from "../ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { useAuthStore } from "../../store/authStore";
 import { useTeamStore } from "../../store/teamStore";
+import { apiClient } from "../../api/client";
 import {
     ArrowLeft,
     Camera,
     Upload,
     Calendar as CalendarIcon,
+    Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -25,12 +27,61 @@ export function CreateTransactionModal({
     const { accessToken } = useAuthStore();
     const { currentTeam, categories, fetchCategories } = useTeamStore();
     const [loading, setLoading] = useState(false);
+    const [ocrLoading, setOcrLoading] = useState(false);
+    const [ocrError, setOcrError] = useState(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         if (accessToken && currentTeam) {
             fetchCategories(accessToken, currentTeam.id);
         }
     }, [accessToken, currentTeam]);
+
+    // 영수증 OCR 처리
+    const handleReceiptUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // 파일 타입 검증
+        if (!file.type.startsWith("image/")) {
+            setOcrError("이미지 파일만 업로드 가능합니다.");
+            return;
+        }
+
+        setOcrLoading(true);
+        setOcrError(null);
+
+        try {
+            const response = await apiClient.uploadFile("/ocr/analyze", file);
+
+            if (response.data) {
+                const { storeInfo, price, date } = response.data;
+
+                // 폼 자동 입력
+                if (storeInfo && storeInfo !== "N/A") {
+                    onChange("merchant", storeInfo);
+                }
+                if (price && price > 0) {
+                    onChange("amount", price.toString());
+                }
+                if (date) {
+                    onChange("date", new Date(date).toISOString());
+                }
+
+                // 영수증은 보통 지출
+                onChange("type", "expense");
+            }
+        } catch (error) {
+            console.error("OCR Error:", error);
+            setOcrError(error.message || "영수증 인식에 실패했습니다.");
+        } finally {
+            setOcrLoading(false);
+            // 파일 input 초기화 (같은 파일 재업로드 가능하도록)
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        }
+    };
 
     const filteredCategories = categories.filter((cat) => cat.type === form.type);
 
@@ -65,15 +116,18 @@ export function CreateTransactionModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex h-screen bg-background">
-            {/* 왼쪽 사이드바 공간 유지 */}
-            <div className="w-64"></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop Overlay */}
+            <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={onClose}
+            />
 
-            {/* 메인 콘텐츠 */}
-            <div className="flex-1 overflow-auto">
-                {/* Header */}
-                <div className="sticky top-0 z-10 bg-background border-b border-border">
-                    <div className="max-w-4xl mx-auto px-6 py-4">
+            {/* Modal Dialog */}
+            <div className="relative w-full max-w-md max-h-[90vh] bg-background rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                {/* Header - Fixed */}
+                <div className="flex-shrink-0 border-b border-border bg-background">
+                    <div className="px-6 py-4">
                         <div className="flex items-center gap-3">
                             <Button
                                 variant="ghost"
@@ -90,7 +144,8 @@ export function CreateTransactionModal({
                     </div>
                 </div>
 
-                <div className="max-w-4xl mx-auto p-6 space-y-6">
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     {/* Receipt Upload - UI Only */}
                     <Card className="p-6 space-y-4">
                         <div className="text-center space-y-3">
@@ -105,10 +160,35 @@ export function CreateTransactionModal({
                                     영수증 사진을 업로드하면 자동으로 정보를 추출합니다
                                 </p>
                             </div>
-                            <Button type="button" variant="outline" className="w-full">
-                                <Upload className="w-4 h-4 mr-2" />
-                                영수증 업로드
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleReceiptUpload}
+                                className="hidden"
+                            />
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={ocrLoading}
+                            >
+                                {ocrLoading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        영수증 분석 중...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        영수증 업로드
+                                    </>
+                                )}
                             </Button>
+
+                            {ocrError && (<p className="text-sm text-destructive">{ocrError}</p>)}
                         </div>
                     </Card>
 
@@ -155,7 +235,9 @@ export function CreateTransactionModal({
                                             onChange("category", "");
                                         }}
                                         className={
-                                            form.type === "expense" ? "font-semibold" : "font-semibold"
+                                            form.type === "expense"
+                                                ? "font-semibold"
+                                                : "font-semibold"
                                         }
                                     >
                                         지출
@@ -185,8 +267,8 @@ export function CreateTransactionModal({
                                             type="button"
                                             onClick={() => onChange("category", category.id)}
                                             className={`p-3 rounded-lg border-2 transition-all ${form.category === category.id
-                                                ? "border-primary bg-primary/5"
-                                                : "border-border hover:border-primary/50"
+                                                    ? "border-primary bg-primary/5"
+                                                    : "border-border hover:border-primary/50"
                                                 }`}
                                         >
                                             <div className="flex flex-col items-center gap-2">

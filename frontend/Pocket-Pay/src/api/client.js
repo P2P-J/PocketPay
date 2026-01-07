@@ -58,4 +58,22 @@ export const apiClient = {
     });
     return handleResponse(response);
   },
+
+  uploadFile: async (endpoint, file, fieldName = "file") => {
+    const formData = new FormData();
+    formData.append(fieldName, file);
+
+    const token = useAuthStore.getState().accessToken;
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+    return handleResponse(response);
+  }
 };
