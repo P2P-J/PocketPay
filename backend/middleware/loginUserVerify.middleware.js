@@ -1,15 +1,30 @@
 const { verifyToken } = require("../utils/jwt.util");
+const { User } = require("../models/index");
 
-const loginUserVerify = (req, res, next) => {
-    const token = req.headers.authorization;
-    const user = verifyToken(token);
+const loginUserVerify = async (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ message: "NO_TOKEN" });
+        }
 
-    if (!user) {
-        return res.status(401).json({ message: "로그인이 필요합니다." });
+        const [type, token] = authHeader.split(" ");
+        if (type !== "Bearer" || !token) {
+            return res.status(401).json({ message: "INVALID_TOKEN_FORMAT" });
+        }
+
+        const decoded = verifyToken(token);
+
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+            return res.status(401).json({ message: "USER_NOT_FOUND" });
+        }
+
+        req.user = user;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: "UNAUTHORIZED" });
     }
-
-    req.user = user;
-    next();
 };
 
 module.exports = {
