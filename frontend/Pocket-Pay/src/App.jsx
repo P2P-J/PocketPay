@@ -6,6 +6,7 @@ import TeamMain from "./pages/teamMain";
 import { AuthScreen } from "./components/AuthScreen";
 import { CreateTeamModal } from "./components/modals/createTeamModal";
 import { Toaster } from "./components/ui/sonner";
+import { authApi } from "./api/auth";
 
 export default function App() {
   const { user, accessToken, loading, checkAuth, loginWithOAuth } = useAuthStore();
@@ -16,24 +17,44 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-
     const token = params.get("token");
-    const email = params.get("email");
-    const name = params.get("name");
-    const provider = params.get("provider");
 
-    if (token && email && loginWithOAuth) {
-      loginWithOAuth(
-        {
-          email,
-          name: name ?? "",
-          provider: provider ?? "oauth",
-        },
-        token
-      );
+    
+    if (!token) return;
 
-      window.history.replaceState(null, "", window.location.pathname);
-    }
+    (async () => {
+      try {
+
+       
+        const res = await fetch("/auth/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`auth/me failed: ${res.status}`);
+        }
+
+        const user = await res.json();
+
+
+     
+        localStorage.setItem("accessToken", token);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        loginWithOAuth(user, token);
+
+
+      } catch (err) {
+        alert("SNS 로그인 처리 중 오류가 발생했습니다.");
+      } finally {
+      
+        window.history.replaceState(null, "", "/");
+      }
+    })();
   }, [loginWithOAuth]);
 
   // ✅ 2. 기존 토큰 유효성 확인
