@@ -8,15 +8,38 @@ import { CreateTeamModal } from "./components/modals/createTeamModal";
 import { Toaster } from "./components/ui/sonner";
 
 export default function App() {
-  const { user, accessToken, loading, checkAuth } = useAuthStore();
+  const { user, accessToken, loading, checkAuth, loginWithOAuth } = useAuthStore();
   const { currentTeam, fetchTeams, fetchCategories } = useTeamStore();
   const [currentScreen, setCurrentScreen] = useState("homepage");
   const [showAuth, setShowAuth] = useState(false);
-  const [showCreateTeam, setShowCreateTeam] = useState(false);
+   const [showCreateTeam, setShowCreateTeam] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    const token = params.get("token");
+    const email = params.get("email");
+    const name = params.get("name");
+    const provider = params.get("provider");
+
+    if (token && email && loginWithOAuth) {
+      loginWithOAuth(
+        {
+          email,
+          name: name ?? "",
+          provider: provider ?? "oauth",
+        },
+        token
+      );
+
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [loginWithOAuth]);
+
+  // ✅ 2. 기존 토큰 유효성 확인
+  useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   useEffect(() => {
     if (accessToken) {
