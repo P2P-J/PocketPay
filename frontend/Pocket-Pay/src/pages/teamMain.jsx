@@ -241,10 +241,10 @@ export default function TeamMain({ onBack }) {
           onBack={onBack}
         />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pt-4">
           {/* Render content based on active tab */}
           {activeTab === "transactions" ? (
-            <div className="tm-inner">
+            <div className="tm-inner px-6 pt-4">
               {/* 상단 요약 카드 영역 */}
               <section className="tm-summary-row">
                 <div className="tm-summary-cards">
