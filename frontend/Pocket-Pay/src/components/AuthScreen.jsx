@@ -5,10 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "../store/authStore";
 
-// const API_BASE_URL = ...; // Removed
-
 export function AuthScreen({ onClose }) {
   const [mode, setMode] = React.useState("select");
+
+  // SNS 로그인 버튼 핸들러
+  const handleGoogleLogin = () => {
+    window.location.href = "/auth/login/oauth/google";
+  };
+
+  const handleNaverLogin = () => {
+    window.location.href = "/auth/login/oauth/naver";
+  };
 
   const handleBackToSelect = () => setMode("select");
 
@@ -38,6 +45,8 @@ export function AuthScreen({ onClose }) {
           <SelectAuthMode
             onSelectLogin={() => setMode("login")}
             onSelectSignup={() => setMode("signup")}
+            onGoogleLogin={handleGoogleLogin}
+            onNaverLogin={handleNaverLogin}
           />
         )}
 
@@ -54,21 +63,67 @@ export function AuthScreen({ onClose }) {
 }
 
 /**
- * 1단계: 로그인 / 회원가입 선택 화면
+ * 1단계: 로그인 / 회원가입 선택 화면 + SNS 버튼
  */
-function SelectAuthMode({ onSelectLogin, onSelectSignup }) {
+function SelectAuthMode({
+  onSelectLogin,
+  onSelectSignup,
+  onGoogleLogin,
+  onNaverLogin,
+}) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         포켓페이 팀 계정에 로그인하거나 회원가입하세요.
       </p>
 
+      {/* 이메일 로그인 / 회원가입 버튼 */}
       <div className="space-y-3">
         <Button variant="default" className="w-full" onClick={onSelectLogin}>
-          로그인
+          이메일로 로그인
         </Button>
         <Button variant="outline" className="w-full" onClick={onSelectSignup}>
-          회원가입
+          이메일로 회원가입
+        </Button>
+      </div>
+
+      {/* 구분선 */}
+      <div className="flex items-center gap-2">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground">
+          또는 SNS 계정으로 계속하기
+        </span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
+      {/* 동그라미 SNS 아이콘 버튼들 */}
+      <div className="flex items-center justify-center gap-4">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="rounded-full w-11 h-11 p-0 bg-white shadow-sm hover:shadow-md"
+          onClick={onGoogleLogin}
+        >
+          <img
+            src="/google-logo.svg"
+            alt="Google"
+            className="w-5 h-5"
+          />
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="rounded-full w-11 h-11 p-0 bg-white shadow-sm hover:shadow-md"
+          onClick={onNaverLogin}
+        >
+          <img
+            src="/naver-logo.svg"
+            alt="Naver"
+            className="w-5 h-5"
+          />
         </Button>
       </div>
     </div>
@@ -101,7 +156,15 @@ function LoginForm({ onBack, onClose }) {
       await login(form.email, form.password);
       onClose?.();
     } catch (err) {
-      setError(err.message || "로그인 중 오류가 발생했습니다.");
+      const message = err?.message;
+
+      if (message === "존재하지 않는 사용자") {
+        alert("가입되지 않은 이메일입니다.");
+      } else if (message === "비밀번호 불일치") {
+        alert("비밀번호가 일치하지 않습니다.");
+      } else {
+        alert(message || "로그인 중 오류가 발생했습니다.");
+      }
     } finally {
       setLoading(false);
     }
@@ -183,12 +246,8 @@ function SignupForm({ onBack, onClose }) {
     setLoading(true);
 
     try {
-      // Signup calling store
       await signup(form.name, form.email, form.password);
-
-      // Auto login after signup
       await login(form.email, form.password);
-
       onClose?.();
     } catch (err) {
       setError(err.message || "회원가입 중 오류가 발생했습니다.");
