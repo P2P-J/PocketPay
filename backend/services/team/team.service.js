@@ -6,12 +6,9 @@ exports.createTeam = async (userId, { name, description }) => {
         name,
         description,
         owner: userId,
-        members: [
-            {
-                user: userId,
-                role: "owner",
-            },
-        ],
+        members: [{
+            user: userId, role: "owner",
+        }],
     });
 
     return team;
@@ -20,7 +17,7 @@ exports.createTeam = async (userId, { name, description }) => {
 // 로그인 유저 팀 목록 조회 GET /team
 exports.getMyTeams = async (userId) => {
     const teams = await Team.find({ "members.user": userId });
-    
+
     return teams;
 };
 
@@ -33,7 +30,7 @@ exports.getTeam = async (teamId, userId) => {
 
     if (!team) {
         throw new Error("팀을 찾을 수 없습니다.");
-    }  
+    }
 
     return team;
 };
@@ -44,7 +41,7 @@ exports.updateTeam = async (teamId, userId, data) => {
         _id: teamId,
         owner: userId,
     });
-    
+
     if (!team) {
         throw new Error("팀 혹은 권한이 없습니다.");
     }
@@ -89,7 +86,7 @@ exports.inviteMember = async (teamId, ownerId, email) => {
 
     const alreadyMember = team.members.some(
         (member) => member.user.toString() === user._id.toString()
-    ); 
+    );
 
     if (alreadyMember) {
         throw new Error("이미 팀원으로 등록된 사용자입니다.");
