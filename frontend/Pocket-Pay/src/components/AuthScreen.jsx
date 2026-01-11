@@ -8,7 +8,6 @@ import { useAuthStore } from "../store/authStore";
 export function AuthScreen({ onClose }) {
   const [mode, setMode] = React.useState("select");
 
-  // SNS 로그인 버튼 핸들러
   const handleGoogleLogin = () => {
     window.location.href = "/auth/login/oauth/google";
   };
@@ -21,7 +20,7 @@ export function AuthScreen({ onClose }) {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      {/* 상단 헤더 영역 */}
+      {/* 헤더 */}
       <div className="flex items-center justify-between border-b px-4 py-3">
         <h2 className="text-lg font-semibold">
           {mode === "login"
@@ -39,7 +38,7 @@ export function AuthScreen({ onClose }) {
         </button>
       </div>
 
-      {/* 본문 영역 */}
+      {/* 본문 */}
       <div className="p-6">
         {mode === "select" && (
           <SelectAuthMode
@@ -62,9 +61,7 @@ export function AuthScreen({ onClose }) {
   );
 }
 
-/**
- * 1단계: 로그인 / 회원가입 선택 화면 + SNS 버튼
- */
+/* 로그인 / 회원가입 선택 + SNS */
 function SelectAuthMode({
   onSelectLogin,
   onSelectSignup,
@@ -77,7 +74,6 @@ function SelectAuthMode({
         포켓페이 팀 계정에 로그인하거나 회원가입하세요.
       </p>
 
-      {/* 이메일 로그인 / 회원가입 버튼 */}
       <div className="space-y-3">
         <Button variant="default" className="w-full" onClick={onSelectLogin}>
           이메일로 로그인
@@ -87,7 +83,6 @@ function SelectAuthMode({
         </Button>
       </div>
 
-      {/* 구분선 */}
       <div className="flex items-center gap-2">
         <div className="h-px flex-1 bg-border" />
         <span className="text-xs text-muted-foreground">
@@ -96,7 +91,6 @@ function SelectAuthMode({
         <div className="h-px flex-1 bg-border" />
       </div>
 
-      {/* 동그라미 SNS 아이콘 버튼들 */}
       <div className="flex items-center justify-center gap-4">
         <Button
           type="button"
@@ -105,11 +99,7 @@ function SelectAuthMode({
           className="rounded-full w-11 h-11 p-0 bg-white shadow-sm hover:shadow-md"
           onClick={onGoogleLogin}
         >
-          <img
-            src="/google-logo.svg"
-            alt="Google"
-            className="w-5 h-5"
-          />
+          <img src="/google-logo.svg" alt="Google" className="w-5 h-5" />
         </Button>
 
         <Button
@@ -119,32 +109,24 @@ function SelectAuthMode({
           className="rounded-full w-11 h-11 p-0 bg-white shadow-sm hover:shadow-md"
           onClick={onNaverLogin}
         >
-          <img
-            src="/naver-logo.svg"
-            alt="Naver"
-            className="w-5 h-5"
-          />
+          <img src="/naver-logo.svg" alt="Naver" className="w-5 h-5" />
         </Button>
       </div>
     </div>
   );
 }
 
-/**
- * 로그인 폼
- */
+/* 로그인 폼 */
 function LoginForm({ onBack, onClose }) {
   const { login } = useAuthStore();
-  const [form, setForm] = React.useState({
-    email: "",
-    password: "",
-  });
+  const [form, setForm] = React.useState({ email: "", password: "" });
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setError(""); // 입력하면 에러 문구 지우기
   };
 
   const handleSubmit = async (e) => {
@@ -154,17 +136,18 @@ function LoginForm({ onBack, onClose }) {
 
     try {
       await login(form.email, form.password);
+      // ✅ 여기까지 왔으면 "성공" → 모달 닫기
       onClose?.();
     } catch (err) {
       const message = err?.message;
-
       if (message === "존재하지 않는 사용자") {
-        alert("가입되지 않은 이메일입니다.");
+        setError("가입되지 않은 이메일입니다.");
       } else if (message === "비밀번호 불일치") {
-        alert("비밀번호가 일치하지 않습니다.");
+        setError("비밀번호가 일치하지 않습니다.");
       } else {
-        alert(message || "로그인 중 오류가 발생했습니다.");
+        setError(message || "로그인 중 오류가 발생했습니다.");
       }
+      // ❌ 실패면 모달 닫지 않음
     } finally {
       setLoading(false);
     }
@@ -204,9 +187,15 @@ function LoginForm({ onBack, onClose }) {
           onChange={handleChange}
           required
         />
+        {error && (
+          <p
+            className="text-xs mt-1"
+            style={{ color: "#ef4444" }}  // 👈 이 줄이 핵심
+          >
+            {error}
+          </p>
+        )}
       </div>
-
-      {error && <p className="text-sm text-red-500">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "로그인 중..." : "로그인"}
@@ -215,9 +204,7 @@ function LoginForm({ onBack, onClose }) {
   );
 }
 
-/**
- * 회원가입 폼
- */
+/* 회원가입 폼 */
 function SignupForm({ onBack, onClose }) {
   const { signup, login } = useAuthStore();
   const [form, setForm] = React.useState({
@@ -232,6 +219,7 @@ function SignupForm({ onBack, onClose }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -316,9 +304,15 @@ function SignupForm({ onBack, onClose }) {
           onChange={handleChange}
           required
         />
+        {error && (
+  <p
+    className="text-xs mt-1"
+    style={{ color: "#ef4444" }}
+  >
+    {error}
+  </p>
+)}
       </div>
-
-      {error && <p className="text-sm text-red-500">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "회원가입 중..." : "회원가입"}
