@@ -96,9 +96,8 @@ export function ProfilePage({ onBack }) {
                                     name="email"
                                     type="email"
                                     value={formData.email}
-                                    onChange={handleInputChange}
-                                    placeholder="변경할 이메일을 입력하세요"
-                                    className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                                    disabled
+                                    className="w-full px-4 py-3 border border-border rounded-lg bg-muted text-muted-foreground cursor-not-allowed opacity-60"
                                 />
                             </div>
 
