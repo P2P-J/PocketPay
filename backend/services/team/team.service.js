@@ -92,7 +92,7 @@ const inviteMember = async (teamId, ownerId, email) => {
     throw AppError.forbidden("팀원 초대 권한이 없습니다.");
   }
 
-  const user = await User.findOne({ email, provider: "local" });
+    const user = await User.findOne({ email, provider: { $in: ["local", "google", "naver"] } });
 
   if (!user) {
     throw AppError.notFound("초대할 사용자를 찾을 수 없습니다.");
