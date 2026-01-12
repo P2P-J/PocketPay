@@ -8,11 +8,9 @@ const app = express();
 connectDB();
 
 app.use(cors({
-  credentials: true,
-  // origin: ['http://localhost:3000', 'http://localhost:5173']
+  origin: ['http://localhost:3000', 'http://localhost:5173']
 }));
 
-app.use(cookieParser());
 app.use(express.json());
 // 라우터 중앙화했으니, 앞으로 API 추가되면 참고해서 구현해야 돼요!
 app.use(require("./routes"));
