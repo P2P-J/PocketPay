@@ -3,6 +3,7 @@ const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
+const AppError = require("../../utils/AppError");
 
 const RECEIPT_API_URL = process.env.DOCUMENT_APIGW_URL;
 const RECEIPT_SECRET_KEY = process.env.DOCUMENT_SECRET_KEY;
@@ -174,8 +175,8 @@ function extractReceiptData(receiptResult, fullText) {
   };
 }
 
-// 4. 외부에서 호출할 메인 함수 Export
-exports.processReceiptImage = async (imagePath) => {
+// 4. 외부에서 호출할 메인 함수
+const processReceiptImage = async (imagePath) => {
   // 영수증 Document OCR 우선 호출
   const receiptResult = await callClovaAPI(
     RECEIPT_API_URL,
@@ -197,5 +198,7 @@ exports.processReceiptImage = async (imagePath) => {
     return extractReceiptData(receiptResult, fullText);
   }
 
-  throw new Error("영수증 데이터를 인식할 수 없습니다.");
+  throw AppError.badRequest("영수증 데이터를 인식할 수 없습니다.");
 };
+
+module.exports = { processReceiptImage };
