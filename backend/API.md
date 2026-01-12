@@ -5,6 +5,84 @@
 
 ---
 
+## Account API
+
+| Method | Endpoint | 설명 | 권한 |
+|--------|----------|------|------|
+| GET | `/account/me` | 내 정보 조회 | 로그인 |
+| DELETE | `/account/me` | 계정 탈퇴 | 로그인 |
+| PUT | `/account/me/changePassword` | 비밀번호 변경(Local 전용) | 로그인 |
+
+### Request Body
+
+**PUT /account/me/changePassword** (비밀번호 변경 - Local 전용)
+```json
+{
+    "currentPassword" : "현재 비밀번호",
+    "newPassword": "변경할 비밀번호"
+}
+```
+
+### Response
+
+**GET /account/me** (내 정보 조회)
+```json
+{
+    "id": "유저 ID",
+    "email": "유저 이메일",
+    "name": "유저 이름",
+    "provider": "유저 계정 종류 - local / google / naver"
+}
+```
+
+---
+
+## Auth API
+
+| Method | Endpoint | 설명 | 권한 |
+|--------|----------|------|------|
+| POST | `/auth/signup/local` | Local 회원가입 | 가입 희망 유저 |
+| POST | `/auth/login/local` | Local 로그인 | 가입된 유저 |
+| GET | `/auth/login/oauth/:provider` | SNS 로그인 | SNS 가입 희망 유저 |
+| GET | `/auth/login/oauth/:provider/callback` | SNS 로그인 콜백 | SNS 가입 유저 |
+
+### Request Body
+
+**POST /auth/signup/local** (Local 회원가입)
+```json
+{
+    "email" : "가입 이메일", 
+    "password" : "가입 비밀번호",
+    "name": "가입 이름"
+}
+```
+
+**POST /auth/login/local** (Local 로그인)
+```json
+{
+    "email" : "로그인 이메일", 
+    "password" : "로그인 비밀번호"
+}
+```
+
+### Response
+
+**POST /auth/login/local** (Local 로그인)
+```json
+{
+    "token": "발급된 JWT 토급 - Local"
+}
+```
+
+**GET /auth/login/oauth/:provider/callback** (SNS 로그인 콜백)
+```json
+{
+    "token": "발급된 JWT 토급 - SNS"
+}
+```
+
+---
+
 ## Teams API
 
 | Method | Endpoint | 설명 | 권한 |
