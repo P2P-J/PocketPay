@@ -20,7 +20,7 @@ const loginUserVerify = async (req, res, next) => {
             return res.status(401).json({ message: "USER_NOT_FOUND" });
         }
 
-        req.user = user;
+        req.user = decoded;
         next();
     } catch (err) {
         return res.status(401).json({ message: "UNAUTHORIZED" });
