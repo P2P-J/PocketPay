@@ -194,4 +194,13 @@ export const useTeamStore = create((set, get) => ({
   },
 
   categories: [],
+
+  reset: () => {
+    set({
+      currentTeam: null,
+      teams: [],
+      transactions: [],
+      loading: false,
+    });
+  },
 }));
