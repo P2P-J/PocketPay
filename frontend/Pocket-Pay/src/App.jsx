@@ -4,6 +4,7 @@ import { useAuthStore } from "./store/authStore";
 import { useTeamStore } from "./store/teamStore";
 import { LandingPage } from "./pages/HomePage";
 import TeamMain from "./pages/teamMain";
+import { ProfilePage } from "./pages/ProfilePage";
 import { LoadingScreen } from "./components/AuthScreen";
 import { Toaster } from "./components/ui/sonner";
 
@@ -77,6 +78,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<LandingPage />} />
         <Route path="/team" element={<TeamMain />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Routes>
       <Toaster />
     </BrowserRouter>

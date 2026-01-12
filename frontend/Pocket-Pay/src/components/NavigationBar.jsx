@@ -1,6 +1,7 @@
 import { Button } from "./ui/button";
 import { useAuthStore } from "../store/authStore";
 import { User, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -16,10 +17,11 @@ export function NavigationBar({
   showTabs = true,
 }) {
   const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
 
-  
+
   const handleProfileClick = () => {
-    
+    navigate("/profile");
     console.log("프로필 클릭");
   };
 
@@ -56,11 +58,10 @@ export function NavigationBar({
                 <button
                   key={tab.id}
                   onClick={() => onTabChange?.(tab.id)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === tab.id
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -84,8 +85,8 @@ export function NavigationBar({
 
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onSelect={handleProfileClick}
-                className="cursor-pointer hover:bg-muted hover:text-foreground">
-                  
+                  className="cursor-pointer hover:bg-muted hover:text-foreground">
+
                   프로필
                 </DropdownMenuItem>
                 <DropdownMenuItem
