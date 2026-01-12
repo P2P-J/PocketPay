@@ -44,7 +44,7 @@ export default function App() {
       } catch (err) {
         alert("SNS 로그인 처리 중 오류가 발생했습니다.");
       } finally {
-        window.history.replaceState(null, "", "/");
+        window.location.replace("/home");
       }
     })();
   }, [loginWithOAuth]);
