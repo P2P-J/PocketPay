@@ -36,13 +36,9 @@ const loginLocalController = async (req, res) => {
             });
         }
 
-        const { user, token } = await loginLocal({ email, password });
+        const { token } = await loginLocal({ email, password });
 
         res.status(200).json({
-            id: user._id.toString(),
-            email: user.email,
-            name: user.name,
-            provider: user.provider,
             token,
         });
     } catch (err) {
@@ -58,29 +54,21 @@ const loginOauthController = async (req, res) => {
         const { code, state } = req.query;
 
         const { token } = await loginOauth(provider, code, state);
-
+        
         res.redirect(
             `${process.env.FRONTEND_URL}/oauth/callback?token=${token}`
         );
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        // 탈퇴 이력 계정이면 rejoin으로 1회 리다이렉트
+        if (err.code === "REJOIN_REQUIRED" && req.params.provider === "google") {
+            return res.redirect("/auth/login/oauth/google?forceConsent=1&state=rejoin");
+        }
+        return res.status(400).json({ message: err.message });
     }
-};
-
-const getMeController = async (req, res) => {
-    const user = req.user;
-
-    res.status(200).json({
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        provider: user.provider,
-    });
 };
 
 module.exports = {
     signupLocalController,
     loginLocalController,
     loginOauthController,
-    getMeController,
 };
