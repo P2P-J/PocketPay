@@ -2,9 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { useAuthStore } from "../store/authStore";
 import { NavigationBar } from "../components/NavigationBar";
+import { useNavigate } from "react-router-dom";
 
 export function ProfilePage({ onBack }) {
     const { user } = useAuthStore();
+    const navigate = useNavigate();
+
+    const handleBack = onBack || (() => navigate(-1));
 
     const [formData, setFormData] = useState({
         name: "",
@@ -52,7 +56,7 @@ export function ProfilePage({ onBack }) {
         <div className="flex flex-col h-screen bg-background">
             <NavigationBar
                 showTabs={false}
-                onBack={onBack}
+                onBack={handleBack}
             />
 
             <div className="flex-1 overflow-y-auto p-6">
