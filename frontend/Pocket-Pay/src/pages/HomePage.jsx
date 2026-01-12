@@ -75,6 +75,16 @@ export function LandingPage() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
+  const handleCreateTeam = () => {
+    if (!user) {
+      // 로그아웃 상태일 땐 로그인/회원가입 모달 띄우기
+      setShowAuthModal(true);
+    } else {
+      // 로그인 되어있는 상태일 땐 팀 생성 모달 띄우기
+      setShowCreateTeamModal(true);
+    }
+  };
+
   const handleEnterTeam = () => {
     if (selectedTeam) {
       setCurrentTeam(selectedTeam._id);
@@ -95,7 +105,7 @@ export function LandingPage() {
       <TeamSidebar
         selectedTeamId={selectedTeamId}
         onTeamSelect={setSelectedTeamId}
-        onCreateTeam={() => setShowCreateTeamModal(true)}
+        onCreateTeam={handleCreateTeam}
       />
 
       {/* Right Content Area */}
@@ -122,7 +132,7 @@ export function LandingPage() {
                   </p>
                 </div>
                 <Button
-                  onClick={() => setShowCreateTeamModal(true)}
+                  onClick={handleCreateTeam}
                   className="mt-4"
                 >
                   시작하기
@@ -251,11 +261,10 @@ export function LandingPage() {
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                                transaction.type === "income"
-                                  ? "bg-blue-100 text-blue-600"
-                                  : "bg-red-100 text-red-600"
-                              }`}
+                              className={`w-12 h-12 rounded-full flex items-center justify-center ${transaction.type === "income"
+                                ? "bg-blue-100 text-blue-600"
+                                : "bg-red-100 text-red-600"
+                                }`}
                             >
                               {transaction.merchant?.[0] || "?"}
                             </div>
@@ -272,11 +281,10 @@ export function LandingPage() {
                             </div>
                           </div>
                           <div
-                            className={`text-lg ${
-                              transaction.type === "income"
-                                ? "text-blue-500"
-                                : "text-red-500"
-                            }`}
+                            className={`text-lg ${transaction.type === "income"
+                              ? "text-blue-500"
+                              : "text-red-500"
+                              }`}
                           >
                             {transaction.type === "income" ? "+" : "-"}
                             {formatCurrency(transaction.amount)}

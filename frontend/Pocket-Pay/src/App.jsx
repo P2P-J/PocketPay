@@ -5,14 +5,50 @@ import { useTeamStore } from "./store/teamStore";
 import { LandingPage } from "./pages/HomePage";
 import TeamMain from "./pages/teamMain";
 import { Toaster } from "./components/ui/sonner";
+import { authApi } from "./api/auth";
 
 export default function App() {
-  const { accessToken, loading, checkAuth } = useAuthStore();
+  const { user, accessToken, loading, checkAuth, loginWithOAuth } =
+    useAuthStore();
   const { fetchTeams } = useTeamStore();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (!token) return;
+
+    (async () => {
+      try {
+        const res = await fetch("/auth/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`auth/me failed: ${res.status}`);
+        }
+
+        const user = await res.json();
+
+        localStorage.setItem("accessToken", token);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        loginWithOAuth(user, token);
+      } catch (err) {
+        alert("SNS 로그인 처리 중 오류가 발생했습니다.");
+      } finally {
+        window.history.replaceState(null, "", "/");
+      }
+    })();
+  }, [loginWithOAuth]);
+
+  // ✅ 2. 기존 토큰 유효성 확인
+  useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   useEffect(() => {
     if (accessToken) {

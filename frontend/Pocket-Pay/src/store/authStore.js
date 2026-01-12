@@ -7,6 +7,7 @@ export const useAuthStore = create((set) => ({
   user: null,
   accessToken: null,
   loading: false,
+  error: null,
 
   setUser: (user) => set({ user }),
   setAccessToken: (token) => set({ accessToken: token }),
@@ -56,6 +57,19 @@ export const useAuthStore = create((set) => ({
     useTeamStore.getState().reset();
     set({ user: null, accessToken: null });
   },
+
+  loginWithOAuth: (user, token) => {
+    localStorage.setItem("accessToken", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    set({
+      user,
+      accessToken: token,
+      loading: false,
+      error: null,
+    });
+  },
+
 
   login: async (email, password) => {
     set({ loading: true });
