@@ -24,7 +24,6 @@ const signupLocal = async ({ email, password, name }) => {
     return user;
 };
 
-// 로그인 POST /auth/login
 const loginLocal = async ({ email, password }) => {
     const user = await User.findOne({
         email,

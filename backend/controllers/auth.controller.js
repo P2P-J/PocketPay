@@ -54,16 +54,33 @@ const loginLocalController = async (req, res) => {
 
 const loginOauthController = async (req, res) => {
     try {
-        
+        const { provider } = req.params;
+        const { code, state } = req.query;
+
+        const { token } = await loginOauth(provider, code, state);
+
+        res.redirect(
+            `${process.env.FRONTEND_URL}/oauth/callback?token=${token}`
+        );
     } catch (err) {
-        res.status(400).json({
-            message: err.message,
-        });
+        res.status(400).json({ message: err.message });
     }
+};
+
+const getMeController = async (req, res) => {
+    const user = req.user;
+
+    res.status(200).json({
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        provider: user.provider,
+    });
 };
 
 module.exports = {
     signupLocalController,
     loginLocalController,
     loginOauthController,
+    getMeController,
 };
