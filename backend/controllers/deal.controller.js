@@ -14,7 +14,7 @@ const registerDeal = async (req, res) => {
       teamId,
     } = req.body;
 
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const team = await Team.findOne({
       _id: teamId,
@@ -48,7 +48,7 @@ const registerDeal = async (req, res) => {
 const getDealDetail = async (req, res) => {
   try {
     const { dealId } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const deal = await dealService.getDealDetail(dealId);
 
@@ -77,7 +77,7 @@ const getDealDetail = async (req, res) => {
 const getMonthlyDeals = async (req, res) => {
   try {
     const { year, month, teamId } = req.query;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     if (!year || !month || !teamId) {
       return res
@@ -108,7 +108,7 @@ const updateDeal = async (req, res) => {
   try {
     const { dealId } = req.params;
     const updateData = req.body;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const deal = await dealService.getDealDetail(dealId);
     if (!deal) {
@@ -137,7 +137,7 @@ const updateDeal = async (req, res) => {
 const deleteDeal = async (req, res) => {
   try {
     const { dealId } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const deal = await dealService.getDealDetail(dealId);
     if (!deal) {

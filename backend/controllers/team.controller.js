@@ -16,7 +16,7 @@ const createTeam = async (req, res) => {
 // 로그인 유저 팀 목록 조회 GET /team
 const getMyTeams = async (req, res) => {
   try {
-    const teams = await teamService.getMyTeams(req.user.userId);
+    const teams = await teamService.getMyTeams(req.user._id);
 
     res.status(200).json(teams);
   } catch (err) {
@@ -29,7 +29,7 @@ const getMyTeams = async (req, res) => {
 // 팀 개별 조회 GET /team/:id
 const getTeam = async (req, res) => {
   try {
-    const team = await teamService.getTeam(req.params.id, req.user.userId);
+    const team = await teamService.getTeam(req.params.id, req.user._id);
 
     res.status(200).json(team);
   } catch (err) {
@@ -44,7 +44,7 @@ const updateTeam = async (req, res) => {
   try {
     const team = await teamService.updateTeam(
       req.params.id,
-      req.user.userId,
+      req.user._id,
       req.body
     );
 
@@ -59,7 +59,7 @@ const updateTeam = async (req, res) => {
 // 팀 삭제 DELETE /team/:id
 const deleteTeam = async (req, res) => {
   try {
-    await teamService.deleteTeam(req.params.id, req.user.userId);
+    await teamService.deleteTeam(req.params.id, req.user._id);
 
     res.status(204).send();
   } catch (err) {
@@ -72,11 +72,7 @@ const deleteTeam = async (req, res) => {
 // 팀원 초대 POST /team/:id/invite
 const inviteMember = async (req, res) => {
   try {
-    await teamService.inviteMember(
-      req.params.id,
-      req.user.userId,
-      req.body.email
-    );
+    await teamService.inviteMember(req.params.id, req.user._id, req.body.email);
     res.status(204).send();
   } catch (err) {
     res.status(400).json({
