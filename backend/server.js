@@ -14,11 +14,8 @@ app.use(cors({
 
 app.use(cookieParser());
 app.use(express.json());
-app.use("/auth", require("./routes/auth.route"));
-app.use("/deal", require("./routes/deal.route"));
-app.use("/team", require("./routes/team.route"));
-app.use("/ocr", require("./routes/ocr.route"));
-app.use("/account", require("./routes/account.route"));
+// 라우터 중앙화했으니, 앞으로 API 추가되면 참고해서 구현해야 돼요!
+app.use(require("./routes"));
 
 app.listen(process.env.PORT, () => {
   console.log("Server running on 3000");
