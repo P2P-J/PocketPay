@@ -1,5 +1,6 @@
 // src/pages/teamMain.jsx
 import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./teamMain.css";
 import { CreateTransactionModal } from "../components/modals/createTransactionModal";
 import { CreateTeamModal } from "../components/modals/createTeamModal";
@@ -57,7 +58,8 @@ const INITIAL_FORM = {
   date: "",
 };
 
-export default function TeamMain({ onBack }) {
+export default function TeamMain() {
+  const navigate = useNavigate();
   const {
     currentTeam,
     setCurrentTeam,
@@ -238,7 +240,7 @@ export default function TeamMain({ onBack }) {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onAuthClick={() => setShowAuthModal(true)}
-          onBack={onBack}
+          onBack={() => navigate("/home")}
         />
 
         <main className="flex-1 overflow-y-auto">

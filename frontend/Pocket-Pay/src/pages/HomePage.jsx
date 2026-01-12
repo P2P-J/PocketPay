@@ -12,13 +12,15 @@ import {
 import { formatCurrency } from "../utils/format";
 import { getCategoryLabel } from "../utils/constants";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 // import { localStorageUtil } from "../utils/localStorage"; // Removed
 import { CreateTeamModal } from "../components/modals/createTeamModal";
 import { TeamSidebar } from "../components/TeamSidebar";
 import { NavigationBar } from "../components/NavigationBar";
 import { AuthScreen } from "../components/AuthScreen";
 
-export function LandingPage({ onEnterApp }) {
+export function LandingPage() {
+  const navigate = useNavigate();
   const {
     teams,
     setCurrentTeam,
@@ -77,7 +79,7 @@ export function LandingPage({ onEnterApp }) {
     if (selectedTeam) {
       setCurrentTeam(selectedTeam._id);
     }
-    onEnterApp();
+    navigate("/team");
   };
 
   return (
