@@ -190,7 +190,7 @@ function LoginForm({ onBack, onClose }) {
         {error && (
           <p
             className="text-xs mt-1"
-            style={{ color: "#ef4444" }}  // 👈 이 줄이 핵심
+            style={{ color: "#ef4444" }} // 👈 이 줄이 핵심
           >
             {error}
           </p>
@@ -305,18 +305,26 @@ function SignupForm({ onBack, onClose }) {
           required
         />
         {error && (
-  <p
-    className="text-xs mt-1"
-    style={{ color: "#ef4444" }}
-  >
-    {error}
-  </p>
-)}
+          <p className="text-xs mt-1" style={{ color: "#ef4444" }}>
+            {error}
+          </p>
+        )}
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "회원가입 중..." : "회원가입"}
       </Button>
     </form>
+  );
+}
+
+export function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center space-y-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-muted-foreground">로딩 중...</p>
+      </div>
+    </div>
   );
 }
