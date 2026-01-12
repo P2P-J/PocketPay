@@ -1,7 +1,7 @@
 const { Team, User, Deal } = require("../../models/index");
 
 // 팀 등록 POST /team
-exports.createTeam = async (userId, { name, description }) => {
+const createTeam = async (userId, { name, description }) => {
     const team = await Team.create({
         name,
         description,
@@ -15,14 +15,14 @@ exports.createTeam = async (userId, { name, description }) => {
 };
 
 // 로그인 유저 팀 목록 조회 GET /team
-exports.getMyTeams = async (userId) => {
+const getMyTeams = async (userId) => {
     const teams = await Team.find({ "members.user": userId });
 
     return teams;
 };
 
 // 팀 개별 조회 GET /team/:id
-exports.getTeam = async (teamId, userId) => {
+const getTeam = async (teamId, userId) => {
     const team = await Team.findOne({
         _id: teamId,
         "members.user": userId,
@@ -36,7 +36,7 @@ exports.getTeam = async (teamId, userId) => {
 };
 
 // 팀 수정 PUT /team/:id
-exports.updateTeam = async (teamId, userId, data) => {
+const updateTeam = async (teamId, userId, data) => {
     const team = await Team.findOne({
         _id: teamId,
         owner: userId,
@@ -53,7 +53,7 @@ exports.updateTeam = async (teamId, userId, data) => {
 };
 
 // 팀 삭제 DELETE /team/:id
-exports.deleteTeam = async (teamId, userId) => {
+const deleteTeam = async (teamId, userId) => {
     const team = await Team.findOneAndDelete({
         _id: teamId,
         owner: userId,
@@ -68,7 +68,7 @@ exports.deleteTeam = async (teamId, userId) => {
 };
 
 // 팀원 초대 POST /team/:id/invite
-exports.inviteMember = async (teamId, ownerId, email) => {
+const inviteMember = async (teamId, ownerId, email) => {
     const team = await Team.findOne({
         _id: teamId,
         owner: ownerId,
@@ -78,7 +78,7 @@ exports.inviteMember = async (teamId, ownerId, email) => {
         throw new Error("팀 혹은 권한이 없습니다.");
     }
 
-    const user = await User.findOne({ email, provider: "local" });
+    const user = await User.findOne({ email, provider: { $in: ["local", "google", "naver"] } });
 
     if (!user) {
         throw new Error("초대할 사용자를 찾을 수 없습니다.");
@@ -100,3 +100,12 @@ exports.inviteMember = async (teamId, ownerId, email) => {
     await team.save();
     return team;
 }
+
+module.exports = {
+    createTeam,
+    getMyTeams,
+    getTeam,
+    updateTeam,
+    deleteTeam,
+    inviteMember,
+};
