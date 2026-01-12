@@ -1,12 +1,13 @@
 import { Button } from "./ui/button";
 import { useAuthStore } from "../store/authStore";
-import { User, ArrowLeft } from "lucide-react";
+import { User, ArrowLeft, Power } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
 
 export function NavigationBar({
@@ -19,10 +20,13 @@ export function NavigationBar({
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
-
   const handleProfileClick = () => {
     navigate("/profile");
-    console.log("프로필 클릭");
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/home");
   };
 
   const tabs = [
@@ -58,10 +62,11 @@ export function NavigationBar({
                 <button
                   key={tab.id}
                   onClick={() => onTabChange?.(tab.id)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === tab.id
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                    }`}
+                  }`}
                 >
                   {tab.label}
                 </button>
@@ -82,19 +87,32 @@ export function NavigationBar({
                   <span className="text-sm">{user.name || user.email}</span>
                 </button>
               </DropdownMenuTrigger>
-
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={handleProfileClick}
-                  className="cursor-pointer hover:bg-muted hover:text-foreground">
-
-                  프로필
-                </DropdownMenuItem>
                 <DropdownMenuItem
-                  variant="destructive"
-                  onSelect={logout}
-                  className="cursor-pointer hover:bg-muted hover:text-foreground"
+                  onSelect={handleProfileClick}
+                  className="cursor-pointer flex items-center gap-2 text-sm hover:bg-muted hover:text-foreground
+                  mt-2 "
                 >
-                  로그아웃
+                  <User className="w-4 h-4" />
+                  <span>프로필</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="mt-2 mb-2" />
+
+                <DropdownMenuItem
+                  onSelect={handleLogout}
+                  className="
+                    cursor-pointer flex items-center gap-2 text-sm
+                    hover:bg-muted hover:text-foreground
+                    mb-2
+                  "
+                >
+                 
+                  <Power
+                    className="w-4 h-4"
+                    style={{ color: "#ef4444" }}  
+                  />
+                  <span style={{ color: "#ef4444" }}>로그아웃</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
