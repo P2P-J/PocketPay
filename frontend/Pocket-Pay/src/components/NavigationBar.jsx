@@ -1,6 +1,12 @@
 import { Button } from "./ui/button";
 import { useAuthStore } from "../store/authStore";
 import { User, ArrowLeft } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "./ui/dropdown-menu";
 
 export function NavigationBar({
   activeTab,
@@ -9,7 +15,13 @@ export function NavigationBar({
   onBack,
   showTabs = true,
 }) {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
+
+  
+  const handleProfileClick = () => {
+    
+    console.log("프로필 클릭");
+  };
 
   const tabs = [
     { id: "transactions", label: "거래 추가" },
@@ -57,15 +69,34 @@ export function NavigationBar({
           </div>
         )}
 
-        {/* Right - Auth Button */}
+        {/* Right - User / Auth Button */}
         <div className="flex items-center gap-2">
           {user ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg">
-              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-xs">
-                {user.name?.[0] || user.email[0].toUpperCase()}
-              </div>
-              <span className="text-sm">{user.name || user.email}</span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-xs">
+                    {user.name?.[0] || user.email[0].toUpperCase()}
+                  </div>
+                  <span className="text-sm">{user.name || user.email}</span>
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={handleProfileClick}
+                className="cursor-pointer hover:bg-muted hover:text-foreground">
+                  
+                  프로필
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={logout}
+                  className="cursor-pointer hover:bg-muted hover:text-foreground"
+                >
+                  로그아웃
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Button onClick={onAuthClick} variant="outline" size="sm">
               <User className="w-4 h-4 mr-2" />
