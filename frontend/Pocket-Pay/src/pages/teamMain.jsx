@@ -1,5 +1,6 @@
 // src/pages/teamMain.jsx
 import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./teamMain.css";
 import { CreateTransactionModal } from "../components/modals/createTransactionModal";
 import { CreateTeamModal } from "../components/modals/createTeamModal";
@@ -57,7 +58,8 @@ const INITIAL_FORM = {
   date: "",
 };
 
-export default function TeamMain({ onBack }) {
+export default function TeamMain() {
+  const navigate = useNavigate();
   const {
     currentTeam,
     setCurrentTeam,
@@ -238,13 +240,13 @@ export default function TeamMain({ onBack }) {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onAuthClick={() => setShowAuthModal(true)}
-          onBack={onBack}
+          onBack={() => navigate("/home")}
         />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pt-4">
           {/* Render content based on active tab */}
           {activeTab === "transactions" ? (
-            <div className="tm-inner">
+            <div className="tm-inner px-6 pt-4">
               {/* 상단 요약 카드 영역 */}
               <section className="tm-summary-row">
                 <div className="tm-summary-cards">

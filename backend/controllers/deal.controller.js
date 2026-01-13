@@ -4,8 +4,18 @@ const { handleError } = require("../utils/errorHandler");
 
 const registerDeal = async (req, res) => {
   try {
-    const { storeInfo, division, description, category, price, businessNumber, date, teamId } = req.body;
-    const userId = req.user.userId;
+    const {
+      storeInfo,
+      division,
+      description,
+      category,
+      price,
+      businessNumber,
+      date,
+      teamId,
+    } = req.body;
+
+    const userId = req.user._id;
 
     await dealService.checkTeamMembership(teamId, userId);
 
@@ -29,7 +39,7 @@ const registerDeal = async (req, res) => {
 const getDealDetail = async (req, res) => {
   try {
     const { dealId } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const deal = await dealService.getDealById(dealId);
     await dealService.checkTeamMembership(deal.teamId, userId);
@@ -43,7 +53,7 @@ const getDealDetail = async (req, res) => {
 const getMonthlyDeals = async (req, res) => {
   try {
     const { year, month, teamId } = req.query;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     if (!year || !month || !teamId) {
       throw AppError.badRequest("teamId, 연도, 월을 입력해주세요.");
@@ -62,7 +72,7 @@ const updateDeal = async (req, res) => {
   try {
     const { dealId } = req.params;
     const updateData = req.body;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const deal = await dealService.getDealById(dealId);
     await dealService.checkTeamMembership(deal.teamId, userId);
@@ -77,7 +87,7 @@ const updateDeal = async (req, res) => {
 const deleteDeal = async (req, res) => {
   try {
     const { dealId } = req.params;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const deal = await dealService.getDealById(dealId);
     await dealService.checkTeamMembership(deal.teamId, userId);
