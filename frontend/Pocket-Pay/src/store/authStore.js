@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import { authApi } from "../api/auth";
-import { teamApi } from "../api/team"; // Import teamApi for checkAuth logic
+import { teamApi } from "../api/team";
+import { useTeamStore } from "./teamStore";
 
 export const useAuthStore = create((set) => ({
   user: null,
   accessToken: null,
   loading: false,
+  error: null,
 
   setUser: (user) => set({ user }),
   setAccessToken: (token) => set({ accessToken: token }),
@@ -39,6 +41,7 @@ export const useAuthStore = create((set) => ({
       if (error.status === 401) {
         localStorage.removeItem("user");
         localStorage.removeItem("accessToken");
+        useTeamStore.getState().reset();
         set({ user: null, accessToken: null, loading: false });
       } else {
         // For other errors (network, 500), keep the session but stop loading
@@ -51,8 +54,22 @@ export const useAuthStore = create((set) => ({
   logout: () => {
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
+    useTeamStore.getState().reset();
     set({ user: null, accessToken: null });
   },
+
+  loginWithOAuth: (user, token) => {
+    localStorage.setItem("accessToken", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    set({
+      user,
+      accessToken: token,
+      loading: false,
+      error: null,
+    });
+  },
+
 
   login: async (email, password) => {
     set({ loading: true });
