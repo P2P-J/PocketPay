@@ -24,7 +24,7 @@ export default function App() {
 
     (async () => {
       try {
-        const res = await fetch("/auth/me", {
+        const res = await fetch("/account/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -42,7 +42,7 @@ export default function App() {
 
         loginWithOAuth(user, token);
       } catch (err) {
-        alert("SNS 로그인 처리 중 오류가 발생했습니다.");
+        console.log("SNS 로그인 처리 중 오류가 발생했습니다.");
       } finally {
         window.location.replace("/home");
       }
@@ -79,6 +79,7 @@ export default function App() {
         <Route path="/home" element={<LandingPage />} />
         <Route path="/team" element={<TeamMain />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/oauth/callback" element={<LoadingScreen />} />
       </Routes>
       <Toaster />
     </BrowserRouter>

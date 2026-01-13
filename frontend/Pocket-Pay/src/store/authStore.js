@@ -70,11 +70,12 @@ export const useAuthStore = create((set) => ({
     });
   },
 
-
   login: async (email, password) => {
     set({ loading: true });
     try {
       const response = await authApi.login({ email, password });
+
+      // Backend returns { token, ...userFields } directly
       const { token, ...user } = response;
 
       localStorage.setItem("user", JSON.stringify(user));
