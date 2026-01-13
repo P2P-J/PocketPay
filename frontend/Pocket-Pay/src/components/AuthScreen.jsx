@@ -1,4 +1,3 @@
-// src/components/AuthScreen.jsx
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,32 +121,42 @@ function LoginForm({ onBack, onClose }) {
   const [form, setForm] = React.useState({ email: "", password: "" });
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [errorField, setErrorField] = React.useState(null); // 🔴 어떤 필드가 에러인지
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    setError(""); // 입력하면 에러 문구 지우기
+  };
+
+  const handleFieldFocus = (field) => {
+    if (error && errorField === field) {
+      setError("");
+      setErrorField(null);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setErrorField(null);
     setLoading(true);
 
     try {
       await login(form.email, form.password);
-      // ✅ 여기까지 왔으면 "성공" → 모달 닫기
       onClose?.();
     } catch (err) {
       const message = err?.message;
+
       if (message === "존재하지 않는 사용자") {
         setError("가입되지 않은 이메일입니다.");
+        setErrorField("email");      
       } else if (message === "비밀번호 불일치") {
         setError("비밀번호가 일치하지 않습니다.");
+        setErrorField("password"); 
       } else {
         setError(message || "로그인 중 오류가 발생했습니다.");
+        setErrorField(null);
       }
-      // ❌ 실패면 모달 닫지 않음
     } finally {
       setLoading(false);
     }
@@ -163,6 +172,7 @@ function LoginForm({ onBack, onClose }) {
         ← 로그인 / 회원가입 선택으로 돌아가기
       </button>
 
+      {/* 이메일 */}
       <div className="space-y-2">
         <Label htmlFor="login-email">이메일</Label>
         <Input
@@ -172,10 +182,17 @@ function LoginForm({ onBack, onClose }) {
           placeholder="team@example.com"
           value={form.email}
           onChange={handleChange}
+          onFocus={() => handleFieldFocus("email")}
+          style={
+            errorField === "email"
+              ? { borderColor: "#ef4444" }
+              : undefined
+          }
           required
         />
       </div>
 
+      {/* 비밀번호 */}
       <div className="space-y-2">
         <Label htmlFor="login-password">비밀번호</Label>
         <Input
@@ -185,13 +202,16 @@ function LoginForm({ onBack, onClose }) {
           placeholder="비밀번호를 입력하세요"
           value={form.password}
           onChange={handleChange}
+          onFocus={() => handleFieldFocus("password")}
+          style={
+            errorField === "password"
+              ? { borderColor: "#ef4444" }
+              : undefined
+          }
           required
         />
         {error && (
-          <p
-            className="text-xs mt-1"
-            style={{ color: "#ef4444" }} // 👈 이 줄이 핵심
-          >
+          <p className="text-xs mt-1" style={{ color: "#ef4444" }}>
             {error}
           </p>
         )}
