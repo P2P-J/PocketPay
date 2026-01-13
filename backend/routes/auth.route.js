@@ -12,7 +12,6 @@ router.post("/signup/local", signupLocalController);
 router.post("/login/local", loginLocalController);
 
 const providers = require('../services/auth/providers');
-const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
 
 // =====================OAUTH ROUTES===================== //
 // OAuth 시작 (redirect 보내기)
@@ -26,15 +25,24 @@ router.get('/login/oauth/:provider', (req, res) => {
         return res.status(400).json({ message: 'INVALID_PROVIDER' });
     }
 
-    const authUrl = oauthProvider.getAuthUrl();
-    res.redirect(authUrl);
+    if (provider === 'naver') {
+        const authUrl = oauthProvider.getAuthUrl();
+
+        return res.redirect(authUrl);
+    } else if (provider === 'google') {
+        const forceConsent =
+            req.query.forceConsent === "1" ||
+            req.cookies?.force_google_consent === "1";
+
+        const state = req.query.state;
+
+        const authUrl = oauthProvider.getAuthUrl({ forceConsent, state });
+        
+        return res.redirect(authUrl);
+    }
 });
 
 // OAuth callback 보내기
 router.get('/login/oauth/:provider/callback', loginOauthController);
-
-// =====================USER INFO ROUTE===================== //
-const { getMeController } = require("../controllers/auth.controller");
-router.get('/me', loginUserVerify, getMeController);
 
 module.exports = router;

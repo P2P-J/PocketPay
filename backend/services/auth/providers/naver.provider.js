@@ -28,7 +28,10 @@ const getAccessToken = async (code, state) => {
         }
     );
 
-    return data.access_token;
+    return {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+    };
 };
 
 // 네이버 사용자 프로필 정보 가져오기
@@ -49,8 +52,35 @@ const getUserProfile = async (accessToken) => {
     };
 };
 
+// 네이버 OAuth 연동 해제
+const revokeToken = async (refreshToken) => {
+    // refresh_token으로 access_token 재발급
+    const refreshRes = await axios.get("https://nid.naver.com/oauth2.0/token", {
+        params: {
+            grant_type: "refresh_token",
+            client_id: process.env.NAVER_CLIENT_ID,
+            client_secret: process.env.NAVER_CLIENT_SECRET,
+            refresh_token: refreshToken,
+        },
+    });
+
+    const accessToken = refreshRes.data.access_token;
+
+    // Naver oauth 연동 해제
+    const deleteRes = await axios.get("https://nid.naver.com/oauth2.0/token", {
+        params: {
+            grant_type: "delete",
+            client_id: process.env.NAVER_CLIENT_ID,
+            client_secret: process.env.NAVER_CLIENT_SECRET,
+            access_token: accessToken,
+            service_provider: "NAVER",
+        },
+    });
+};
+
 module.exports = {
     getAuthUrl,
     getAccessToken,
     getUserProfile,
+    revokeToken,
 };
