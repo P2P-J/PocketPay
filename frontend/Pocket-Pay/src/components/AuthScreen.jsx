@@ -147,10 +147,10 @@ function LoginForm({ onBack, onClose }) {
     } catch (err) {
       const message = err?.message;
 
-      if (message === "존재하지 않는 사용자") {
+      if (message === "존재하지 않는 사용자입니다.") {
         setError("가입되지 않은 이메일입니다.");
         setErrorField("email");
-      } else if (message === "비밀번호 불일치") {
+      } else if (message === "비밀번호 일치하지 않습니다.") {
         setError("비밀번호가 일치하지 않습니다.");
         setErrorField("password");
       } else {
