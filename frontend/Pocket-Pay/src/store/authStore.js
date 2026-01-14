@@ -3,6 +3,7 @@ import { authApi } from "../api/auth";
 import { teamApi } from "../api/team";
 import { useTeamStore } from "./teamStore";
 
+
 export const useAuthStore = create((set) => ({
   user: null,
   accessToken: null,
@@ -71,24 +72,30 @@ export const useAuthStore = create((set) => ({
   },
 
   login: async (email, password) => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
-      const response = await authApi.login({ email, password });
+      const { token } = await authApi.login({ email, password });
 
-      // Backend returns { token, ...userFields } directly
-      const { token, ...user } = response;
-
-      localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("accessToken", token);
+      set({ accessToken: token });
 
-      set({ user, accessToken: token, loading: false });
+      const user = await authApi.me();
+      localStorage.setItem("user", JSON.stringify(user));
+
+      set({
+      user,
+      accessToken: token,
+      loading: false,
+      error: null,
+    });
+
       return true;
-    } catch (error) {
-      console.error("Login error:", error);
-      set({ loading: false });
-      throw error;
-    }
-  },
+  } catch (error) {
+    console.error("Login error:", error);
+    set({ loading: false, error: error.message || "로그인에 실패했습니다." });
+    throw error; 
+  }
+},
 
   signup: async (name, email, password) => {
     set({ loading: true });
