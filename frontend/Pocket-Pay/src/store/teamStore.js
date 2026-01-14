@@ -12,8 +12,10 @@ export const useTeamStore = create((set, get) => ({
     set({ loading: true });
     try {
       const response = await teamApi.getMyTeams();
-      // Backend returns array directly: res.status(200).json(teams)
-      const teams = Array.isArray(response) ? response : response.teams || [];
+      // Backend returns { data: teams }
+      const teams =
+        response.data ||
+        (Array.isArray(response) ? response : response.teams || []);
 
       set({ teams: teams, loading: false });
 
@@ -194,4 +196,13 @@ export const useTeamStore = create((set, get) => ({
   },
 
   categories: [],
+
+  reset: () => {
+    set({
+      currentTeam: null,
+      teams: [],
+      transactions: [],
+      loading: false,
+    });
+  },
 }));
