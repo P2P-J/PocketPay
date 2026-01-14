@@ -27,7 +27,7 @@ const getTeam = async (teamId, userId) => {
   const team = await Team.findOne({
     _id: teamId,
     "members.user": userId,
-  });
+  }).populate("members.user", "name email");
 
   if (!team) {
     throw AppError.notFound("팀을 찾을 수 없습니다.");
@@ -111,6 +111,60 @@ const inviteMember = async (teamId, ownerId, email) => {
   return team;
 };
 
+const removeMember = async (teamId, ownerId, targetUserId) => {
+  if (!isValidObjectId(teamId) || !isValidObjectId(targetUserId)) {
+    throw AppError.badRequest("올바른 ID가 아닙니다.");
+  }
+
+  const team = await Team.findOne({
+    _id: teamId,
+    owner: ownerId,
+  });
+
+  if (!team) {
+    throw AppError.forbidden("팀원 방출 권한이 없습니다.");
+  }
+
+  if (team.owner.toString() === targetUserId) {
+    throw AppError.badRequest("owner는 방출할 수 없습니다.");
+  }
+
+  const memberIndex = team.members.findIndex(
+    (m) => m.user.toString() === targetUserId
+  );
+
+  if (memberIndex === -1) {
+    throw AppError.notFound("해당 유저는 팀 멤버가 아닙니다.");
+  }
+
+  team.members.splice(memberIndex, 1);
+  await team.save();
+};
+
+const leaveTeam = async (teamId, userId) => {
+  if (!isValidObjectId(teamId)) {
+    throw AppError.badRequest("올바른 팀 ID가 아닙니다.");
+  }
+
+  const team = await Team.findOne({
+    _id: teamId,
+    "members.user": userId,
+  });
+
+  if (!team) {
+    throw AppError.notFound("팀을 찾을 수 없거나 멤버가 아닙니다.");
+  }
+
+  if (team.owner.toString() === userId) {
+    throw AppError.forbidden("owner는 탈퇴할 수 없습니다. 팀을 삭제하거나 소유권을 이전하세요.");
+  }
+
+  team.members = team.members.filter(
+    (m) => m.user.toString() !== userId
+  );
+  await team.save();
+};
+
 module.exports = {
   createTeam,
   getMyTeams,
@@ -118,4 +172,6 @@ module.exports = {
   updateTeam,
   deleteTeam,
   inviteMember,
+  removeMember,
+  leaveTeam,
 };
