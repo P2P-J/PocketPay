@@ -99,6 +99,8 @@
 | PUT    | `/teams/:teamId`         | 팀 수정         | 팀 소유자 |
 | DELETE | `/teams/:teamId`         | 팀 삭제         | 팀 소유자 |
 | POST   | `/teams/:teamId/members` | 팀원 초대       | 팀 소유자 |
+| DELETE | `/teams/:teamId/members/me` | 팀 탈퇴 (자발적) | 팀 멤버   |
+| DELETE | `/teams/:teamId/members/:userId` | 팀원 방출       | 팀 소유자 |
 
 ### Request Body
 
@@ -144,7 +146,7 @@
   "id": "팀ID",
   "name": "팀 이름",
   "description": "팀 설명",
-  "members": [{ "id": "유저ID", "email": "user@example.com", "role": "owner" }]
+  "members": [{ "id": "유저ID", "name": "유저이름", "email": "user@example.com", "role": "owner" }]
 }
 ```
 

@@ -55,6 +55,24 @@ const inviteMember = async (req, res) => {
   }
 };
 
+const removeMember = async (req, res) => {
+  try {
+    await teamService.removeMember(req.params.teamId, req.user.userId, req.params.userId);
+    res.status(204).send();
+  } catch (err) {
+    handleError(res, err);
+  }
+};
+
+const leaveTeam = async (req, res) => {
+  try {
+    await teamService.leaveTeam(req.params.teamId, req.user.userId);
+    res.status(204).send();
+  } catch (err) {
+    handleError(res, err);
+  }
+};
+
 module.exports = {
   createTeam,
   getMyTeams,
@@ -62,4 +80,6 @@ module.exports = {
   updateTeam,
   deleteTeam,
   inviteMember,
+  removeMember,
+  leaveTeam,
 };
