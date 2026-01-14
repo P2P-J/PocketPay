@@ -34,7 +34,7 @@ const deleteMyAccount = async (userId) => {
     switch (provider) {
       case "naver":
       case "google": {
-        const userRevokeToken = user.oauthTokens?.[provider]?.refresh;
+        const userRevokeToken = user.oauthTokens?.[provider]?.refreshToken;
         const revokeFunc = providers?.[provider]?.revokeToken;
 
         await revokeFunc(userRevokeToken);
