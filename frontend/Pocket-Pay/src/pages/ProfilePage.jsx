@@ -3,53 +3,104 @@ import { Button } from "../components/ui/button";
 import { useAuthStore } from "../store/authStore";
 import { NavigationBar } from "../components/NavigationBar";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { changePassword, deleteAccount } from "../api/account";
 
 export function ProfilePage({ onBack }) {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
   const handleBack = onBack || (() => navigate(-1));
 
+  // 사용자 정보 (읽기 전용)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
   });
 
-  // 사용자 정보 로드
   useEffect(() => {
+    console.log("ProfilePage useEffect: User changed", user);
     if (user) {
       setFormData({
         name: user.name || "",
         email: user.email || "",
       });
     }
-  }, [user]);
+  }, [user?.email, user?.name]);
 
-  // 로그인 타입 결정
   const loginType = user?.provider || "local";
 
-  const handleInputChange = (e) => {
+  // --- 비밀번호 변경 모달 상태 및 로직 ---
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState("");
+
+  const handlePasswordChangeClick = () => {
+    console.log("Password Change Button Clicked");
+    setPasswordForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setPasswordError("");
+    setIsPasswordOpen(true);
+    console.log("Setting isPasswordOpen to true");
+  };
+
+  const handlePasswordInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePasswordChange = () => {
-    // 비밀번호 변경 로직 추후 모달로 구현
-    console.log("비밀번호 변경");
+  const handlePasswordSubmit = async () => {
+    const { currentPassword, newPassword, confirmPassword } = passwordForm;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("모든 필드를 입력해주세요.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("새 비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    try {
+      await changePassword(currentPassword, newPassword);
+      toast.success("비밀번호가 변경되었습니다.");
+      setIsPasswordOpen(false);
+    } catch (err) {
+      setPasswordError(err.response?.data?.message || "비밀번호 변경 실패");
+    }
   };
 
-  const handleDeleteAccount = () => {
-    // 회원탈퇴 로직
-    console.log("회원탈퇴");
+  // --- 회원탈퇴 모달 상태 및 로직 ---
+  const [deleteStep, setDeleteStep] = useState(0); // 0: 닫힘, 1: 1차 확인, 2: 2차 확인
+
+  const handleDeleteClick = () => {
+    setDeleteStep(1);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // 프로필 수정 로직
-    console.log("프로필 수정:", formData);
+  const handleDeleteConfirmStep1 = () => {
+    setDeleteStep(2);
+  };
+
+  const handleDeleteFinal = async () => {
+    try {
+      await deleteAccount();
+      toast.success("정상적으로 회원 탈퇴 되었습니다.");
+      logout();
+      navigate("/home");
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "회원 탈퇴 중 오류가 발생했습니다."
+      );
+      setDeleteStep(0);
+    }
   };
 
   return (
@@ -70,29 +121,20 @@ export function ProfilePage({ onBack }) {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-6">
               <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium block">
-                  이름
-                </label>
+                <label className="text-sm font-medium block">이름</label>
                 <input
-                  id="name"
-                  name="name"
                   type="text"
                   value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="변경할 이름을 입력하세요"
-                  className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                  disabled
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-muted text-muted-foreground cursor-not-allowed opacity-60"
                 />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium block">
-                  이메일
-                </label>
+                <label className="text-sm font-medium block">이메일</label>
                 <input
-                  id="email"
-                  name="email"
                   type="email"
                   value={formData.email}
                   disabled
@@ -105,32 +147,149 @@ export function ProfilePage({ onBack }) {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={handlePasswordChange}
+                    onClick={handlePasswordChangeClick}
                     className="w-full"
                   >
                     비밀번호 변경
                   </Button>
                 )}
 
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={handleDeleteAccount}
-                    className="flex-1"
-                  >
-                    회원탈퇴
-                  </Button>
-
-                  <Button type="submit" className="flex-1">
-                    수정 완료
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeleteClick}
+                  className="w-full"
+                >
+                  회원탈퇴
+                </Button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* 비밀번호 변경 모달 */}
+      {isPasswordOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg max-w-md w-full p-6 space-y-4">
+            <h2 className="text-2xl font-bold">비밀번호 변경</h2>
+            <p className="text-sm text-muted-foreground">
+              현재 비밀번호와 새 비밀번호를 입력해주세요.
+            </p>
+
+            <div className="space-y-4 py-2">
+              <div>
+                <input
+                  name="currentPassword"
+                  type="password"
+                  placeholder="현재 비밀번호"
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordInputChange}
+                  className="w-full px-3 py-2 border rounded-md"
+                />
+              </div>
+              <div>
+                <input
+                  name="newPassword"
+                  type="password"
+                  placeholder="새 비밀번호"
+                  value={passwordForm.newPassword}
+                  onChange={handlePasswordInputChange}
+                  className="w-full px-3 py-2 border rounded-md"
+                />
+              </div>
+              <div>
+                <input
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="새 비밀번호 확인"
+                  value={passwordForm.confirmPassword}
+                  onChange={handlePasswordInputChange}
+                  className="w-full px-3 py-2 border rounded-md"
+                />
+              </div>
+              {passwordError && (
+                <p className="text-sm text-red-500">{passwordError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setIsPasswordOpen(false)}
+              >
+                취소
+              </Button>
+              <Button className="flex-1" onClick={handlePasswordSubmit}>
+                변경하기
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 회원탈퇴 1차 모달 */}
+      {deleteStep === 1 && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg max-w-md w-full p-6 space-y-4">
+            <h2 className="text-2xl font-bold">회원탈퇴</h2>
+            <p className="text-sm text-muted-foreground">
+              정말로 회원을 탈퇴하시겠습니까?
+              <br />
+              개인정보 및 모임 데이터가 전부 삭제됩니다.
+            </p>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setDeleteStep(0)}
+              >
+                취소
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleDeleteConfirmStep1}
+              >
+                탈퇴하기
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 회원탈퇴 2차 모달 */}
+      {deleteStep === 2 && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg max-w-md w-full p-6 space-y-4">
+            <h2 className="text-2xl font-bold">최종 확인</h2>
+            <p className="text-sm font-medium text-red-500">
+              정말로 회원을 탈퇴하시겠습니까?
+              <br />이 작업은 되돌릴 수 없으며, 모든 데이터가 영구적으로
+              삭제됩니다.
+            </p>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setDeleteStep(0)}
+              >
+                취소
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleDeleteFinal}
+              >
+                확인
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
