@@ -1,87 +1,87 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import { useTeamStore } from "./store/teamStore";
 import { LandingPage } from "./pages/HomePage";
 import TeamMain from "./pages/teamMain";
-import { AuthScreen } from "./components/AuthScreen";
-import { CreateTeamModal } from "./components/modals/createTeamModal";
+import { ProfilePage } from "./pages/ProfilePage";
+import { LoadingScreen } from "./components/AuthScreen";
 import { Toaster } from "./components/ui/sonner";
 
 export default function App() {
-  const { user, accessToken, loading, checkAuth } = useAuthStore();
-  const { currentTeam, fetchTeams, fetchCategories } = useTeamStore();
-  const [currentScreen, setCurrentScreen] = useState("homepage");
-  const [showAuth, setShowAuth] = useState(false);
-  const [showCreateTeam, setShowCreateTeam] = useState(false);
+  const { accessToken, checkAuth, loginWithOAuth } = useAuthStore();
+  const { fetchTeams } = useTeamStore();
 
+  // App에서만 쓰는 "초기 인증 확인 중" 상태
+  const [authChecking, setAuthChecking] = useState(true);
+
+  // ✅ 1. SNS OAuth 콜백 처리 (구글/네이버에서 token 줬을 때)
   useEffect(() => {
-    checkAuth();
-  }, []);
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
 
+    if (!token) return;
+
+    (async () => {
+      try {
+        const res = await fetch("/account/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`auth/me failed: ${res.status}`);
+        }
+
+        const user = await res.json();
+
+        localStorage.setItem("accessToken", token);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        loginWithOAuth(user, token);
+      } catch (err) {
+        console.log("SNS 로그인 처리 중 오류가 발생했습니다.");
+      } finally {
+        window.location.replace("/home");
+      }
+    })();
+  }, [loginWithOAuth]);
+
+  // ✅ 2. 앱 처음 켰을 때 기존 토큰 유효성 확인
+  useEffect(() => {
+    (async () => {
+      try {
+        await checkAuth();
+      } finally {
+        setAuthChecking(false);
+      }
+    })();
+  }, [checkAuth]);
+
+  // ✅ 3. 로그인 된 상태면 팀 목록 가져오기
   useEffect(() => {
     if (accessToken) {
       fetchTeams();
     }
-  }, [accessToken]);
+  }, [accessToken, fetchTeams]);
 
-  // Categories are not fetched from backend - removed unnecessary effect
-  // useEffect(() => {
-  //   if (accessToken && currentTeam) {
-  //     fetchCategories(accessToken, currentTeam.id);
-  //   }
-  // }, [accessToken, currentTeam]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-muted-foreground">로딩 중...</p>
-        </div>
-      </div>
-    );
+  if (authChecking) {
+    return <LoadingScreen />;
   }
 
-  // HomePage 화면
-  if (currentScreen === "homepage") {
-    return (
-      <>
-        <LandingPage onEnterApp={() => setCurrentScreen("team-main")} />
-        <Toaster />
-      </>
-    );
-  }
-
-  // TeamMain 화면 (거래 관리)
-  if (currentScreen === "team-main") {
-    return (
-      <>
-        <TeamMain onBack={() => setCurrentScreen("homepage")} />
-        <Toaster />
-      </>
-    );
-  }
-
-  // 기본 화면 (필요시 추가)
+  // 나머지는 기존 그대로
   return (
-    <>
-      {/* 팀 생성 모달 */}
-      {showCreateTeam && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <CreateTeamModal onClose={() => setShowCreateTeam(false)} />
-        </div>
-      )}
-
-      {/* 로그인 모달 */}
-      {showAuth && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <AuthScreen onClose={() => setShowAuth(false)} />
-          </div>
-        </div>
-      )}
-
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={<LandingPage />} />
+        <Route path="/team" element={<TeamMain />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/oauth/callback" element={<LoadingScreen />} />
+      </Routes>
       <Toaster />
-    </>
+    </BrowserRouter>
   );
 }
