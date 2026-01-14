@@ -91,7 +91,10 @@ export default function TeamMain() {
   // =====================
   useEffect(() => {
     if (!currentTeam) return;
-    fetchTransactions(currentTeam._id || currentTeam.id);
+    const teamId = currentTeam._id || currentTeam.id;
+    if (teamId) {
+      fetchTransactions(teamId);
+    }
   }, [currentTeam]);
 
   // Removed local storage effects
