@@ -4,7 +4,17 @@ const { handleError } = require("../utils/errorHandler");
 
 const registerDeal = async (req, res) => {
   try {
-    const { storeInfo, division, description, category, price, businessNumber, date, teamId } = req.body;
+    const {
+      storeInfo,
+      division,
+      description,
+      category,
+      price,
+      businessNumber,
+      date,
+      teamId,
+    } = req.body;
+
     const userId = req.user.userId;
 
     await dealService.checkTeamMembership(teamId, userId);
