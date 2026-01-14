@@ -74,14 +74,19 @@ export const useAuthStore = create((set) => ({
     set({ loading: true });
     try {
       const response = await authApi.login({ email, password });
+      const { token } = response;
 
-      // Backend returns { token, ...userFields } directly
-      const { token, ...user } = response;
-
-      localStorage.setItem("user", JSON.stringify(user));
+      // 1. Token 저장
       localStorage.setItem("accessToken", token);
+      set({ accessToken: token });
 
-      set({ user, accessToken: token, loading: false });
+      // 2. User Info Fetch (JWT only flow)
+      const user = await authApi.me();
+
+      // 3. User 저장
+      localStorage.setItem("user", JSON.stringify(user));
+      set({ user, loading: false });
+
       return true;
     } catch (error) {
       console.error("Login error:", error);

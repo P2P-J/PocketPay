@@ -39,14 +39,10 @@ const loginLocalController = async (req, res) => {
       });
     }
 
-    const { token, user } = await loginLocal({ email, password });
+    const { token } = await loginLocal({ email, password });
 
     res.status(200).json({
       token,
-      id: user._id,
-      email: user.email,
-      name: user.name,
-      provider: user.provider,
     });
   } catch (err) {
     res.status(400).json({
