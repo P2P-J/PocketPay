@@ -28,6 +28,7 @@ const handleResponse = async (response) => {
 export const apiClient = {
   get: async (endpoint) => {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "GET",
       headers: getHeaders(),
     });
     return handleResponse(response);
@@ -75,5 +76,5 @@ export const apiClient = {
       body: formData,
     });
     return handleResponse(response);
-  }
+  },
 };

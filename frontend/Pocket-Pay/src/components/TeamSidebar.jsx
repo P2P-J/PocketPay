@@ -22,9 +22,9 @@ export function TeamSidebar({ selectedTeamId, onTeamSelect, onCreateTeam }) {
       {/* Team List */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-2">
-          {teams.map((team) => (
+          {teams.map((team, index) => (
             <button
-              key={team._id || team.id}
+              key={team._id || team.id || index}
               onClick={() => onTeamSelect(team._id || team.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
                 selectedTeamId === (team._id || team.id)
@@ -38,7 +38,7 @@ export function TeamSidebar({ selectedTeamId, onTeamSelect, onCreateTeam }) {
                 }`}
                 style={{ backgroundColor: team.color }}
               >
-                {team.name[0]}
+                {team.name ? team.name[0] : "?"}
               </div>
               <span className="text-sm">{team.name}</span>
             </button>
