@@ -224,6 +224,31 @@ export const useTeamStore = create((set, get) => ({
     }
   },
 
+  leaveTeam: async (teamId) => {
+    set({ loading: true });
+    try {
+      await teamApi.leaveTeam(teamId);
+
+      const currentState = get();
+      const wasCurrentTeam =
+        (currentState.currentTeam?._id || currentState.currentTeam?.id) ===
+        teamId;
+
+      set({
+        teams: currentState.teams.filter((t) => (t._id || t.id) !== teamId),
+        currentTeam: wasCurrentTeam ? null : currentState.currentTeam,
+        transactions: wasCurrentTeam ? [] : currentState.transactions,
+        loading: false,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Leave team error:", error);
+      set({ loading: false });
+      throw error;
+    }
+  },
+
   deleteTransaction: async (transactionId) => {
     set({ loading: true });
     try {

@@ -10,4 +10,5 @@ export const teamApi = {
     apiClient.post(`/teams/${id}/members`, { email }),
   removeMember: (teamId, userId) =>
     apiClient.delete(`/teams/${teamId}/members/${userId}`),
+  leaveTeam: (id) => apiClient.delete(`/teams/${id}/members/me`),
 };
