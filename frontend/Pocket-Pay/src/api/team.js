@@ -8,4 +8,6 @@ export const teamApi = {
   delete: (id) => apiClient.delete(`/teams/${id}`),
   inviteMember: (id, email) =>
     apiClient.post(`/teams/${id}/members`, { email }),
+  removeMember: (teamId, userId) =>
+    apiClient.delete(`/teams/${teamId}/members/${userId}`),
 };
