@@ -147,12 +147,12 @@ function LoginForm({ onBack, onClose }) {
     } catch (err) {
       const message = err?.message;
 
-      if (message === "존재하지 않는 사용자") {
+      if (message === "존재하지 않는 사용자입니다.") {
         setError("가입되지 않은 이메일입니다.");
-        setErrorField("email");      
-      } else if (message === "비밀번호 불일치") {
+        setErrorField("email");
+      } else if (message === "비밀번호 일치하지 않습니다.") {
         setError("비밀번호가 일치하지 않습니다.");
-        setErrorField("password"); 
+        setErrorField("password");
       } else {
         setError(message || "로그인 중 오류가 발생했습니다.");
         setErrorField(null);
@@ -184,9 +184,7 @@ function LoginForm({ onBack, onClose }) {
           onChange={handleChange}
           onFocus={() => handleFieldFocus("email")}
           style={
-            errorField === "email"
-              ? { borderColor: "#ef4444" }
-              : undefined
+            errorField === "email" ? { borderColor: "#ef4444" } : undefined
           }
           required
         />
@@ -204,9 +202,7 @@ function LoginForm({ onBack, onClose }) {
           onChange={handleChange}
           onFocus={() => handleFieldFocus("password")}
           style={
-            errorField === "password"
-              ? { borderColor: "#ef4444" }
-              : undefined
+            errorField === "password" ? { borderColor: "#ef4444" } : undefined
           }
           required
         />
@@ -275,7 +271,7 @@ function SignupForm({ onBack, onClose }) {
       </button>
 
       <div className="space-y-2">
-        <Label htmlFor="signup-name">이름 / 팀명</Label>
+        <Label htmlFor="signup-name">이름</Label>
         <Input
           id="signup-name"
           name="name"

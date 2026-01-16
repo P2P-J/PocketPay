@@ -12,13 +12,17 @@ export const useTeamStore = create((set, get) => ({
     set({ loading: true });
     try {
       const response = await teamApi.getMyTeams();
-      // Backend returns array directly: res.status(200).json(teams)
-      const teams = Array.isArray(response) ? response : response.teams || [];
+      // Backend returns { data: teams }
+      const teams =
+        response.data ||
+        (Array.isArray(response) ? response : response.teams || []);
 
       set({ teams: teams, loading: false });
 
       if (teams.length > 0 && !get().currentTeam) {
-        set({ currentTeam: teams[0] });
+        // Fetch detailed team data for the first team
+        const firstTeamId = teams[0]._id || teams[0].id;
+        get().setCurrentTeam(firstTeamId);
       }
     } catch (error) {
       console.error("Fetch teams error:", error);
@@ -51,6 +55,59 @@ export const useTeamStore = create((set, get) => ({
     if (team) {
       set({ currentTeam: team });
       get().fetchTransactions(team.id || team._id);
+      // Fetch detailed team data with populated members
+      get().fetchTeamDetails(team.id || team._id);
+    }
+  },
+
+  fetchTeamDetails: async (teamId) => {
+    try {
+      const response = await teamApi.getTeam(teamId);
+      // Backend returns { data: team } with populated members
+      const detailedTeam = response.data || response;
+
+      // Update currentTeam with detailed data including populated members
+      set({ currentTeam: detailedTeam });
+
+      // Also update the team in the teams array
+      set((state) => ({
+        teams: state.teams.map((t) =>
+          t.id === teamId || t._id === teamId ? detailedTeam : t
+        ),
+      }));
+    } catch (error) {
+      console.error("Fetch team details error:", error);
+    }
+  },
+
+  deleteTeam: async (teamId) => {
+    set({ loading: true });
+    try {
+      await teamApi.delete(teamId);
+
+      // Remove team from local state
+      set((state) => ({
+        teams: state.teams.filter((t) => t.id !== teamId && t._id !== teamId),
+        currentTeam:
+          state.currentTeam?._id === teamId || state.currentTeam?.id === teamId
+            ? null
+            : state.currentTeam,
+        transactions:
+          state.currentTeam?._id === teamId || state.currentTeam?.id === teamId
+            ? []
+            : state.transactions,
+        loading: false,
+      }));
+
+      // If there are remaining teams, set the first one as current
+      const remainingTeams = get().teams;
+      if (remainingTeams.length > 0 && !get().currentTeam) {
+        get().setCurrentTeam(remainingTeams[0]._id || remainingTeams[0].id);
+      }
+    } catch (error) {
+      console.error("Delete team error:", error);
+      set({ loading: false });
+      throw error;
     }
   },
 

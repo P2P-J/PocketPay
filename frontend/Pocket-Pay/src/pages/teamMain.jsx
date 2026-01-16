@@ -7,6 +7,7 @@ import { CreateTeamModal } from "../components/modals/createTeamModal";
 import { useTeamStore } from "../store/teamStore";
 // import { localStorageUtil } from "../utils/localStorage"; // Removed
 import { TeamSidebar } from "../components/TeamSidebar";
+import { MemberSidebar } from "../components/MemberSidebar";
 import { NavigationBar } from "../components/NavigationBar";
 import { AddTransactionScreen } from "../components/AddTransactionScreen";
 import { MonthlyContent } from "../components/MonthlyContent";
@@ -69,6 +70,7 @@ export default function TeamMain() {
     createTransaction,
     updateTransaction,
     deleteTransaction,
+    deleteTeam,
   } = useTeamStore();
   // const [transactions, setTransactions] = useState([]); // Removed local state
   const [showModal, setShowModal] = useState(false);
@@ -91,7 +93,10 @@ export default function TeamMain() {
   // =====================
   useEffect(() => {
     if (!currentTeam) return;
-    fetchTransactions(currentTeam._id || currentTeam.id);
+    const teamId = currentTeam._id || currentTeam.id;
+    if (teamId) {
+      fetchTransactions(teamId);
+    }
   }, [currentTeam]);
 
   // Removed local storage effects
@@ -224,6 +229,19 @@ export default function TeamMain() {
     deleteTransaction(id).catch(alert);
   };
 
+  const handleDeleteTeam = async () => {
+    try {
+      const teamId = currentTeam?._id || currentTeam?.id;
+      if (!teamId) return;
+
+      await deleteTeam(teamId);
+      // Navigate to home after successful deletion
+      navigate("/home");
+    } catch (error) {
+      alert(error.message || "팀 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background">
       {/* Left Sidebar */}
@@ -233,7 +251,7 @@ export default function TeamMain() {
         onCreateTeam={() => setShowCreateTeamModal(true)}
       />
 
-      {/* Main Content */}
+      {/* Main Content Area with Navigation and Right Sidebar */}
       <div className="flex-1 flex flex-col">
         {/* Navigation Bar */}
         <NavigationBar
@@ -243,97 +261,110 @@ export default function TeamMain() {
           onBack={() => navigate("/home")}
         />
 
-        <main className="flex-1 overflow-y-auto pt-4">
-          {/* Render content based on active tab */}
-          {activeTab === "transactions" ? (
-            <div className="tm-inner px-6 pt-4">
-              {/* 상단 요약 카드 영역 */}
-              <section className="tm-summary-row">
-                <div className="tm-summary-cards">
-                  {/* 현재 잔액 카드 */}
-                  <div className="tm-summary-card">
-                    <div className="tm-summary-texts">
-                      <div className="tm-summary-label">현재 잔액</div>
-                      <div
-                        className="tm-summary-amount"
-                        style={{ color: "#3b82f6" }}
-                      >
-                        {currentBalance >= 0 ? "" : "-"}
-                        {Math.abs(currentBalance).toLocaleString()}원
+        {/* Content area below nav bar */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Main Content */}
+          <div className="flex-1 overflow-y-auto">
+            <main className="pt-4">
+              {/* Render content based on active tab */}
+              {/* Render content based on active tab */}
+              {activeTab === "transactions" ? (
+                <div className="tm-inner px-6 pt-4">
+                  {/* 상단 요약 카드 영역 */}
+                  <section className="tm-summary-row">
+                    <div className="tm-summary-cards">
+                      {/* 현재 잔액 카드 */}
+                      <div className="tm-summary-card">
+                        <div className="tm-summary-texts">
+                          <div className="tm-summary-label">현재 잔액</div>
+                          <div
+                            className="tm-summary-amount"
+                            style={{ color: "#3b82f6" }}
+                          >
+                            {currentBalance >= 0 ? "" : "-"}
+                            {Math.abs(currentBalance).toLocaleString()}원
+                          </div>
+                        </div>
+                        <div className="tm-summary-icon tm-summary-icon--income">
+                          📊
+                        </div>
                       </div>
-                    </div>
-                    <div className="tm-summary-icon tm-summary-icon--income">
-                      📊
-                    </div>
-                  </div>
 
-                  {/* 이번달 수입 카드 */}
-                  <div className="tm-summary-card">
-                    <div className="tm-summary-texts">
-                      <div className="tm-summary-label">이번달 수입</div>
-                      <div
-                        className="tm-summary-amount"
-                        style={{ color: "#22c55e" }}
-                      >
-                        {monthlyIncome.toLocaleString()}원
+                      {/* 이번달 수입 카드 */}
+                      <div className="tm-summary-card">
+                        <div className="tm-summary-texts">
+                          <div className="tm-summary-label">이번달 수입</div>
+                          <div
+                            className="tm-summary-amount"
+                            style={{ color: "#22c55e" }}
+                          >
+                            {monthlyIncome.toLocaleString()}원
+                          </div>
+                        </div>
+                        <div className="tm-summary-icon tm-summary-icon--income">
+                          📈
+                        </div>
                       </div>
-                    </div>
-                    <div className="tm-summary-icon tm-summary-icon--income">
-                      📈
-                    </div>
-                  </div>
 
-                  {/* 이번주 지출 카드 */}
-                  <div className="tm-summary-card">
-                    <div className="tm-summary-texts">
-                      <div className="tm-summary-label">이번주 지출</div>
-                      <div
-                        className="tm-summary-amount tm-summary-amount-expense"
-                        style={{ color: "#ef4444" }}
-                      >
-                        {weeklyExpense.toLocaleString()}원
+                      {/* 이번주 지출 카드 */}
+                      <div className="tm-summary-card">
+                        <div className="tm-summary-texts">
+                          <div className="tm-summary-label">이번주 지출</div>
+                          <div
+                            className="tm-summary-amount tm-summary-amount-expense"
+                            style={{ color: "#ef4444" }}
+                          >
+                            {weeklyExpense.toLocaleString()}원
+                          </div>
+                        </div>
+                        <div className="tm-summary-icon tm-summary-icon--expense">
+                          📉
+                        </div>
                       </div>
                     </div>
-                    <div className="tm-summary-icon tm-summary-icon--expense">
-                      📉
+                  </section>
+
+                  {/* 거래 내역 + 상단 거래 추가 버튼 */}
+                  <section className="tm-list-section">
+                    <div className="tm-list-header">
+                      <h2 className="tm-list-title">거래 내역</h2>
+                      <button
+                        type="button"
+                        className="tm-add-btn"
+                        onClick={handleOpenCreateModal}
+                      >
+                        <span className="tm-add-btn-plus">＋</span>
+                        거래 추가
+                      </button>
                     </div>
-                  </div>
+
+                    {hasTransactions ? (
+                      <TransactionTable
+                        transactions={transactions}
+                        onDelete={handleDelete}
+                        onEdit={handleOpenEditModal}
+                      />
+                    ) : (
+                      <EmptyState onAddClick={handleOpenCreateModal} />
+                    )}
+                  </section>
                 </div>
-              </section>
+              ) : activeTab === "monthly" ? (
+                <MonthlyContent />
+              ) : activeTab === "report" ? (
+                <ReportContent />
+              ) : activeTab === "settings" ? (
+                <SettingsContent />
+              ) : null}
+            </main>
+          </div>
 
-              {/* 거래 내역 + 상단 거래 추가 버튼 */}
-              <section className="tm-list-section">
-                <div className="tm-list-header">
-                  <h2 className="tm-list-title">거래 내역</h2>
-                  <button
-                    type="button"
-                    className="tm-add-btn"
-                    onClick={handleOpenCreateModal}
-                  >
-                    <span className="tm-add-btn-plus">＋</span>
-                    거래 추가
-                  </button>
-                </div>
-
-                {hasTransactions ? (
-                  <TransactionTable
-                    transactions={transactions}
-                    onDelete={handleDelete}
-                    onEdit={handleOpenEditModal}
-                  />
-                ) : (
-                  <EmptyState onAddClick={handleOpenCreateModal} />
-                )}
-              </section>
-            </div>
-          ) : activeTab === "monthly" ? (
-            <MonthlyContent />
-          ) : activeTab === "report" ? (
-            <ReportContent />
-          ) : activeTab === "settings" ? (
-            <SettingsContent />
-          ) : null}
-        </main>
+          {/* Right Member Sidebar */}
+          <MemberSidebar
+            currentTeam={currentTeam}
+            onDeleteTeam={handleDeleteTeam}
+          />
+        </div>
       </div>
 
       {showModal && (

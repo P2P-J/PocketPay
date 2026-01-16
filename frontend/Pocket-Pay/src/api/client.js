@@ -22,12 +22,19 @@ const handleResponse = async (response) => {
     error.status = response.status;
     throw error;
   }
+
+  // Handle 204 No Content (e.g., DELETE requests)
+  if (response.status === 204) {
+    return null;
+  }
+
   return response.json();
 };
 
 export const apiClient = {
   get: async (endpoint) => {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "GET",
       headers: getHeaders(),
     });
     return handleResponse(response);
@@ -75,5 +82,5 @@ export const apiClient = {
       body: formData,
     });
     return handleResponse(response);
-  }
+  },
 };

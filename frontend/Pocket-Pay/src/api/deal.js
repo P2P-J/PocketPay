@@ -1,10 +1,10 @@
 import { apiClient } from "./client";
 
 export const dealApi = {
-  create: (data) => apiClient.post("/deal/register", data),
+  create: (data) => apiClient.post("/deals", data),
   getMonthly: (teamId, year, month) =>
-    apiClient.get(`/deal/monthly?teamId=${teamId}&year=${year}&month=${month}`),
-  getDetail: (dealId) => apiClient.get(`/deal/${dealId}`),
-  update: (dealId, data) => apiClient.put(`/deal/${dealId}`, data),
-  delete: (dealId) => apiClient.delete(`/deal/${dealId}`),
+    apiClient.get(`/deals?teamId=${teamId}&year=${year}&month=${month}`),
+  getDetail: (dealId) => apiClient.get(`/deals/${dealId}`),
+  update: (dealId, data) => apiClient.put(`/deals/${dealId}`, data),
+  delete: (dealId) => apiClient.delete(`/deals/${dealId}`),
 };
