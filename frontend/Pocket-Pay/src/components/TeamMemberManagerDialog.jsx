@@ -48,6 +48,7 @@ export function TeamMemberManagerDialog({ teamId, open, onOpenChange }) {
       setInviteMessage("");
       setError("");
       setInviteError("");
+      setInviteEmail("");
     }
   }, [open, teamId]);
 
