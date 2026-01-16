@@ -3,10 +3,12 @@ import { Button } from "./ui/button";
 import { useAuthStore } from "../store/authStore";
 import { Users, Trash2 } from "lucide-react";
 import { DeleteTeamModal } from "./modals/DeleteTeamModal";
+import { TeamMemberManagerDialog } from "./TeamMemberManagerDialog";
 
 export function MemberSidebar({ currentTeam, onDeleteTeam }) {
   const { user } = useAuthStore();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [memberModalOpen, setMemberModalOpen] = useState(false);
 
   if (!currentTeam) {
     return null;
@@ -36,11 +38,11 @@ export function MemberSidebar({ currentTeam, onDeleteTeam }) {
   };
 
   const handleManageMembersClick = () => {
-    // 추후 기능 구현 예정
-    console.log("팀원 관리 기능은 추후 구현 예정입니다.");
+    setMemberModalOpen(true);
   };
 
   return (
+    <>
     <div className="w-64 bg-card border-l border-border flex flex-col">
       <div className="p-4 border-b border-border">
         <Button
@@ -108,5 +110,13 @@ export function MemberSidebar({ currentTeam, onDeleteTeam }) {
         />
       )}
     </div>
+
+      {/* 🔹 실제 팀원관리 모달 연결 */}
+      <TeamMemberManagerDialog
+        teamId={currentTeam._id || currentTeam.id}
+        open={memberModalOpen}
+        onOpenChange={setMemberModalOpen}
+      />
+    </>
   );
 }
