@@ -29,7 +29,6 @@ export function LandingPage() {
   } = useTeamStore();
   const { user, logout } = useAuthStore();
   const [selectedTeamId, setSelectedTeamId] = useState(null);
-  // const [selectedTeamTransactions, setSelectedTeamTransactions] = useState([]); // Use storeTransactions instead
   const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -39,10 +38,8 @@ export function LandingPage() {
     }
   }, [teams, selectedTeamId]);
 
-  // 선택된 팀이 바뀔 때마다 해당 팀의 거래 내역 로드
   useEffect(() => {
     if (selectedTeamId) {
-      // API call to fetch transactions
       fetchTransactions(selectedTeamId);
     }
   }, [selectedTeamId]);
@@ -131,10 +128,7 @@ export function LandingPage() {
                     <br />첫 번째 팀을 만들어보세요
                   </p>
                 </div>
-                <Button
-                  onClick={handleCreateTeam}
-                  className="mt-4"
-                >
+                <Button onClick={handleCreateTeam} className="mt-4">
                   시작하기
                 </Button>
               </div>
@@ -178,7 +172,7 @@ export function LandingPage() {
                     <h2 className="text-lg">이번 달 요약</h2>
                     <div className="grid grid-cols-3 gap-4">
                       {/* Balance */}
-                      <div className="bg-card border border-border rounded-xl p-4 flex justify-between items-center">
+                      <div className="bg-card border border-border rounded-2xl p-6 flex justify-between items-center hover:shadow-md transition-shadow">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Wallet className="w-4 h-4" />
@@ -192,43 +186,43 @@ export function LandingPage() {
                             {formatCurrency(balance)}
                           </div>
                         </div>
-                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl">
+                        <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center text-2xl">
                           📊
                         </div>
                       </div>
 
                       {/* Total Income */}
-                      <div className="bg-card border border-border rounded-xl p-4 flex justify-between items-center">
+                      <div className="bg-card border border-border rounded-2xl p-6 flex justify-between items-center hover:shadow-md transition-shadow">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <TrendingUp className="w-4 h-4" />총 수입
                           </div>
                           <div
                             className="text-2xl font-bold"
-                            style={{ color: "#22c55e" }}
+                            style={{ color: "#3DD598" }}
                           >
                             {formatCurrency(totalIncome)}
                           </div>
                         </div>
-                        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-2xl">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl">
                           📈
                         </div>
                       </div>
 
                       {/* Total Expense */}
-                      <div className="bg-card border border-border rounded-xl p-4 flex justify-between items-center">
+                      <div className="bg-card border border-border rounded-2xl p-6 flex justify-between items-center hover:shadow-md transition-shadow">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <TrendingDown className="w-4 h-4" />총 지출
                           </div>
                           <div
                             className="text-2xl font-bold"
-                            style={{ color: "#ef4444" }}
+                            style={{ color: "#ff6b6b" }}
                           >
                             {formatCurrency(totalExpense)}
                           </div>
                         </div>
-                        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-2xl">
+                        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center text-2xl">
                           📉
                         </div>
                       </div>
@@ -243,7 +237,7 @@ export function LandingPage() {
 
                   {/* Recent Transactions */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between px-1">
                       <h2 className="text-lg">최근 내역</h2>
                       <Button
                         variant="ghost"
@@ -257,14 +251,15 @@ export function LandingPage() {
                       {recentTransactions.map((transaction) => (
                         <div
                           key={transaction.id}
-                          className="bg-card border border-border rounded-xl p-4 flex items-center justify-between hover:shadow-sm transition-shadow"
+                          className="bg-card border border-border rounded-2xl p-5 px-6 flex items-center justify-between hover:shadow-md transition-all"
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-12 h-12 rounded-full flex items-center justify-center ${transaction.type === "income"
-                                ? "bg-blue-100 text-blue-600"
-                                : "bg-red-100 text-red-600"
-                                }`}
+                              className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold ${
+                                transaction.type === "income"
+                                  ? "bg-primary/10 text-primary"
+                                  : "bg-destructive/10 text-destructive"
+                              }`}
                             >
                               {transaction.merchant?.[0] || "?"}
                             </div>
@@ -281,10 +276,11 @@ export function LandingPage() {
                             </div>
                           </div>
                           <div
-                            className={`text-lg ${transaction.type === "income"
-                              ? "text-blue-500"
-                              : "text-red-500"
-                              }`}
+                            className={`text-lg font-semibold ${
+                              transaction.type === "income"
+                                ? "text-primary"
+                                : "text-destructive"
+                            }`}
                           >
                             {transaction.type === "income" ? "+" : "-"}
                             {formatCurrency(transaction.amount)}
@@ -299,7 +295,7 @@ export function LandingPage() {
                     <Button
                       onClick={handleEnterTeam}
                       size="lg"
-                      className="px-8"
+                      className="p-4 border-t border-border"
                     >
                       영수증 업로드 →
                     </Button>
