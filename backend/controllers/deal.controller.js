@@ -3,7 +3,7 @@ const AppError = require("../utils/AppError");
 const { handleError } = require("../utils/errorHandler");
 
 const registerDeal = async (req, res) => {
-  try { // 수정본
+  try { 
     const {
       storeInfo,
       division,
