@@ -44,14 +44,20 @@
   min-width: 0;
 
   background: var(--card);
-  border-radius: 24px;
+  border-radius: 20px;
   border: 1px solid var(--border);
-  padding: 20px 28px;
+  padding: 24px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   min-height: 120px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tm-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
 }
 
 .tm-summary-texts {
@@ -95,10 +101,10 @@
   color: var(--destructive);
 }
 
-/* 거래 추가 버튼 – 피그마 초록 버튼 느낌 */
+/* 거래 추가 버튼 – 토스 스타일 */
 .tm-add-btn {
-  padding: 10px 24px;
-  border-radius: 999px;
+  padding: 12px 28px;
+  border-radius: 12px;
   border: none;
   background: var(--primary);
   color: var(--primary-foreground);
@@ -108,23 +114,22 @@
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.35);
-  transition: background 0.15s ease, box-shadow 0.15s ease,
-    transform 0.1s ease;
+  box-shadow: 0 4px 12px rgba(61, 213, 152, 0.25);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* 🔹 행 가운데에 고정 */
   align-self: center;
 }
 
 .tm-add-btn:hover {
-  background: color-mix(in oklab, var(--primary) 90%, #0000);
-  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.4);
-  transform: translateY(-1px);
+  background: color-mix(in oklab, var(--primary) 90%, #000);
+  box-shadow: 0 8px 20px rgba(61, 213, 152, 0.35);
+  transform: translateY(-2px);
 }
 
 .tm-add-btn:active {
   transform: translateY(0);
-  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 2px 8px rgba(61, 213, 152, 0.2);
 }
 
 .tm-add-btn-plus {
@@ -182,11 +187,11 @@
 
 .tm-empty-card {
   background: var(--card);
-  border-radius: 24px;
+  border-radius: 20px;
   border: 1px solid var(--border);
   padding: 48px 32px 40px;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .tm-empty-icon {
@@ -214,8 +219,8 @@
 }
 
 .tm-empty-btn {
-  padding: 10px 28px;
-  border-radius: 999px;
+  padding: 12px 28px;
+  border-radius: 12px;
   border: none;
   background: var(--primary);
   color: var(--primary-foreground);
@@ -225,20 +230,19 @@
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.35);
-  transition: background 0.15s ease, box-shadow 0.15s ease,
-    transform 0.1s ease;
+  box-shadow: 0 4px 12px rgba(61, 213, 152, 0.25);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tm-empty-btn:hover {
-  background: color-mix(in oklab, var(--primary) 90%, #0000);
-  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.4);
-  transform: translateY(-1px);
+  background: color-mix(in oklab, var(--primary) 90%, #000);
+  box-shadow: 0 8px 20px rgba(61, 213, 152, 0.35);
+  transform: translateY(-2px);
 }
 
 .tm-empty-btn:active {
   transform: translateY(0);
-  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 2px 8px rgba(61, 213, 152, 0.2);
 }
 
 /* =========================
@@ -247,9 +251,9 @@
 
 .tm-table-wrapper {
   background: var(--card);
-  border-radius: 24px;
+  border-radius: 16px;
   border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
 
@@ -270,7 +274,7 @@
 .tm-table td {
   padding: 14px 20px;
   border-bottom: 1px solid var(--border);
-  vertical-align: middle;        /* 세로 가운데 정렬 */
+  vertical-align: middle; /* 세로 가운데 정렬 */
 }
 
 /* 헤더 기본은 왼쪽 정렬 */
@@ -557,4 +561,3 @@
     grid-template-columns: 1fr;
   }
 }
-
