@@ -142,8 +142,6 @@ export default function TeamMain() {
     [transactions]
   );
 
-
-  
   // =====================
   // 모달 열기/닫기 + 폼 변경
   // =====================
@@ -298,7 +296,7 @@ export default function TeamMain() {
                           <div className="tm-summary-label">이번달 수입</div>
                           <div
                             className="tm-summary-amount"
-                            style={{ color: "#22c55e" }}
+                            style={{ color: "#3DD598" }}
                           >
                             {monthlyIncome.toLocaleString()}원
                           </div>
@@ -314,7 +312,7 @@ export default function TeamMain() {
                           <div className="tm-summary-label">이번주 지출</div>
                           <div
                             className="tm-summary-amount tm-summary-amount-expense"
-                            style={{ color: "#ef4444" }}
+                            style={{ color: "#ff6b6b" }}
                           >
                             {weeklyExpense.toLocaleString()}원
                           </div>
