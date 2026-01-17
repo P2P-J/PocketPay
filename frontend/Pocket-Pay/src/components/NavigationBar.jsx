@@ -90,8 +90,7 @@ export function NavigationBar({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onSelect={handleProfileClick}
-                  className="cursor-pointer flex items-center gap-2 text-sm hover:bg-muted hover:text-foreground
-                  mt-2 "
+                  className="cursor-pointer flex items-center gap-2 text-sm hover:bg-muted hover:text-foreground mt-2"
                 >
                   <User className="w-4 h-4" />
                   <span>프로필</span>
@@ -101,17 +100,9 @@ export function NavigationBar({
 
                 <DropdownMenuItem
                   onSelect={handleLogout}
-                  className="
-                    cursor-pointer flex items-center gap-2 text-sm
-                    hover:bg-muted hover:text-foreground
-                    mb-2
-                  "
+                  className="cursor-pointer flex items-center gap-2 text-sm hover:bg-muted hover:text-foreground mb-2"
                 >
-                 
-                  <Power
-                    className="w-4 h-4"
-                    style={{ color: "#ef4444" }}  
-                  />
+                  <Power className="w-4 h-4" style={{ color: "#ef4444" }} />
                   <span style={{ color: "#ef4444" }}>로그아웃</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
