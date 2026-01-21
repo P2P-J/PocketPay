@@ -11,11 +11,11 @@
 | ------ | ---------------------------- | ------------------------- | ------ |
 | GET    | `/account/me`                | 내 정보 조회              | 로그인 |
 | DELETE | `/account/me`                | 계정 탈퇴                 | 로그인 |
-| PUT    | `/account/me/changePassword` | 비밀번호 변경(Local 전용) | 로그인 |
+| PATCH  | `/account/me/changePassword` | 비밀번호 변경(Local 전용) | 로그인 |
 
 ### Request Body
 
-**PUT /account/me/changePassword** (비밀번호 변경 - Local 전용)
+**PATCH /account/me/changePassword** (비밀번호 변경 - Local 전용)
 
 ```json
 {
@@ -43,14 +43,14 @@
 
 | Method | Endpoint                               | 설명            | 권한               |
 | ------ | -------------------------------------- | --------------- | ------------------ |
-| POST   | `/auth/signup/local`                   | Local 회원가입  | 가입 희망 유저     |
-| POST   | `/auth/login/local`                    | Local 로그인    | 가입된 유저        |
-| GET    | `/auth/login/oauth/:provider`          | SNS 로그인      | SNS 가입 희망 유저 |
-| GET    | `/auth/login/oauth/:provider/callback` | SNS 로그인 콜백 | SNS 가입 유저      |
+| POST   | `/auth/signup`                   | Local 회원가입  | 가입 희망 유저     |
+| POST   | `/auth/login`                    | Local 로그인    | 가입된 유저        |
+| GET    | `/auth/oauth/:provider`          | SNS 로그인      | SNS 가입 희망 유저 |
+| GET    | `/auth/oauth/:provider/callback` | SNS 로그인 콜백 | SNS 가입 유저      |
 
 ### Request Body
 
-**POST /auth/signup/local** (Local 회원가입)
+**POST /auth/signup** (Local 회원가입)
 
 ```json
 {
@@ -60,7 +60,7 @@
 }
 ```
 
-**POST /auth/login/local** (Local 로그인)
+**POST /auth/login** (Local 로그인)
 
 ```json
 {
@@ -71,7 +71,7 @@
 
 ### Response
 
-**POST /auth/login/local** (Local 로그인)
+**POST /auth/login** (Local 로그인)
 
 ```json
 {
@@ -79,7 +79,7 @@
 }
 ```
 
-**GET /auth/login/oauth/:provider/callback** (SNS 로그인 콜백)
+**GET /auth/oauth/:provider/callback** (SNS 로그인 콜백)
 
 ```json
 {
