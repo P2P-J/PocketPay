@@ -1,17 +1,12 @@
-/**
- * 커스텀 에러 클래스
- * Service에서 적절한 HTTP 상태 코드와 함께 에러를 던질 수 있음!!
- */
 class AppError extends Error {
   constructor(message, statusCode) {
     super(message);
     this.statusCode = statusCode;
-    this.isOperational = true; // 예상된 에러인지 구분
+    this.isOperational = true;
 
     Error.captureStackTrace(this, this.constructor);
   }
 
-  // 자주 쓰는 에러 타입들을 static 하게 메서드로써 제공
   static badRequest(message = "잘못된 요청입니다.") {
     return new AppError(message, 400);
   }

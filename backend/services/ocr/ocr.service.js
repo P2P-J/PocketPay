@@ -10,7 +10,6 @@ const RECEIPT_SECRET_KEY = process.env.DOCUMENT_SECRET_KEY;
 const GENERAL_API_URL = process.env.GENERAL_APIGW_URL;
 const GENERAL_SECRET_KEY = process.env.GENERAL_SECRET_KEY;
 
-// 1. 공통 API 호출 함수
 async function callClovaAPI(url, secretKey, requestIdPrefix, imagePath) {
   try {
     const formData = new FormData();
@@ -38,13 +37,11 @@ async function callClovaAPI(url, secretKey, requestIdPrefix, imagePath) {
   }
 }
 
-// 2. 텍스트 추출
 function extractFullText(generalResult) {
   if (!generalResult?.images?.[0]?.fields) return "";
   return generalResult.images[0].fields.map((f) => f.inferText).join("\n");
 }
 
-// 3. 데이터 파싱 로직
 function extractReceiptData(receiptResult, fullText) {
   if (!receiptResult?.images?.[0]?.receipt?.result) return null;
 
@@ -59,25 +56,34 @@ function extractReceiptData(receiptResult, fullText) {
 
   const normalizeDate = (dateStr) => {
     if (!dateStr) return null;
+
     let cleanStr = dateStr.replace(/\s/g, "");
-    let match = cleanStr.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+
+    cleanStr = cleanStr.replace(/이월/g, "01-");
+
+    cleanStr = cleanStr.replace(/[년월]/g, "-").replace(/일/g, "");
+
+    let match = cleanStr.match(/^(\d{4})(\d{2})(\d{2})$/);
     if (match) {
-      return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(
-        2,
-        "0"
-      )}`;
+      return `${match[1]}-${match[2]}-${match[3]}`;
     }
+
+    match = cleanStr.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+    if (match) {
+      const month = match[2].padStart(2, "0");
+      const day = match[3].padStart(2, "0");
+      return `${match[1]}-${month}-${day}`;
+    }
+
     match = cleanStr.match(/(\d{2})[-./](\d{1,2})[-./](\d{1,2})/);
     if (match) {
-      return `20${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(
-        2,
-        "0"
-      )}`;
+      const month = match[2].padStart(2, "0");
+      const day = match[3].padStart(2, "0");
+      return `20${match[1]}-${month}-${day}`;
     }
     return null;
   };
 
-  // 가격 1차 추출 (영수증 API 결과)
   let price = 0;
   if (receipt.totalPrice?.price?.formatted?.value) {
     price = parsePrice(receipt.totalPrice.price.formatted.value);
@@ -85,7 +91,6 @@ function extractReceiptData(receiptResult, fullText) {
     price = parsePrice(receipt.totalPrice.price.text);
   }
 
-  // 가격 보정 로직
   if (price < 100 && fullText) {
     const flatText = fullText.replace(/\n/g, " ").replace(/\s+/g, " ");
     const cleanText = flatText.replace(
@@ -137,19 +142,24 @@ function extractReceiptData(receiptResult, fullText) {
     }
   }
 
-  // 날짜 추출
+  let date = "N/A";
   let rawDate = "";
-  if (receipt.paymentInfo?.date?.formatted?.year) {
-    const { year, month, day } = receipt.paymentInfo.date.formatted;
-    rawDate = `${year}-${month}-${day}`;
-  } else if (receipt.paymentInfo?.date?.text) {
+
+  if (receipt.paymentInfo?.date?.text) {
     rawDate = receipt.paymentInfo.date.text;
+  } else if (receipt.paymentInfo?.date?.formatted) {
+    const { year, month, day } = receipt.paymentInfo.date.formatted;
+    if (year && year.length >= 2) {
+      rawDate = `${year}-${month}-${day}`;
+    }
   }
 
-  // 날짜 보정
   if ((!rawDate || rawDate.startsWith("-")) && fullText) {
     const datePatterns = [
-      /(?:거\s*래\s*일\s*시|날\s*짜|일\s*시)[:\s]*([\d]{2,4}[-./][\d]{1,2}[-./][\d]{1,2})/,
+      /(\d{4}\s*년\s*\d{1,2}\s*월\s*\d{1,2}\s*일)/,
+
+      /(?:거\s*래\s*일\s*시|날\s*짜|일\s*시|등\s*록)[:\s]*([\d]{2,4}[-./][\d]{1,2}[-./][\d]{1,2})/,
+
       /(\d{4}[-./]\d{1,2}[-./]\d{1,2})/,
       /(\d{2}[-./]\d{1,2}[-./]\d{1,2})/,
     ];
@@ -163,7 +173,9 @@ function extractReceiptData(receiptResult, fullText) {
     }
   }
 
-  const date = normalizeDate(rawDate);
+  const standardizedDate = normalizeDate(rawDate);
+  if (standardizedDate) date = standardizedDate;
+
   const rawBizNum = receipt.storeInfo?.bizNum?.text || "";
   const normalizedBizNum = rawBizNum.replace(/[^0-9]/g, "") || "N/A";
 
@@ -175,9 +187,7 @@ function extractReceiptData(receiptResult, fullText) {
   };
 }
 
-// 4. 외부에서 호출할 메인 함수
 const processReceiptImage = async (imagePath) => {
-  // 영수증 Document OCR 우선 호출
   const receiptResult = await callClovaAPI(
     RECEIPT_API_URL,
     RECEIPT_SECRET_KEY,
@@ -185,7 +195,6 @@ const processReceiptImage = async (imagePath) => {
     imagePath
   );
 
-  // 보조용 General OCR 호출
   const generalResult = await callClovaAPI(
     GENERAL_API_URL,
     GENERAL_SECRET_KEY,

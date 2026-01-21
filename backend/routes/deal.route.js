@@ -5,9 +5,9 @@ const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
 
 router.use(loginUserVerify);
 
-router.post("/", dealController.registerDeal);
+router.post("/", dealController.createDeal);
 router.get("/", dealController.getMonthlyDeals);
-router.get("/:dealId", dealController.getDealDetail);
+router.get("/:dealId", dealController.getDealById);
 router.put("/:dealId", dealController.updateDeal);
 router.delete("/:dealId", dealController.deleteDeal);
 

@@ -7,7 +7,7 @@ const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
 const upload = multer({
   dest: "uploads/",
   limits: {
-    fileSize: 5 * 1024 * 1024, // 제한 일단 5MB로 걸어뒀습니다
+    fileSize: 5 * 1024 * 1024,
     files: 1,
   },
   fileFilter: (req, file, cb) => {
@@ -19,7 +19,6 @@ const upload = multer({
   },
 });
 
-// Multer 에러 핸들링 미들웨어
 const handleUpload = (req, res, next) => {
   upload.single("file")(req, res, (err) => {
     if (err instanceof multer.MulterError) {
