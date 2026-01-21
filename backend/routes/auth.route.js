@@ -8,13 +8,13 @@ const {
 } = require("../controllers/auth.controller");
 
 // =====================LOCAL AUTH ROUTES===================== //
-// local : http://localhost:3000/auth/login/local
-router.post("/signup/local", signupLocalController);
-router.post("/login/local", loginLocalController);
+// local : http://localhost:3000/auth/login
+router.post("/signup", signupLocalController);
+router.post("/login", loginLocalController);
 // =====================OAUTH ROUTES===================== //
-// google : http://localhost:3000/auth/login/oauth/google
-// naver : http://localhost:3000/auth/login/oauth/naver
-router.get('/login/oauth/:provider', loginOauthController);
-router.get('/login/oauth/:provider/callback', loginOauthCallbackController);
+// google : http://localhost:3000/auth/oauth/google
+// naver : http://localhost:3000/auth/oauth/naver
+router.get('/oauth/:provider', loginOauthController);
+router.get('/oauth/:provider/callback', loginOauthCallbackController);
 
 module.exports = router;

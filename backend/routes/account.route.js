@@ -7,6 +7,6 @@ router.use(loginUserVerify);
 
 router.get("/me", AccountController.getMyAccount);
 router.delete("/me", AccountController.deleteMyAccount);
-router.put("/me/changePassword", AccountController.changeMyPassword);
+router.patch("/me/password", AccountController.changeMyPassword);
 
 module.exports = router;
