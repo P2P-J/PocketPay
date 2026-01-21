@@ -2,7 +2,7 @@ const dealService = require("../services/deal/deal.service");
 const AppError = require("../utils/AppError");
 const { handleError } = require("../utils/errorHandler");
 
-const registerDeal = async (req, res) => {
+const createDeal = async (req, res) => {
   try { 
     const {
       storeInfo,
@@ -36,7 +36,7 @@ const registerDeal = async (req, res) => {
   }
 };
 
-const getDealDetail = async (req, res) => {
+const getDealById = async (req, res) => {
   try {
     const { dealId } = req.params;
     const userId = req.user.userId;
@@ -100,8 +100,8 @@ const deleteDeal = async (req, res) => {
 };
 
 module.exports = {
-  registerDeal,
-  getDealDetail,
+  createDeal,
+  getDealById,
   getMonthlyDeals,
   updateDeal,
   deleteDeal,

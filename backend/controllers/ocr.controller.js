@@ -12,7 +12,6 @@ const analyzeImage = async (req, res) => {
     const filePath = req.file.path;
     const data = await ocrService.processReceiptImage(filePath);
 
-    // 임시 파일 삭제
     fs.unlink(filePath, (err) => {
       if (err) 
         console.error("임시 파일 삭제 실패:", err);
