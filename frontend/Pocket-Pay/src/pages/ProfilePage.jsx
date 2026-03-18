@@ -4,7 +4,7 @@ import { useAuthStore } from "../store/authStore";
 import { NavigationBar } from "../components/NavigationBar";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { changePassword, deleteAccount } from "../api/account";
+import { authApi } from "../api/auth";
 
 export function ProfilePage({ onBack }) {
   const { user, logout } = useAuthStore();
@@ -70,11 +70,11 @@ export function ProfilePage({ onBack }) {
     }
 
     try {
-      await changePassword(currentPassword, newPassword);
+      await authApi.changePassword({ currentPassword, newPassword });
       toast.success("비밀번호가 변경되었습니다.");
       setIsPasswordOpen(false);
     } catch (err) {
-      setPasswordError(err.response?.data?.message || "비밀번호 변경 실패");
+      setPasswordError(err.message || "비밀번호 변경 실패");
     }
   };
 
@@ -91,13 +91,13 @@ export function ProfilePage({ onBack }) {
 
   const handleDeleteFinal = async () => {
     try {
-      await deleteAccount();
+      await authApi.deleteAccount();
       toast.success("정상적으로 회원 탈퇴 되었습니다.");
       logout();
       navigate("/home");
     } catch (err) {
       toast.error(
-        err.response?.data?.message || "회원 탈퇴 중 오류가 발생했습니다."
+        err.message || "회원 탈퇴 중 오류가 발생했습니다."
       );
       setDeleteStep(0);
     }
