@@ -23,3 +23,9 @@ uploads/
 
 # Analysis documents
 /analysis/
+
+# Claude Code
+.claude/
+
+# Env examples with secrets
+*.env.local
