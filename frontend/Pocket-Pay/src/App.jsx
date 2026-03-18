@@ -5,7 +5,10 @@ import { useTeamStore } from "./store/teamStore";
 import { LandingPage } from "./pages/HomePage";
 import TeamMain from "./pages/teamMain";
 import { ProfilePage } from "./pages/ProfilePage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 import { LoadingScreen } from "./components/AuthScreen";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Toaster } from "./components/ui/sonner";
 
 export default function App() {
@@ -15,7 +18,7 @@ export default function App() {
   // App에서만 쓰는 "초기 인증 확인 중" 상태
   const [authChecking, setAuthChecking] = useState(true);
 
-  // ✅ 1. SNS OAuth 콜백 처리 (구글/네이버에서 token 줬을 때)
+  // 1. SNS OAuth 콜백 처리 (구글/네이버에서 token 줬을 때)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
@@ -31,7 +34,6 @@ export default function App() {
         });
 
         if (!res.ok) {
-          const text = await res.text();
           throw new Error(`auth/me failed: ${res.status}`);
         }
 
@@ -42,14 +44,14 @@ export default function App() {
 
         loginWithOAuth(user, token);
       } catch (err) {
-        console.log("SNS 로그인 처리 중 오류가 발생했습니다.");
+        console.error("SNS 로그인 처리 중 오류가 발생했습니다.");
       } finally {
         window.location.replace("/home");
       }
     })();
   }, [loginWithOAuth]);
 
-  // ✅ 2. 앱 처음 켰을 때 기존 토큰 유효성 확인
+  // 2. 앱 처음 켰을 때 기존 토큰 유효성 확인
   useEffect(() => {
     (async () => {
       try {
@@ -60,7 +62,7 @@ export default function App() {
     })();
   }, [checkAuth]);
 
-  // ✅ 3. 로그인 된 상태면 팀 목록 가져오기
+  // 3. 로그인 된 상태면 팀 목록 가져오기
   useEffect(() => {
     if (accessToken) {
       fetchTeams();
@@ -71,17 +73,33 @@ export default function App() {
     return <LoadingScreen />;
   }
 
-  // 나머지는 기존 그대로
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<LandingPage />} />
-        <Route path="/team" element={<TeamMain />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/oauth/callback" element={<LoadingScreen />} />
-      </Routes>
-      <Toaster />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<LandingPage />} />
+          <Route
+            path="/team"
+            element={
+              <ProtectedRoute>
+                <TeamMain />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/oauth/callback" element={<LoadingScreen />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+        <Toaster />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

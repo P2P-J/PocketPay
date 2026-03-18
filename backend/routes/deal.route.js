@@ -2,13 +2,20 @@ const express = require("express");
 const router = express.Router();
 const dealController = require("../controllers/deal.controller");
 const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
+const { validate } = require("../middleware/validate.middleware");
+const {
+  createDealSchema,
+  updateDealSchema,
+  getMonthlyDealsSchema,
+  dealIdParamSchema,
+} = require("../validators/deal.validator");
 
 router.use(loginUserVerify);
 
-router.post("/", dealController.registerDeal);
-router.get("/", dealController.getMonthlyDeals);
-router.get("/:dealId", dealController.getDealDetail);
-router.put("/:dealId", dealController.updateDeal);
-router.delete("/:dealId", dealController.deleteDeal);
+router.post("/", validate(createDealSchema), dealController.registerDeal);
+router.get("/", validate(getMonthlyDealsSchema), dealController.getMonthlyDeals);
+router.get("/:dealId", validate(dealIdParamSchema), dealController.getDealDetail);
+router.put("/:dealId", validate(updateDealSchema), dealController.updateDeal);
+router.delete("/:dealId", validate(dealIdParamSchema), dealController.deleteDeal);
 
 module.exports = router;

@@ -28,6 +28,7 @@ const registerDeal = async (req, res) => {
       businessNumber,
       date,
       teamId,
+      createdBy: userId,
     });
 
     return res.status(201).json({ message: "영수증 등록 성공", data: newDeal });

@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 const { verifyToken } = require("../utils/jwt.util");
 const { User } = require("../models/index");
 
@@ -23,6 +24,13 @@ const loginUserVerify = async (req, res, next) => {
         req.user = decoded;
         next();
     } catch (err) {
+        // 토큰 만료 vs 변조 구분
+        if (err instanceof jwt.TokenExpiredError) {
+            return res.status(401).json({ message: "TOKEN_EXPIRED" });
+        }
+        if (err instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({ message: "INVALID_TOKEN" });
+        }
         return res.status(401).json({ message: "UNAUTHORIZED" });
     }
 };

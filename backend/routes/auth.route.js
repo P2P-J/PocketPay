@@ -5,18 +5,16 @@ const {
     loginLocalController,
     loginOauthController,
 } = require("../controllers/auth.controller");
+const { validate } = require("../middleware/validate.middleware");
+const { signupSchema, loginSchema } = require("../validators/auth.validator");
 
 // =====================LOCAL AUTH ROUTES===================== //
-// local : http://localhost:3000/auth/login/local
-router.post("/signup/local", signupLocalController);
-router.post("/login/local", loginLocalController);
+router.post("/signup/local", validate(signupSchema), signupLocalController);
+router.post("/login/local", validate(loginSchema), loginLocalController);
 
 const providers = require('../services/auth/providers');
 
 // =====================OAUTH ROUTES===================== //
-// OAuth 시작 (redirect 보내기)
-// google : http://localhost:3000/auth/login/oauth/google
-// naver : http://localhost:3000/auth/login/oauth/naver
 router.get('/login/oauth/:provider', (req, res) => {
     const { provider } = req.params;
 
@@ -37,12 +35,12 @@ router.get('/login/oauth/:provider', (req, res) => {
         const state = req.query.state;
 
         const authUrl = oauthProvider.getAuthUrl({ forceConsent, state });
-        
+
         return res.redirect(authUrl);
     }
 });
 
-// OAuth callback 보내기
+// OAuth callback
 router.get('/login/oauth/:provider/callback', loginOauthController);
 
 module.exports = router;

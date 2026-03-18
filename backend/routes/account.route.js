@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
+const { validate } = require("../middleware/validate.middleware");
+const { changePasswordSchema } = require("../validators/auth.validator");
 const AccountController = require("../controllers/account.controller");
 
 router.use(loginUserVerify);
@@ -12,6 +14,6 @@ router.get("/me", AccountController.getMyAccount);
 router.delete("/me", AccountController.deleteMyAccount);
 
 // 비밀번호 변경 PUT /account/me/changePassword (Local 전용)
-router.put("/me/changePassword", AccountController.changeMyPassword);
+router.put("/me/changePassword", validate(changePasswordSchema), AccountController.changeMyPassword);
 
 module.exports = router;
