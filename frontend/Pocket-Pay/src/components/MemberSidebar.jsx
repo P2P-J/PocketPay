@@ -1,0 +1,161 @@
+import { useState } from "react";
+import { Button } from "./ui/button";
+import { useAuthStore } from "../store/authStore";
+import { Users, Trash2, LogOut } from "lucide-react";
+import { DeleteTeamModal } from "./modals/DeleteTeamModal";
+import { LeaveTeamModal } from "./modals/LeaveTeamModal";
+import { TeamMemberManagerDialog } from "./TeamMemberManagerDialog";
+
+export function MemberSidebar({ currentTeam, onDeleteTeam }) {
+  const { user } = useAuthStore();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [memberModalOpen, setMemberModalOpen] = useState(false);
+
+  if (!currentTeam) {
+    return null;
+  }
+
+  // Check if current user is the owner by checking their role in members array
+  const currentUserMember = currentTeam.members?.find(
+    (member) =>
+      member.user?._id === user?.userId ||
+      member.user?._id === user?._id ||
+      member.user?._id === user?.id || // user.id 추가
+      member.user === user?.userId ||
+      member.user === user?._id ||
+      member.user === user?.id // user.id 추가
+  );
+  const isOwner = currentUserMember?.role === "owner";
+
+  // Sort members by joinedAt (가입된 순서)
+  const sortedMembers = currentTeam.members
+    ? [...currentTeam.members].sort((a, b) => {
+        const dateA = new Date(a.joinedAt || 0);
+        const dateB = new Date(b.joinedAt || 0);
+        return dateA - dateB;
+      })
+    : [];
+
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    await onDeleteTeam?.();
+  };
+
+  const handleLeaveClick = () => {
+    setShowLeaveModal(true);
+  };
+
+  const handleManageMembersClick = () => {
+    setMemberModalOpen(true);
+  };
+
+  return (
+    <>
+      <div className="w-64 bg-card border-l border-border flex flex-col">
+        <div className="p-4 border-b border-border">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleManageMembersClick}
+          >
+            <Users className="w-4 h-4 mr-2" />
+            팀원 관리
+          </Button>
+        </div>
+
+        {/* Member List */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">
+              팀원 목록 ({sortedMembers.length}명)
+            </h3>
+            {sortedMembers.map((member, index) => {
+              const memberUser = member.user;
+              const memberName = memberUser?.name || "알 수 없음";
+              const memberRole = member.role;
+              const isOwnerMember = memberRole === "owner";
+
+              return (
+                <div
+                  key={member._id || memberUser?._id || index}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-muted/50"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-medium">
+                    {memberName[0]?.toUpperCase() || "?"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">
+                      {memberName}
+                    </div>
+                    {memberRole && (
+                      <div
+                        className={`text-xs ${
+                          memberRole === "owner"
+                            ? "text-primary font-semibold"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {memberRole === "owner" ? "Owner" : "Member"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Owner: 팀 삭제하기 버튼 / Member: 팀 나가기 버튼 */}
+        <div className="p-4 border-t border-border">
+          {isOwner ? (
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={handleDeleteClick}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />팀 삭제하기
+            </Button>
+          ) : (
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={handleLeaveClick}
+            >
+              <LogOut className="w-4 h-4 mr-2" />팀 나가기
+            </Button>
+          )}
+        </div>
+
+        {/* Delete Team Modal */}
+        {showDeleteModal && (
+          <DeleteTeamModal
+            teamName={currentTeam.name}
+            onClose={() => setShowDeleteModal(false)}
+            onConfirm={handleConfirmDelete}
+          />
+        )}
+
+        {/* Leave Team Modal */}
+        {showLeaveModal && (
+          <LeaveTeamModal
+            isOpen={showLeaveModal}
+            onClose={() => setShowLeaveModal(false)}
+            teamName={currentTeam.name}
+            teamId={currentTeam._id || currentTeam.id}
+          />
+        )}
+      </div>
+
+      {/* 🔹 실제 팀원관리 모달 연결 */}
+      <TeamMemberManagerDialog
+        teamId={currentTeam._id || currentTeam.id}
+        open={memberModalOpen}
+        onOpenChange={setMemberModalOpen}
+      />
+    </>
+  );
+}
