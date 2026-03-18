@@ -1,8 +1,6 @@
-const mongoose = require("mongoose");
 const { Team, User, Deal } = require("../../models/index");
 const AppError = require("../../utils/AppError");
-
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+const { isValidObjectId } = require("../../utils/validation");
 
 const createTeam = async (userId, { name, description }) => {
   const team = await Team.create({

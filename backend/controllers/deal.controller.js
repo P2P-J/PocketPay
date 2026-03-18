@@ -1,9 +1,8 @@
 const dealService = require("../services/deal/deal.service");
-const AppError = require("../utils/AppError");
 const { handleError } = require("../utils/errorHandler");
 
 const registerDeal = async (req, res) => {
-  try { // 수정본
+  try {
     const {
       storeInfo,
       division,
@@ -55,10 +54,6 @@ const getMonthlyDeals = async (req, res) => {
   try {
     const { year, month, teamId } = req.query;
     const userId = req.user.userId;
-
-    if (!year || !month || !teamId) {
-      throw AppError.badRequest("teamId, 연도, 월을 입력해주세요.");
-    }
 
     await dealService.checkTeamMembership(teamId, userId);
 

@@ -1,40 +1,37 @@
-const providers = require('./providers');
+const providers = require("./providers");
 const { issueToken } = require("../../utils/jwt.util");
 const { User, WithdrawnOauth } = require("../../models/index");
+const AppError = require("../../utils/AppError");
 
 const loginOauth = async (providerName, code, state) => {
   const provider = providers[providerName];
-  if (!provider) throw new Error('INVALID_PROVIDER');
+  if (!provider) throw AppError.badRequest("지원하지 않는 OAuth 제공자입니다.");
 
-  // provider별 accessToken, refreshToken 발급
-  const tokenObj = provider.getAccessToken.length === 2 // naver는 인자가 2개
-    ? await provider.getAccessToken(code, state)   // naver
-    : await provider.getAccessToken(code);         // google
+  const tokenObj =
+    provider.getAccessToken.length === 2
+      ? await provider.getAccessToken(code, state)
+      : await provider.getAccessToken(code);
 
   const { accessToken, refreshToken } = tokenObj;
-
   const profile = await provider.getUserProfile(accessToken);
 
-  // 탈퇴 이력 확인용
   const isRejoin = state === "rejoin";
 
-  // 구글 oauth 탈퇴 이력 확인
   if (profile.provider === "google") {
     const withdrawn = await WithdrawnOauth.findOne({
       provider: "google",
       providerId: profile.providerId,
     });
 
-    // withdrawn이 있는데 rejoin이 아니면 에러
     if (withdrawn && !isRejoin) {
-      const err = new Error("REJOIN_REQUIRED");
-      err.code = "REJOIN_REQUIRED";
-      throw err;
+      throw AppError.forbidden("REJOIN_REQUIRED");
     }
 
-    // rejoin이면 탈퇴 이력 삭제
     if (withdrawn && isRejoin) {
-      await WithdrawnOauth.deleteOne({ provider: "google", providerId: profile.providerId });
+      await WithdrawnOauth.deleteOne({
+        provider: "google",
+        providerId: profile.providerId,
+      });
     }
   }
 
@@ -51,14 +48,12 @@ const loginOauth = async (providerName, code, state) => {
       providerId: profile.providerId,
       oauthTokens: { [profile.provider]: { refreshToken } },
     });
-  } else {
-    // refreshToken이 있으면 갱신 저장
-    if (refreshToken) {
-      user.oauthTokens = user.oauthTokens || {};
-      user.oauthTokens[profile.provider] = user.oauthTokens[profile.provider] || {};
-      user.oauthTokens[profile.provider].refreshToken = refreshToken;
-      await user.save();
-    }
+  } else if (refreshToken) {
+    user.oauthTokens = user.oauthTokens || {};
+    user.oauthTokens[profile.provider] =
+      user.oauthTokens[profile.provider] || {};
+    user.oauthTokens[profile.provider].refreshToken = refreshToken;
+    await user.save();
   }
 
   const token = issueToken(user);

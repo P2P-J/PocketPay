@@ -7,7 +7,7 @@ const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
 const upload = multer({
   dest: "uploads/",
   limits: {
-    fileSize: 5 * 1024 * 1024, // 제한 일단 5MB로 걸어뒀습니다
+    fileSize: 5 * 1024 * 1024,
     files: 1,
   },
   fileFilter: (req, file, cb) => {
