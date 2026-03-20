@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "PocketPay",
+    "slug": "pocketpay",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "backgroundColor": "#3DD598"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pocketpay.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#3DD598"
+      },
+      "package": "com.pocketpay.app"
+    }
+  }
+}

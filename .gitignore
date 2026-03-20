@@ -10,6 +10,10 @@ node_modules/
 dist/
 build/
 
+# Expo
+.expo/
+mobile/.expo/
+
 # OS files
 .DS_Store
 Thumbs.db
