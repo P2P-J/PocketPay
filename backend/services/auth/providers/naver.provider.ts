@@ -2,12 +2,13 @@ const axios = require('axios');
 const qs = require('querystring');
 
 // 네이버 OAuth 인증 URL 생성
-const getAuthUrl = () => {
+const getAuthUrl = ({ state } = {}) => {
+    const stateValue = state ? `${process.env.NAVER_STATE}_${state}` : process.env.NAVER_STATE;
     const params = qs.stringify({
         response_type: 'code',
         client_id: process.env.NAVER_CLIENT_ID,
         redirect_uri: process.env.NAVER_REDIRECT_URI,
-        state: process.env.NAVER_STATE,
+        state: stateValue,
     });
 
     return `https://nid.naver.com/oauth2.0/authorize?${params}`;

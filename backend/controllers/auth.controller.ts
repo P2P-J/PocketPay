@@ -58,10 +58,11 @@ const redirectToOAuthProvider = (req, res) => {
     const oauthProvider = providers[provider];
     if (!oauthProvider) throw AppError.badRequest("지원하지 않는 OAuth 제공자입니다.");
 
-    const options = {};
+    const options: any = {
+      state: req.query.state,
+    };
     if (provider === "google") {
       options.forceConsent = req.query.forceConsent === "1";
-      options.state = req.query.state;
     }
 
     const authUrl = oauthProvider.getAuthUrl(options);
@@ -86,13 +87,32 @@ const loginOauthController = async (req, res) => {
 
     const { accessToken, refreshToken } = await loginOauth(provider, code, state);
 
-    // HTTP-only 쿠키로 토큰 전달 (URL에 노출하지 않음)
+    // 모바일 앱에서 온 요청인지 확인 (state에 "mobile" 포함)
+    const stateStr = String(state || "");
+    const isMobile = stateStr === "mobile" || stateStr.includes("_mobile") || req.query.platform === "mobile";
+
+    if (isMobile) {
+      // 딥링크로 앱에 토큰 전달
+      const params = new URLSearchParams({
+        accessToken,
+        refreshToken,
+      });
+      return res.redirect(`pocketpay://auth/callback?${params.toString()}`);
+    }
+
+    // 웹: HTTP-only 쿠키로 토큰 전달
     res.cookie("oauth_access_token", accessToken, COOKIE_OPTIONS);
     res.cookie("oauth_refresh_token", refreshToken, COOKIE_OPTIONS);
     res.redirect(`${process.env.FRONTEND_URL}/oauth/callback`);
   } catch (err) {
     if (err.message === "REJOIN_REQUIRED" && req.params.provider === "google") {
       return res.redirect("/auth/login/oauth/google?forceConsent=1&state=rejoin");
+    }
+
+    const errState = String(req.query.state || "");
+    const isMobile = errState === "mobile" || errState.includes("_mobile") || req.query.platform === "mobile";
+    if (isMobile) {
+      return res.redirect(`pocketpay://auth/callback?error=${encodeURIComponent(err.message || "로그인 실패")}`);
     }
     return handleError(res, err);
   }
@@ -114,6 +134,67 @@ const getOAuthTokensController = async (req, res) => {
   return res.status(200).json({ accessToken, refreshToken });
 };
 
+// 인증코드 발송
+const sendVerificationCodeController = async (req, res) => {
+  try {
+    const { email, purpose } = req.body;
+    if (!email) throw AppError.badRequest("이메일을 입력해주세요.");
+
+    const verificationService = require("../services/auth/verification.service");
+    const result = await verificationService.sendCode(email, purpose || "이메일 인증");
+    res.status(200).json(result);
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+// 인증코드 검증
+const verifyCodeController = async (req, res) => {
+  try {
+    const { email, code, purpose } = req.body;
+    if (!email || !code) throw AppError.badRequest("이메일과 인증코드를 입력해주세요.");
+
+    const verificationService = require("../services/auth/verification.service");
+    const result = verificationService.verifyCode(email, code, purpose || "이메일 인증");
+    res.status(200).json(result);
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+// 비밀번호 재설정 (인증코드 검증 후)
+const resetPasswordController = async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    if (!email || !code || !newPassword) {
+      throw AppError.badRequest("이메일, 인증코드, 새 비밀번호를 모두 입력해주세요.");
+    }
+    if (newPassword.length < 8 || newPassword.length > 20) {
+      throw AppError.badRequest("비밀번호는 8~20자 사이여야 합니다.");
+    }
+
+    // 인증코드 검증
+    const verificationService = require("../services/auth/verification.service");
+    verificationService.verifyCode(email, code, "비밀번호 재설정");
+
+    // 사용자 찾기
+    const user = await User.findOne({ email, provider: "local" });
+    if (!user) throw AppError.notFound("해당 이메일로 가입된 계정이 없습니다.");
+
+    // 비밀번호 변경
+    const { hashPassword } = require("../utils/bcrypt.util");
+    user.password = await hashPassword(newPassword);
+    await user.save();
+
+    // 인증코드 삭제 (재사용 방지)
+    verificationService.deleteCode(email, "비밀번호 재설정");
+
+    res.status(200).json({ message: "비밀번호가 재설정되었습니다." });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
 module.exports = {
   signupLocalController,
   loginLocalController,
@@ -121,4 +202,7 @@ module.exports = {
   redirectToOAuthProvider,
   loginOauthController,
   getOAuthTokensController,
+  sendVerificationCodeController,
+  verifyCodeController,
+  resetPasswordController,
 };

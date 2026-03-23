@@ -10,7 +10,7 @@ interface ValidationSchemas {
 
 /**
  * Zod 스키마 기반 요청 검증 미들웨어
- * @param schemas - { body?, params?, query? } 각각 Zod 스키마
+ * Express 5에서 req.query는 getter 전용이므로 덮어쓰지 않고 검증만 수행
  */
 const validate = (schemas: ValidationSchemas) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -19,10 +19,10 @@ const validate = (schemas: ValidationSchemas) => {
         req.body = schemas.body.parse(req.body);
       }
       if (schemas.params) {
-        (req as any).params = schemas.params.parse(req.params);
+        schemas.params.parse(req.params);
       }
       if (schemas.query) {
-        (req as any).query = schemas.query.parse(req.query);
+        schemas.query.parse(req.query);
       }
       next();
     } catch (err) {

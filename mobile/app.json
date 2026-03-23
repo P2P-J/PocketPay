@@ -1,24 +1,45 @@
 {
   "expo": {
-    "name": "PocketPay",
+    "name": "작은 모임",
     "slug": "pocketpay",
     "version": "1.0.0",
+    "scheme": "pocketpay",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
-      "backgroundColor": "#3DD598"
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pocketpay.app"
+      "bundleIdentifier": "com.pocketpay.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "영수증 사진을 선택하여 OCR 자동 입력에 사용합니다.",
+        "NSCameraUsageDescription": "영수증을 촬영하여 OCR 자동 입력에 사용합니다."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#3DD598"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.pocketpay.app"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "영수증 사진을 선택하여 거래 내역을 자동으로 입력합니다.",
+          "cameraPermission": "영수증을 촬영하여 거래 내역을 자동으로 입력합니다."
+        }
+      ]
+    ]
   }
 }

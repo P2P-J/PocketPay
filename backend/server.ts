@@ -19,15 +19,24 @@ if (process.env.SENTRY_DSN) {
 
 const app = express();
 
+// ngrok/프록시 뒤에서 실행 시 필요 (X-Forwarded-For 허용)
+app.set("trust proxy", 1);
+
 // 보안 헤더
 app.use(helmet());
 
-// CORS 설정 (환경변수 기반)
+// CORS 설정 (개발: 모바일 앱 허용, 프로덕션: 화이트리스트)
+const isDev = process.env.NODE_ENV !== "production";
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
   : ["http://localhost:3000", "http://localhost:5173"];
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(
+  cors({
+    origin: isDev ? true : allowedOrigins, // 개발 환경: 모든 origin 허용
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 
 // Rate Limiting

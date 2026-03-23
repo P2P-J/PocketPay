@@ -14,7 +14,26 @@ const createTeam = async (userId, { name, description }) => {
 
 const getMyTeams = async (userId) => {
   const teams = await Team.find({ "members.user": userId });
-  return teams;
+
+  // 각 팀의 최신 거래 날짜를 가져와서 정렬
+  const teamsWithLatest = await Promise.all(
+    teams.map(async (team) => {
+      const latestDeal = await Deal.findOne({ teamId: team._id })
+        .sort({ createdAt: -1 })
+        .select("createdAt")
+        .lean();
+      return {
+        team,
+        latestActivity: latestDeal?.createdAt || team.createdAt,
+      };
+    })
+  );
+
+  teamsWithLatest.sort((a, b) =>
+    new Date(b.latestActivity).getTime() - new Date(a.latestActivity).getTime()
+  );
+
+  return teamsWithLatest.map((t) => t.team);
 };
 
 const getTeam = async (teamId, userId) => {
@@ -30,6 +49,11 @@ const getTeam = async (teamId, userId) => {
   if (!team) {
     throw AppError.notFound("팀을 찾을 수 없습니다.");
   }
+
+  // 멤버를 가입 순서(joinedAt)로 정렬 (owner가 가장 먼저)
+  team.members.sort((a: any, b: any) =>
+    new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
+  );
 
   return team;
 };
@@ -90,7 +114,7 @@ const inviteMember = async (teamId, ownerId, email) => {
     throw AppError.forbidden("팀원 초대 권한이 없습니다.");
   }
 
-    const user = await User.findOne({ email, provider: { $in: ["local", "google", "naver"] } });
+    const user = await User.findOne({ email, provider: { $in: ["local", "google", "naver", "kakao"] } });
 
   if (!user) {
     throw AppError.notFound("초대할 사용자를 찾을 수 없습니다.");

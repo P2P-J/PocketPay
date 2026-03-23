@@ -57,9 +57,10 @@ const getMonthlyDeals = async (req, res) => {
 
     await dealService.checkTeamMembership(teamId, userId);
 
-    const deals = await dealService.getMonthlyDeals(teamId, year, month);
+    const deals = await dealService.getMonthlyDeals(teamId, Number(year), Number(month));
     return res.status(200).json({ data: deals });
-  } catch (error) {
+  } catch (error: any) {
+    console.error("[getMonthlyDeals ERROR]", error?.message, error?.stack?.split("\n")[1]);
     return handleError(res, error);
   }
 };
@@ -95,10 +96,41 @@ const deleteDeal = async (req, res) => {
   }
 };
 
+const getTeamSummary = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const userId = req.user.userId;
+
+    await dealService.checkTeamMembership(teamId, userId);
+    const summary = await dealService.getTeamSummary(teamId);
+    return res.status(200).json({ data: summary });
+  } catch (error) {
+    return handleError(res, error);
+  }
+};
+
+const getMonthlyStatsCtrl = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const now = new Date();
+    const year = Number(req.query.year) || now.getFullYear();
+    const month = Number(req.query.month) || now.getMonth() + 1;
+    const userId = req.user.userId;
+
+    await dealService.checkTeamMembership(teamId, userId);
+    const stats = await dealService.getMonthlyStats(teamId, year, month);
+    return res.status(200).json({ data: stats });
+  } catch (error) {
+    return handleError(res, error);
+  }
+};
+
 module.exports = {
   registerDeal,
   getDealDetail,
   getMonthlyDeals,
+  getTeamSummary,
+  getMonthlyStatsCtrl,
   updateDeal,
   deleteDeal,
 };

@@ -41,8 +41,10 @@ const createDeal = async (dealData) => {
 };
 
 const getMonthlyDeals = async (teamId, year, month) => {
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 1);
+  const y = Number(year);
+  const m = Number(month);
+  const startDate = new Date(y, m - 1, 1);
+  const endDate = new Date(y, m, 1);
 
   const deals = await Deal.find({
     teamId: teamId,
@@ -50,6 +52,79 @@ const getMonthlyDeals = async (teamId, year, month) => {
   }).sort({ date: -1 });
 
   return deals;
+};
+
+const getTeamSummary = async (teamId) => {
+  const deals = await Deal.find({ teamId });
+  let income = 0;
+  let expense = 0;
+  for (const deal of deals) {
+    if (deal.division === "수입") income += deal.price;
+    else expense += deal.price;
+  }
+  return { income, expense, balance: income - expense };
+};
+
+const getMonthlyStats = async (teamId, year, month) => {
+  const y = Number(year);
+  const m = Number(month);
+
+  // 이번 달
+  const curStart = new Date(y, m - 1, 1);
+  const curEnd = new Date(y, m, 1);
+  const curDeals = await Deal.find({
+    teamId,
+    date: { $gte: curStart, $lt: curEnd },
+  });
+
+  // 전월
+  const prevStart = new Date(y, m - 2, 1);
+  const prevEnd = new Date(y, m - 1, 1);
+  const prevDeals = await Deal.find({
+    teamId,
+    date: { $gte: prevStart, $lt: prevEnd },
+  });
+
+  // 이번 달 합계
+  let curIncome = 0, curExpense = 0;
+  const categoryMap: Record<string, number> = {};
+  for (const d of curDeals) {
+    if (d.division === "수입") curIncome += d.price;
+    else {
+      curExpense += d.price;
+      const cat = d.category || "기타";
+      categoryMap[cat] = (categoryMap[cat] || 0) + d.price;
+    }
+  }
+
+  // 전월 합계
+  let prevIncome = 0, prevExpense = 0;
+  for (const d of prevDeals) {
+    if (d.division === "수입") prevIncome += d.price;
+    else prevExpense += d.price;
+  }
+
+  // 증감률 계산
+  const incomeChange = prevIncome > 0
+    ? Math.round(((curIncome - prevIncome) / prevIncome) * 100)
+    : curIncome > 0 ? 100 : 0;
+  const expenseChange = prevExpense > 0
+    ? Math.round(((curExpense - prevExpense) / prevExpense) * 100)
+    : curExpense > 0 ? 100 : 0;
+
+  // 카테고리별 지출 (금액 내림차순)
+  const categoryBreakdown = Object.entries(categoryMap)
+    .map(([category, total]) => ({ category, total }))
+    .sort((a, b) => b.total - a.total);
+
+  return {
+    current: { income: curIncome, expense: curExpense },
+    previous: { income: prevIncome, expense: prevExpense },
+    incomeChange,
+    expenseChange,
+    categoryBreakdown,
+    topCategory: categoryBreakdown[0] || null,
+  };
 };
 
 const updateDeal = async (dealId, updateData) => {
@@ -67,6 +142,8 @@ module.exports = {
   getDealById,
   createDeal,
   getMonthlyDeals,
+  getTeamSummary,
+  getMonthlyStats,
   updateDeal,
   deleteDeal,
 };

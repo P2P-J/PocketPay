@@ -14,6 +14,8 @@ router.use(loginUserVerify);
 
 router.post("/", validate(createDealSchema), dealController.registerDeal);
 router.get("/", validate(getMonthlyDealsSchema), dealController.getMonthlyDeals);
+router.get("/summary/:teamId", dealController.getTeamSummary);
+router.get("/stats/:teamId", dealController.getMonthlyStatsCtrl);
 router.get("/:dealId", validate(dealIdParamSchema), dealController.getDealDetail);
 router.put("/:dealId", validate(updateDealSchema), dealController.updateDeal);
 router.delete("/:dealId", validate(dealIdParamSchema), dealController.deleteDeal);
