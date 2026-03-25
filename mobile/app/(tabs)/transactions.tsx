@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { View, Text, SectionList, Pressable, Alert } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { View, Text, SectionList, Pressable, Alert, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
@@ -96,6 +96,14 @@ export default function TransactionsScreen() {
 
   const sections = useMemo(() => groupByDate(transactions), [transactions]);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    if (!currentTeam) return;
+    setRefreshing(true);
+    await fetchTransactions(getTeamId(currentTeam), year, month);
+    setRefreshing(false);
+  }, [currentTeam, year, month]);
+
   const changeMonth = (delta: number) => {
     let newMonth = month + delta;
     let newYear = year;
@@ -179,6 +187,9 @@ export default function TransactionsScreen() {
             </Swipeable>
           )}
           stickySectionHeadersEnabled
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
     </View>

@@ -31,6 +31,7 @@ export function Skeleton({
       -1,
       true
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- opacity는 useSharedValue로 생성된 stable ref
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({

@@ -42,6 +42,9 @@ const deleteMyAccount = async (userId) => {
 
       if (ownedTeams.length > 0) {
         const teamIds = ownedTeams.map((t) => t._id);
+        // 소유 팀의 거래 내역도 함께 삭제
+        const Deal = require("../../models/Deal.model");
+        await Deal.deleteMany({ teamId: { $in: teamIds } }, { session });
         await Team.deleteMany({ _id: { $in: teamIds } }, { session });
       }
 

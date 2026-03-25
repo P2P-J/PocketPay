@@ -41,8 +41,8 @@ export function ListItem({
       >
         {/* 아이콘 (40px 원형) */}
         <View
-          className="w-icon-md h-icon-md rounded-full items-center justify-center mr-3"
-          style={{ backgroundColor: iconBgColor }}
+          className="rounded-full items-center justify-center mr-3"
+          style={{ width: 40, height: 40, backgroundColor: iconBgColor }}
         >
           {icon}
         </View>

@@ -54,16 +54,19 @@ export default function AddScreen() {
     type === TRANSACTION_TYPE.EXPENSE ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
   const processOcr = async (uri: string) => {
+    if (__DEV__) console.log("[OCR] 파일 URI:", uri);
     setOcrLoading(true);
     try {
       const res = await ocrApi.analyze(uri);
+      if (__DEV__) console.log("[OCR] 응답:", JSON.stringify(res));
       const data = res.data;
       if (data.storeInfo) setMerchant(data.storeInfo);
-      if (data.price) setAmount(String(data.price));
+      if (data.price) setAmount(Number(data.price).toLocaleString("ko-KR"));
       if (data.date) setDate(data.date);
       showToast("success", "영수증 인식 완료");
-    } catch {
-      showToast("error", "영수증 인식 실패", "다시 시도해주세요");
+    } catch (err) {
+      if (__DEV__) console.log("[OCR] 에러:", err instanceof Error ? err.message : err);
+      showToast("error", "영수증 인식 실패", err instanceof Error ? err.message : "다시 시도해주세요");
     } finally {
       setOcrLoading(false);
     }
@@ -104,7 +107,8 @@ export default function AddScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!amount || Number(amount) <= 0) {
+    const rawAmount = Number(amount.replace(/,/g, ""));
+    if (!amount || rawAmount <= 0) {
       showToast("error", "금액을 입력해주세요");
       return;
     }
@@ -118,7 +122,7 @@ export default function AddScreen() {
       await createTransaction({
         merchant,
         type,
-        amount: Number(amount),
+        amount: rawAmount,
         category,
         description,
         date,
@@ -195,7 +199,16 @@ export default function AddScreen() {
             label="금액"
             placeholder="0"
             value={amount}
-            onChangeText={setAmount}
+            onChangeText={(v) => {
+              const nums = v.replace(/[^0-9]/g, "");
+              if (nums === "") { setAmount(""); return; }
+              const n = Number(nums);
+              if (n > 1_000_000_000_000) {
+                showToast("info", "최대 1조원까지 입력 가능합니다");
+                return;
+              }
+              setAmount(n.toLocaleString("ko-KR"));
+            }}
             keyboardType="numeric"
           />
           <DatePickerInput

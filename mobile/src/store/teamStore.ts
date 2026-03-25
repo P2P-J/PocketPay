@@ -135,10 +135,13 @@ export const useTeamStore = create<TeamState>((set, get) => ({
     const payload = transactionToDealPayload({ ...data, teamId });
     await dealApi.create(payload);
 
-    // 현재 달 거래 + 전체 잔액 새로고침
-    const now = new Date();
+    // 추가한 거래의 날짜 기준 월로 새로고침 (OCR 과거 날짜 대응)
+    const txDate = data.date ? new Date(data.date) : new Date();
+    const txYear = txDate.getFullYear();
+    const txMonth = txDate.getMonth() + 1;
+
     await Promise.all([
-      get().fetchTransactions(teamId, now.getFullYear(), now.getMonth() + 1),
+      get().fetchTransactions(teamId, txYear, txMonth),
       get().fetchSummary(teamId),
     ]);
   },

@@ -55,12 +55,16 @@ const getMonthlyDeals = async (teamId, year, month) => {
 };
 
 const getTeamSummary = async (teamId) => {
-  const deals = await Deal.find({ teamId });
+  const result = await Deal.aggregate([
+    { $match: { teamId: new (require("mongoose").Types.ObjectId)(teamId) } },
+    { $group: { _id: "$division", total: { $sum: "$price" } } },
+  ]);
+
   let income = 0;
   let expense = 0;
-  for (const deal of deals) {
-    if (deal.division === "수입") income += deal.price;
-    else expense += deal.price;
+  for (const r of result) {
+    if (r._id === "수입") income = r.total;
+    else expense = r.total;
   }
   return { income, expense, balance: income - expense };
 };
@@ -127,6 +131,17 @@ const getMonthlyStats = async (teamId, year, month) => {
   };
 };
 
+// 전체 거래 조회 (페이지네이션, 날짜 내림차순)
+const getAllDeals = async (teamId, page = 1, limit = 30) => {
+  const skip = (page - 1) * limit;
+  const deals = await Deal.find({ teamId })
+    .sort({ date: -1, createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+  const total = await Deal.countDocuments({ teamId });
+  return { deals, total, hasMore: skip + deals.length < total };
+};
+
 const updateDeal = async (dealId, updateData) => {
   const updatedDeal = await Deal.findByIdAndUpdate(dealId, updateData, { new: true });
   return updatedDeal;
@@ -142,6 +157,7 @@ module.exports = {
   getDealById,
   createDeal,
   getMonthlyDeals,
+  getAllDeals,
   getTeamSummary,
   getMonthlyStats,
   updateDeal,

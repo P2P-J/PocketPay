@@ -1,4 +1,14 @@
 require("dotenv").config();
+
+// 필수 환경변수 검증
+const REQUIRED_ENV = ["MONGO_URI", "JWT_SECRET"];
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    console.error(`❌ 필수 환경변수 ${key}가 설정되지 않았습니다.`);
+    process.exit(1);
+  }
+}
+
 const Sentry = require("@sentry/node");
 const express = require("express");
 const helmet = require("helmet");

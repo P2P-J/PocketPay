@@ -44,9 +44,16 @@ const dealIdParamSchema = {
   }),
 };
 
+const teamIdParamSchema = {
+  params: z.object({
+    teamId: z.string().regex(objectIdRegex, "올바른 팀 ID가 아닙니다."),
+  }),
+};
+
 module.exports = {
   createDealSchema,
   updateDealSchema,
   getMonthlyDealsSchema,
   dealIdParamSchema,
+  teamIdParamSchema,
 };

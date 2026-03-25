@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, Platform } from "react-native";
+import { View, Text, Pressable, Platform, Modal } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface DatePickerInputProps {
@@ -47,27 +47,44 @@ export function DatePickerInput({ label, value, onChange }: DatePickerInputProps
         </Text>
       </Pressable>
 
-      {show && (
-        <View>
-          <DateTimePicker
-            value={dateObj}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={handleChange}
-            locale="ko"
-            maximumDate={new Date()}
-          />
-          {Platform.OS === "ios" && (
-            <Pressable
-              onPress={() => setShow(false)}
-              className="items-center py-2"
-            >
-              <Text className="text-brand font-pretendard-semibold text-body">
-                확인
-              </Text>
-            </Pressable>
-          )}
-        </View>
+      {/* Android: 기본 다이얼로그 */}
+      {show && Platform.OS === "android" && (
+        <DateTimePicker
+          value={dateObj}
+          mode="date"
+          display="default"
+          onChange={handleChange}
+          locale="ko"
+          maximumDate={new Date()}
+        />
+      )}
+
+      {/* iOS: Modal로 감싸서 인라인 펼침 방지 */}
+      {Platform.OS === "ios" && (
+        <Modal
+          visible={show}
+          transparent
+          animationType="slide"
+        >
+          <View className="flex-1 justify-end bg-black/40">
+            <View className="bg-white rounded-t-2xl pb-8">
+              <View className="flex-row justify-end px-4 pt-3 pb-1">
+                <Pressable onPress={() => setShow(false)} className="py-2 px-3">
+                  <Text className="text-brand font-pretendard-semibold text-body">
+                    확인
+                  </Text>
+                </Pressable>
+              </View>
+              <DateTimePicker
+                value={dateObj}
+                mode="date"
+                display="inline"
+                onChange={handleChange}
+                locale="ko"
+              />
+            </View>
+          </View>
+        </Modal>
       )}
     </View>
   );

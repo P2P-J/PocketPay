@@ -78,7 +78,12 @@ export function Button({
       ) : (
         <>
           {icon}
-          <Text className={buttonText({ variant, size })}>{label}</Text>
+          <Text
+            className={buttonText({ variant, size })}
+            style={variant === "danger" || variant === "primary" ? { color: "#FFFFFF" } : undefined}
+          >
+            {label}
+          </Text>
         </>
       )}
     </Pressable>

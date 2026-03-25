@@ -52,7 +52,7 @@ export default function EditTransactionScreen() {
       const t = dealToTransaction(res.data);
       setType(t.type);
       setMerchant(t.merchant);
-      setAmount(String(t.amount));
+      setAmount(t.amount ? Number(t.amount).toLocaleString("ko-KR") : "");
       setCategory(t.category);
       setDescription(t.description);
       setDate(t.date?.split("T")[0] || "");
@@ -65,7 +65,8 @@ export default function EditTransactionScreen() {
   };
 
   const handleSave = async () => {
-    if (!amount || Number(amount) <= 0) {
+    const rawAmount = Number(amount.replace(/,/g, ""));
+    if (!amount || rawAmount <= 0) {
       showToast("error", "금액을 입력해주세요");
       return;
     }
@@ -75,7 +76,7 @@ export default function EditTransactionScreen() {
       await updateTransaction(id!, {
         storeInfo: merchant,
         division: type === "income" ? "수입" : "지출",
-        price: Number(amount),
+        price: rawAmount,
         category,
         description,
         date,
@@ -161,7 +162,16 @@ export default function EditTransactionScreen() {
             label="금액"
             placeholder="0"
             value={amount}
-            onChangeText={setAmount}
+            onChangeText={(v) => {
+              const nums = v.replace(/[^0-9]/g, "");
+              if (nums === "") { setAmount(""); return; }
+              const n = Number(nums);
+              if (n > 1_000_000_000_000) {
+                showToast("info", "최대 1조원까지 입력 가능합니다");
+                return;
+              }
+              setAmount(n.toLocaleString("ko-KR"));
+            }}
             keyboardType="numeric"
           />
           <DatePickerInput

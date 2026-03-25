@@ -25,7 +25,7 @@ interface ITeam extends Document {
 }
 
 const TeamSchema = new mongoose.Schema<ITeam>({
-    name: { type: String, required: true, unique: true, trim: true },
+    name: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     members: [{

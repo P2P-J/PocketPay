@@ -68,7 +68,7 @@ const revokeToken = async (refreshToken) => {
     const accessToken = refreshRes.data.access_token;
 
     // Naver oauth 연동 해제
-    const deleteRes = await axios.get("https://nid.naver.com/oauth2.0/token", {
+    await axios.get("https://nid.naver.com/oauth2.0/token", {
         params: {
             grant_type: "delete",
             client_id: process.env.NAVER_CLIENT_ID,

@@ -17,6 +17,11 @@ const loginUserVerify = async (req: Request, res: Response, next: NextFunction) 
 
         const decoded = verifyToken(token);
 
+        // refresh token으로 API 접근 차단
+        if (decoded.type === "refresh") {
+            return res.status(401).json({ message: "INVALID_TOKEN" });
+        }
+
         const user = await User.findById(decoded.userId);
         if (!user) {
             return res.status(401).json({ message: "USER_NOT_FOUND" });

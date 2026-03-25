@@ -68,13 +68,19 @@ const getMonthlyDeals = async (req, res) => {
 const updateDeal = async (req, res) => {
   try {
     const { dealId } = req.params;
-    const updateData = req.body;
     const userId = req.user.userId;
+
+    // Mass Assignment 방지: 허용된 필드만 추출
+    const { storeInfo, division, description, category, price, date, businessNumber } = req.body;
+    const safeUpdate = Object.fromEntries(
+      Object.entries({ storeInfo, division, description, category, price, date, businessNumber })
+        .filter(([, v]) => v !== undefined)
+    );
 
     const deal = await dealService.getDealById(dealId);
     await dealService.checkTeamMembership(deal.teamId, userId);
 
-    const updatedDeal = await dealService.updateDeal(dealId, updateData);
+    const updatedDeal = await dealService.updateDeal(dealId, safeUpdate);
     return res.status(200).json({ message: "수정 성공", data: updatedDeal });
   } catch (error) {
     return handleError(res, error);
@@ -90,7 +96,22 @@ const deleteDeal = async (req, res) => {
     await dealService.checkTeamMembership(deal.teamId, userId);
 
     await dealService.deleteDeal(dealId);
-    return res.status(200).json({ message: "삭제 성공" });
+    return res.status(204).end();
+  } catch (error) {
+    return handleError(res, error);
+  }
+};
+
+const getAllDeals = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const userId = req.user.userId;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 30;
+
+    await dealService.checkTeamMembership(teamId, userId);
+    const result = await dealService.getAllDeals(teamId, page, limit);
+    return res.status(200).json({ data: result });
   } catch (error) {
     return handleError(res, error);
   }
@@ -129,6 +150,7 @@ module.exports = {
   registerDeal,
   getDealDetail,
   getMonthlyDeals,
+  getAllDeals,
   getTeamSummary,
   getMonthlyStatsCtrl,
   updateDeal,

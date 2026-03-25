@@ -131,11 +131,26 @@ export const apiClient = {
     fieldName = "file",
     isRetry = false
   ): Promise<unknown> => {
+    // URI 정규화 (ph:// → file:// 변환 방지, iOS 호환)
+    const uri = fileUri;
+
+    // 확장자 기반 MIME 타입 감지
+    const ext = uri.split(".").pop()?.toLowerCase() || "jpg";
+    const mimeMap: Record<string, string> = {
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      webp: "image/webp",
+      heic: "image/heic",
+    };
+    const mimeType = mimeMap[ext] || "image/jpeg";
+    const fileName = `receipt_${Date.now()}.${ext === "heic" ? "jpg" : ext}`;
+
     const formData = new FormData();
     formData.append(fieldName, {
-      uri: fileUri,
-      type: "image/jpeg",
-      name: "receipt.jpg",
+      uri,
+      type: mimeType,
+      name: fileName,
     } as unknown as Blob);
 
     const headers: Record<string, string> = {};

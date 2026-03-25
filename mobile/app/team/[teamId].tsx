@@ -1,39 +1,44 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, Alert } from "react-native";
+import { View, Text, ScrollView, Alert, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { UserPlus, UserMinus, Trash2 } from "lucide-react-native";
+import { UserPlus, Trash2, ChevronDown } from "lucide-react-native";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { ListItem } from "@/components/ui/ListItem";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { showToast } from "@/components/ui/Toast";
 import { teamApi } from "@/api/team";
 import { useAuthStore } from "@/store/authStore";
 import { useTeamStore } from "@/store/teamStore";
 import type { Team, Member } from "@/types/team";
-import { isTeamOwner } from "@/types/team";
+import { isTeamOwner, getTeamId } from "@/types/team";
 import { getUserId } from "@/types/user";
 
 export default function TeamDetailScreen() {
-  const { teamId } = useLocalSearchParams<{ teamId: string }>();
+  const { teamId: initialTeamId } = useLocalSearchParams<{ teamId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
+  const teams = useTeamStore((s) => s.teams);
   const deleteTeamStore = useTeamStore((s) => s.deleteTeam);
   const leaveTeamStore = useTeamStore((s) => s.leaveTeam);
 
+  const [selectedTeamId, setSelectedTeamId] = useState(initialTeamId || "");
   const [team, setTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showTeamPicker, setShowTeamPicker] = useState(false);
 
   useEffect(() => {
-    if (teamId) loadTeam();
-  }, [teamId]);
+    if (selectedTeamId) loadTeam(selectedTeamId);
+  }, [selectedTeamId]);
 
-  const loadTeam = async () => {
+  const loadTeam = async (tid?: string) => {
+    const id = tid || selectedTeamId;
+    if (!id) return;
+    setLoading(true);
     try {
-      const res = await teamApi.getTeam(teamId!);
+      const res = await teamApi.getTeam(id);
       setTeam(res.data);
     } catch {
       showToast("error", "팀 정보를 불러올 수 없습니다");
@@ -49,18 +54,18 @@ export default function TeamDetailScreen() {
     const memberId = typeof member.user === "string" ? member.user : member.user._id;
     const memberName = memberUser?.name || "멤버";
 
-    Alert.alert("멤버 추방", `${memberName}님을 추방하시겠어요?`, [
+    Alert.alert("팀원 삭제", `${memberName}님을 삭제하시겠습니까?`, [
       { text: "취소", style: "cancel" },
       {
-        text: "추방",
+        text: "삭제",
         style: "destructive",
         onPress: async () => {
           try {
-            await teamApi.removeMember(teamId!, memberId);
-            showToast("success", `${memberName}님이 추방되었습니다`);
+            await teamApi.removeMember(selectedTeamId, memberId);
+            showToast("success", `${memberName}님이 삭제되었습니다`);
             loadTeam();
           } catch {
-            showToast("error", "추방 실패");
+            showToast("error", "삭제 실패");
           }
         },
       },
@@ -88,7 +93,7 @@ export default function TeamDetailScreen() {
                   style: "destructive",
                   onPress: async () => {
                     try {
-                      await deleteTeamStore(teamId!);
+                      await deleteTeamStore(selectedTeamId);
                       showToast("success", "모임이 삭제되었습니다");
                       router.replace("/(tabs)");
                     } catch {
@@ -111,7 +116,7 @@ export default function TeamDetailScreen() {
         text: "나가기",
         onPress: async () => {
           try {
-            await leaveTeamStore(teamId!);
+            await leaveTeamStore(selectedTeamId);
             showToast("success", "모임을 나갔습니다");
             router.back();
           } catch {
@@ -135,18 +140,60 @@ export default function TeamDetailScreen() {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <Header title={team?.name || "팀 관리"} showBack />
+      <Header title="모임 관리" showBack />
 
       <ScrollView className="flex-1 px-screen-x">
-        {/* 팀 정보 */}
-        <Card variant="elevated" className="mt-4 mb-section-gap">
-          <Text className="text-body font-pretendard-bold text-text-primary mb-1">
-            {team?.name}
-          </Text>
-          <Text className="text-sub text-text-secondary">
-            {team?.description || "설명 없음"}
-          </Text>
-        </Card>
+        {/* 모임 선택 드롭다운 */}
+        <Pressable
+          onPress={() => setShowTeamPicker(!showTeamPicker)}
+          className="mt-4 mb-2"
+        >
+          <Card variant="elevated">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <Text className="text-body font-pretendard-bold text-text-primary">
+                  {team?.name || "모임 선택"}
+                </Text>
+                <Text className="text-sub text-text-secondary mt-0.5">
+                  {team?.description || "설명 없음"}
+                </Text>
+              </View>
+              <ChevronDown
+                size={20}
+                color="#8B95A1"
+                style={{ transform: [{ rotate: showTeamPicker ? "180deg" : "0deg" }] }}
+              />
+            </View>
+          </Card>
+        </Pressable>
+
+        {/* 모임 목록 (펼침) */}
+        {showTeamPicker && (
+          <Card variant="default" className="mb-4">
+            {teams.map((t) => {
+              const tid = getTeamId(t);
+              const isSelected = tid === selectedTeamId;
+              return (
+                <Pressable
+                  key={tid}
+                  onPress={() => {
+                    setSelectedTeamId(tid);
+                    setShowTeamPicker(false);
+                  }}
+                  className={`px-4 py-3 ${isSelected ? "bg-brand/10" : ""}`}
+                >
+                  <Text
+                    className={`text-body font-pretendard${isSelected ? "-bold text-brand" : " text-text-primary"}`}
+                  >
+                    {t.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </Card>
+        )}
+
+        <View className="mb-section-gap" />
 
         {/* 멤버 목록 */}
         <View className="flex-row items-center justify-between mb-3">
@@ -159,7 +206,7 @@ export default function TeamDetailScreen() {
               variant="ghost"
               size="sm"
               icon={<UserPlus size={16} color="#3DD598" />}
-              onPress={() => router.push(`/team/invite?teamId=${teamId}`)}
+              onPress={() => router.push(`/team/invite?teamId=${selectedTeamId}`)}
             />
           )}
         </View>
@@ -171,25 +218,33 @@ export default function TeamDetailScreen() {
           const memberId = memberUser._id;
           const isSelf = memberId === getUserId(user);
 
+          const canRemove = isOwner && !isSelf && member.role !== "owner";
+
           return (
-            <ListItem
-              key={memberId}
-              icon={
-                <Text className="text-body font-pretendard-bold text-brand">
-                  {memberUser.name?.charAt(0) || "?"}
-                </Text>
-              }
-              iconBgColor="#E8FAF2"
-              title={memberUser.name || "알 수 없음"}
-              subtitle={memberUser.email}
-              amountLabel=""
-              showDivider={i < (team.members?.length || 0) - 1}
-              onPress={
-                isOwner && !isSelf && member.role !== "owner"
-                  ? () => handleRemoveMember(member)
-                  : undefined
-              }
-            />
+            <View key={memberId} className="flex-row items-center">
+              <View className="flex-1">
+                <ListItem
+                  icon={
+                    <Text className="text-body font-pretendard-bold text-brand">
+                      {memberUser.name?.charAt(0) || "?"}
+                    </Text>
+                  }
+                  iconBgColor="#E8FAF2"
+                  title={memberUser.name || "알 수 없음"}
+                  subtitle={member.role === "owner" ? "팀장" : memberUser.email}
+                  amountLabel=""
+                  showDivider={i < (team.members?.length || 0) - 1}
+                />
+              </View>
+              {canRemove && (
+                <Pressable
+                  onPress={() => handleRemoveMember(member)}
+                  className="p-2 ml-1"
+                >
+                  <Trash2 size={18} color="#F04452" />
+                </Pressable>
+              )}
+            </View>
           );
         })}
 

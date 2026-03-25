@@ -4,10 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const AppError = require("../../utils/AppError");
 
-const RECEIPT_API_URL = process.env.DOCUMENT_APIGW_URL;
-const RECEIPT_SECRET_KEY = process.env.DOCUMENT_SECRET_KEY;
-const GENERAL_API_URL = process.env.GENERAL_APIGW_URL;
-const GENERAL_SECRET_KEY = process.env.GENERAL_SECRET_KEY;
+// API URL/키는 함수 호출 시점에 바인딩 (모듈 로드 시점에는 env가 아직 세팅 안 될 수 있음)
 
 // 가격 관련 상수
 const PRICE_MIN_THRESHOLD = 100;         // 유효한 최소 가격
@@ -177,6 +174,11 @@ function extractReceiptData(receiptResult, fullText) {
 
 // 4. 메인 함수 (병렬 API 호출)
 const processReceiptImage = async (imagePath) => {
+  const RECEIPT_API_URL = process.env.DOCUMENT_APIGW_URL;
+  const RECEIPT_SECRET_KEY = process.env.DOCUMENT_SECRET_KEY;
+  const GENERAL_API_URL = process.env.GENERAL_APIGW_URL;
+  const GENERAL_SECRET_KEY = process.env.GENERAL_SECRET_KEY;
+
   // 영수증 Document OCR + General OCR 병렬 호출
   const [receiptResult, generalResult] = await Promise.all([
     callClovaAPI(RECEIPT_API_URL, RECEIPT_SECRET_KEY, "receipt-", imagePath),

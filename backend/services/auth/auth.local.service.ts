@@ -21,12 +21,12 @@ const signupLocal = async ({ email, password, name }) => {
 const loginLocal = async ({ email, password }) => {
   const user = await User.findOne({ email, provider: "local" });
   if (!user) {
-    throw AppError.notFound("존재하지 않는 사용자입니다.");
+    throw AppError.unauthorized("이메일 또는 비밀번호가 올바르지 않습니다.");
   }
 
   const match = await comparePassword(password, user.password);
   if (!match) {
-    throw AppError.unauthorized("비밀번호가 일치하지 않습니다.");
+    throw AppError.unauthorized("이메일 또는 비밀번호가 올바르지 않습니다.");
   }
 
   const tokens = issueTokenPair(user);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, ScrollView, Pressable, Modal } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Check, ChevronRight } from "lucide-react-native";
 import { Header } from "@/components/ui/Header";
@@ -37,7 +37,6 @@ const AGREEMENTS: Agreement[] = [
 
 export default function TermsScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ from?: string }>();
   const insets = useSafeAreaInsets();
 
   const [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -66,13 +65,7 @@ export default function TermsScreen() {
   };
 
   const handleNext = () => {
-    if (params.from === "social") {
-      // 소셜 로그인 후 약관 동의 → 바로 홈으로
-      router.replace("/(tabs)");
-    } else {
-      // 이메일 회원가입으로 이동
-      router.push("/(auth)/signup");
-    }
+    router.push("/(auth)/signup");
   };
 
   return (

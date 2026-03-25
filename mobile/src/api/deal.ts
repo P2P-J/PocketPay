@@ -19,6 +19,13 @@ export const dealApi = {
   delete: (dealId: string) =>
     apiClient.delete(`/deals/${dealId}`),
 
+  getAll: (teamId: string, page = 1, limit = 30) =>
+    apiClient.get(
+      `/deals/all/${teamId}?page=${page}&limit=${limit}`
+    ) as Promise<{
+      data: { deals: Deal[]; total: number; hasMore: boolean };
+    }>,
+
   getSummary: (teamId: string) =>
     apiClient.get(`/deals/summary/${teamId}`) as Promise<{
       data: { income: number; expense: number; balance: number };

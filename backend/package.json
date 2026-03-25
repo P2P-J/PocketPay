@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "OCR.js",
+  "main": "server.ts",
   "scripts": {
     "start": "tsx server.ts",
     "dev": "tsx watch server.ts",

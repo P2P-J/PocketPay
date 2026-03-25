@@ -116,6 +116,7 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="team" />
           <Stack.Screen name="transaction" />
+          <Stack.Screen name="change-password" />
           <Stack.Screen name="+not-found" />
         </Stack>
       </AuthGuard>

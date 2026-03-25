@@ -77,27 +77,27 @@ const updateTeam = async (teamId, userId, data) => {
   return team;
 };
 
-// 트랜잭션 참고!
 const deleteTeam = async (teamId, userId) => {
   if (!isValidObjectId(teamId)) {
     throw AppError.badRequest("올바른 팀 ID가 아닙니다.");
   }
 
-  // 1. 먼저 권한 확인 (삭제 전에 체크)
-  const team = await Team.findOne({
-    _id: teamId,
-    owner: userId,
-  });
-
+  const team = await Team.findOne({ _id: teamId, owner: userId });
   if (!team) {
     throw AppError.forbidden("팀 삭제 권한이 없습니다.");
   }
 
-  // 2. 연관 데이터(Deal) 먼저 삭제
-  await Deal.deleteMany({ teamId: teamId });
-
-  // 3. 팀 삭제
-  await Team.findByIdAndDelete(teamId);
+  // 트랜잭션으로 원자적 삭제 (Deal + Team)
+  const mongoose = require("mongoose");
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await Deal.deleteMany({ teamId }, { session });
+      await Team.findByIdAndDelete(teamId, { session });
+    });
+  } finally {
+    session.endSession();
+  }
 };
 
 const inviteMember = async (teamId, ownerId, email) => {

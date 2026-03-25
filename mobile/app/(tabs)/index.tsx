@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useEffect, useState } from "react";
-import { View, Text, ScrollView, RefreshControl, Pressable } from "react-native";
+import { View, Text, SectionList, RefreshControl, Pressable, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
@@ -16,6 +16,8 @@ import { getCategoryLabel, getCategoryEmoji } from "@/constants/categories";
 import { TrendingUp, TrendingDown } from "lucide-react-native";
 import { dealApi } from "@/api/deal";
 import { getTeamId } from "@/types/team";
+import type { Transaction } from "@/types/transaction";
+import { dealToTransaction } from "@/types/transaction";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -42,30 +44,89 @@ export default function HomeScreen() {
   }
   const [stats, setStats] = useState<MonthlyStats | null>(null);
 
-  // 화면 포커스 또는 팀 변경 시 거래 + 잔액 + 통계 새로고침
-  useEffect(() => {
-    if (isFocused && currentTeam) {
-      const teamId = getTeamId(currentTeam);
-      const now = new Date();
-      fetchTransactions(teamId, now.getFullYear(), now.getMonth() + 1);
-      fetchSummary(teamId);
-      dealApi.getMonthlyStats(teamId, now.getFullYear(), now.getMonth() + 1)
-        .then((res) => setStats(res.data))
-        .catch(() => setStats(null));
+  // 전체 거래 (무한 스크롤)
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(true);
+  const loadingMoreRef = useRef(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const loadAllTransactions = async (teamId: string, pageNum = 1, reset = false) => {
+    try {
+      const res = await dealApi.getAll(teamId, pageNum, 30);
+      const txs = res.data.deals.map(dealToTransaction);
+      setAllTransactions((prev) => reset ? txs : [...prev, ...txs]);
+      hasMoreRef.current = res.data.hasMore;
+      pageRef.current = pageNum;
+    } catch {
+      // 실패 시 무시
     }
-  }, [isFocused, currentTeam]);
+  };
+
+  const loadMore = useCallback(async () => {
+    if (!hasMoreRef.current || loadingMoreRef.current || !currentTeam) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    await loadAllTransactions(getTeamId(currentTeam), pageRef.current + 1);
+    loadingMoreRef.current = false;
+    setLoadingMore(false);
+  }, [currentTeam]);
+
+  // 화면 포커스 시 팀 목록 + 거래 + 잔액 + 통계 새로고침
+  useEffect(() => {
+    if (isFocused) {
+      // 팀 목록 항상 새로고침 (초대받은 팀 즉시 반영)
+      fetchTeams();
+
+      if (currentTeam) {
+        const teamId = getTeamId(currentTeam);
+        const now = new Date();
+        fetchTransactions(teamId, now.getFullYear(), now.getMonth() + 1);
+        fetchSummary(teamId);
+        loadAllTransactions(teamId, 1, true);
+        dealApi.getMonthlyStats(teamId, now.getFullYear(), now.getMonth() + 1)
+          .then((res) => setStats(res.data))
+          .catch(() => setStats(null));
+      }
+    }
+  }, [isFocused]);
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchTeams();
+    // 팀이 있으면 현재 팀 데이터도 새로고침
+    const team = useTeamStore.getState().currentTeam;
+    if (team) {
+      const teamId = getTeamId(team);
+      const now = new Date();
+      await fetchTransactions(teamId, now.getFullYear(), now.getMonth() + 1);
+      await fetchSummary(teamId);
+      await loadAllTransactions(teamId, 1, true);
+      dealApi.getMonthlyStats(teamId, now.getFullYear(), now.getMonth() + 1)
+        .then((res) => setStats(res.data))
+        .catch(() => setStats(null));
+    }
     setRefreshing(false);
-  }, [fetchTeams]);
+  }, []);
 
-  const recentTransactions = useMemo(
-    () => transactions.slice(0, 5),
-    [transactions]
-  );
+  // 전체 거래 날짜별 그루핑 (토스 스타일)
+  const sections = useMemo(() => {
+    const groups: Record<string, Transaction[]> = {};
+    for (const t of allTransactions) {
+      const dateKey = t.date?.split("T")[0] || "날짜 없음";
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(t);
+    }
+    const days = ["일", "월", "화", "수", "목", "금", "토"];
+    return Object.entries(groups).map(([date, data]) => {
+      if (date === "날짜 없음") return { title: "날짜 없음", data };
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return { title: "날짜 없음", data };
+      const title = `${d.getMonth() + 1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
+      return { title, data };
+    });
+  }, [allTransactions]);
 
   // 이번 달 수입/지출 (거래 탭 데이터 기반)
   const { monthIncome, monthExpense } = useMemo(() => {
@@ -131,26 +192,33 @@ export default function HomeScreen() {
         )}
       </View>
 
-      <ScrollView
-        className="flex-1 px-screen-x"
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-      >
-        {/* 잔액 카드 */}
-        <Card variant="elevated" className="mb-card-gap">
-          <Text className="text-sub text-text-secondary mb-1">전체 잔액</Text>
-          <Text className={`text-display font-pretendard-bold ${balanceColor}`}>
-            {formatBalance(balance)}
-          </Text>
-        </Card>
+        onEndReached={allTransactions.length > 0 ? loadMore : undefined}
+        onEndReachedThreshold={0.5}
+        stickySectionHeadersEnabled={false}
+        ListHeaderComponent={
+          <View>
+            {/* 잔액 카드 */}
+            <Card variant="elevated" className="mb-card-gap">
+              <Text className="text-sub text-text-secondary mb-1">전체 잔액</Text>
+              <Text className={`text-display font-pretendard-bold ${balanceColor}`}>
+                {formatBalance(balance)}
+              </Text>
+            </Card>
 
-        {/* 이번 달 수입/지출 + 전월 비교 */}
-        <View className="flex-row gap-2 mb-card-gap">
-          <Card variant="default" className="flex-1">
-            <Text className="text-caption text-text-secondary mb-1">이번 달 수입</Text>
-            <Text className="text-body font-pretendard-bold text-income">
-              +₩{monthIncome.toLocaleString()}
+            {/* 이번 달 수입/지출 + 전월 비교 */}
+            <View className="flex-row gap-2 mb-card-gap">
+              <Card variant="default" className="flex-1">
+                <Text className="text-caption text-text-secondary mb-1">이번 달 수입</Text>
+                <Text className="text-body font-pretendard-bold text-income">
+                  +₩{monthIncome.toLocaleString()}
             </Text>
             {stats && stats.incomeChange !== 0 && (
               <View className="flex-row items-center mt-1">
@@ -181,50 +249,63 @@ export default function HomeScreen() {
           </Card>
         </View>
 
-        {/* 이번 달 최다 지출 카테고리 */}
-        {stats?.topCategory && (
-          <Card variant="default" className="mb-section-gap">
-            <Text className="text-caption text-text-secondary mb-1">이번 달 최다 지출</Text>
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <Text className="text-[20px] mr-2">{getCategoryEmoji(stats.topCategory.category)}</Text>
-                <Text className="text-body font-pretendard-semibold text-text-primary">
-                  {getCategoryLabel(stats.topCategory.category)}
-                </Text>
-              </View>
-              <Text className="text-body font-pretendard-bold text-expense">
-                -₩{stats.topCategory.total.toLocaleString()}
-              </Text>
-            </View>
-          </Card>
-        )}
+            {/* 이번 달 최다 지출 카테고리 */}
+            {stats?.topCategory && (
+              <Card variant="default" className="mb-section-gap">
+                <Text className="text-caption text-text-secondary mb-1">이번 달 최다 지출</Text>
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center">
+                    <Text className="text-[20px] mr-2">{getCategoryEmoji(stats.topCategory.category)}</Text>
+                    <Text className="text-body font-pretendard-semibold text-text-primary">
+                      {getCategoryLabel(stats.topCategory.category)}
+                    </Text>
+                  </View>
+                  <Text className="text-body font-pretendard-bold text-expense">
+                    -₩{stats.topCategory.total.toLocaleString()}
+                  </Text>
+                </View>
+              </Card>
+            )}
 
-        {/* 최근 거래 */}
-        {recentTransactions.length > 0 ? (
-          <View>
-            <Text className="text-section font-pretendard-semibold text-text-primary mb-3">
-              최근 거래
-            </Text>
-            {recentTransactions.map((t, i) => (
-              <ListItem
-                key={t.id}
-                icon={<Text className="text-[18px]">{getCategoryEmoji(t.category)}</Text>}
-                title={t.merchant || getCategoryLabel(t.category)}
-                subtitle={t.description}
-                amount={t.type === "income" ? t.amount : -t.amount}
-                showDivider={i < recentTransactions.length - 1}
-              />
-            ))}
+            {/* 거래 내역 헤더 */}
+            {allTransactions.length > 0 && (
+              <Text className="text-section font-pretendard-semibold text-text-primary mb-1">
+                거래 내역
+              </Text>
+            )}
           </View>
-        ) : (
-          !loading && (
+        }
+        renderSectionHeader={({ section }) => (
+          <View className="py-2 bg-background">
+            <Text className="text-sub font-pretendard-semibold text-text-secondary">
+              {section.title}
+            </Text>
+          </View>
+        )}
+        renderItem={({ item, index, section }) => (
+          <ListItem
+            icon={<Text className="text-[18px]">{getCategoryEmoji(item.category)}</Text>}
+            title={item.merchant || getCategoryLabel(item.category)}
+            subtitle={item.description}
+            amount={item.type === "income" ? item.amount : -item.amount}
+            showDivider={index < section.data.length - 1}
+            onPress={() => router.push(`/transaction/${item.id}`)}
+          />
+        )}
+        ListFooterComponent={
+          loadingMore ? (
+            <View className="py-4 items-center">
+              <ActivityIndicator size="small" color="#3DD598" />
+            </View>
+          ) : !loading && allTransactions.length === 0 ? (
             <EmptyState
               title="아직 거래 내역이 없어요"
               description="첫 거래를 추가해보세요"
             />
-          )
-        )}
-      </ScrollView>
+          ) : null
+        }
+        ListEmptyComponent={null}
+      />
 
       {/* 팀 선택 바텀시트 */}
       <BottomSheet ref={sheetRef} title="모임 선택">

@@ -24,6 +24,7 @@ export default function MoreScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const currentTeam = useTeamStore((s) => s.currentTeam);
+  const teams = useTeamStore((s) => s.teams);
   const reset = useTeamStore((s) => s.reset);
 
   const handleLogout = () => {
@@ -40,9 +41,24 @@ export default function MoreScreen() {
   };
 
   const handleDeleteAccount = () => {
+    // 내가 팀장인 모임 찾기
+    const userId = user?.userId || user?._id || user?.id;
+    const ownedTeams = teams.filter((t) => {
+      const members = t.members || [];
+      return members.some((m) => {
+        const mid = typeof m.user === "string" ? m.user : m.user._id;
+        return mid === userId && m.role === "owner";
+      });
+    });
+
+    const ownedNames = ownedTeams.map((t) => t.name).join(", ");
+    const teamWarning = ownedTeams.length > 0
+      ? `\n\n팀장으로 있는 모임 [${ownedNames}]이(가) 모든 거래 내역, 팀원 정보와 함께 영구 삭제됩니다.`
+      : "";
+
     Alert.alert(
       "⚠️ 회원 탈퇴",
-      "탈퇴하면 모든 모임, 거래 내역, 계정 정보가 영구적으로 삭제됩니다.\n\n삭제된 데이터는 복구할 수 없습니다.",
+      `탈퇴하면 계정 정보가 영구적으로 삭제됩니다.${teamWarning}\n\n삭제된 데이터는 복구할 수 없습니다.`,
       [
         { text: "취소", style: "cancel" },
         {
@@ -106,19 +122,23 @@ export default function MoreScreen() {
         <Text className="text-sub font-pretendard-semibold text-text-secondary mb-2">
           모임
         </Text>
-        {currentTeam && (
-          <ListItem
-            icon={<Users size={20} color="#3DD598" />}
-            title="팀 관리"
-            subtitle={currentTeam.name}
-            amountLabel=""
-            onPress={() => router.push(`/team/${getTeamId(currentTeam)}`)}
-          />
-        )}
+        <ListItem
+          icon={<Users size={20} color="#3DD598" />}
+          title="모임 관리"
+
+          onPress={() => {
+            if (teams.length > 0) {
+              const teamId = currentTeam ? getTeamId(currentTeam) : getTeamId(teams[0]);
+              router.push(`/team/${teamId}`);
+            } else {
+              showToast("info", "모임이 없습니다", "먼저 모임을 만들어주세요");
+            }
+          }}
+        />
         <ListItem
           icon={<PlusCircle size={20} color="#3182F6" />}
           title="새 모임 만들기"
-          amountLabel=""
+
           onPress={() => router.push("/team/create")}
         />
 
@@ -130,20 +150,20 @@ export default function MoreScreen() {
           <ListItem
             icon={<Lock size={20} color="#8B95A1" />}
             title="비밀번호 변경"
-            amountLabel=""
-            onPress={() => router.push("/(auth)/change-password")}
+  
+            onPress={() => router.push("/change-password")}
           />
         )}
         <ListItem
           icon={<LogOut size={20} color="#8B95A1" />}
           title="로그아웃"
-          amountLabel=""
+
           onPress={handleLogout}
         />
         <ListItem
           icon={<Trash2 size={20} color="#F04452" />}
           title="회원 탈퇴"
-          amountLabel=""
+
           onPress={handleDeleteAccount}
           showDivider={false}
         />
