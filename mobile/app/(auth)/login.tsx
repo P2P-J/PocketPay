@@ -142,8 +142,6 @@ export default function LoginScreen() {
   };
 
   const handleOAuthLogin = (provider: string) => {
-    // state=mobile로 백엔드에 모바일 요청임을 알림
-    // callback에서 딥링크(pocketpay://auth/callback)로 토큰 전달
     const url = `${API_BASE_URL}/auth/login/oauth/${provider}?state=mobile`;
     Linking.openURL(url);
   };

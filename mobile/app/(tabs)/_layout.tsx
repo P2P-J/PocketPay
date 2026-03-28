@@ -8,6 +8,8 @@ import {
   MoreHorizontal,
 } from "lucide-react-native";
 import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
+import { useTeamStore } from "@/store/teamStore";
+import { showToast } from "@/components/ui/Toast";
 
 function AddButton({ onPress }: { onPress?: () => void }) {
   return (
@@ -90,6 +92,12 @@ export default function TabLayout() {
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
+            const teams = useTeamStore.getState().teams;
+            if (teams.length === 0) {
+              showToast("error", "모임이 없어요", "모임을 먼저 만들어주세요!");
+              router.push("/team/create");
+              return;
+            }
             router.push("/(tabs)/add");
           },
         }}
