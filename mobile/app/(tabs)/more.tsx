@@ -8,6 +8,7 @@ import {
   LogOut,
   Trash2,
   ChevronRight,
+  Calculator,
 } from "lucide-react-native";
 import { useAuthStore } from "@/store/authStore";
 import { useTeamStore } from "@/store/teamStore";
@@ -119,6 +120,16 @@ export default function MoreScreen() {
         </Card>
 
         {/* 메뉴 */}
+        <Text className="text-sub font-pretendard-semibold text-text-secondary mb-2">
+          도구
+        </Text>
+        <ListItem
+          icon={<Calculator size={20} color="#FF8C42" />}
+          title="더치페이 계산기"
+          onPress={() => router.push("/dutch")}
+        />
+
+        <View className="h-6" />
         <Text className="text-sub font-pretendard-semibold text-text-secondary mb-2">
           모임
         </Text>
