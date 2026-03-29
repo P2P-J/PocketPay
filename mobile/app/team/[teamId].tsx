@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Alert, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { UserPlus, Trash2, ChevronDown, QrCode } from "lucide-react-native";
+import { UserPlus, Trash2, ChevronDown, QrCode, Wallet } from "lucide-react-native";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { ListItem } from "@/components/ui/ListItem";
@@ -261,8 +261,18 @@ export default function TeamDetailScreen() {
           );
         })}
 
+        {/* 회비 현황 버튼 */}
+        <Button
+          label="회비 현황"
+          variant="outline"
+          size="full"
+          icon={<Wallet size={20} color="#3DD598" />}
+          onPress={() => router.push(`/team/fee?teamId=${selectedTeamId}`)}
+          className="mt-4"
+        />
+
         {/* 액션 버튼 */}
-        <View className="mt-8 mb-8 gap-3">
+        <View className="mt-3 mb-8 gap-3">
           {isOwner ? (
             <Button
               label="모임 삭제"

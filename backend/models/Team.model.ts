@@ -22,6 +22,8 @@ interface ITeam extends Document {
   members: ITeamMember[];
   inviteToken?: string;
   inviteTokenExpiry?: Date;
+  feeAmount: number;
+  feeDueDay: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +39,8 @@ const TeamSchema = new mongoose.Schema<ITeam>({
     }],
     inviteToken: { type: String, index: true, sparse: true },
     inviteTokenExpiry: { type: Date },
+    feeAmount: { type: Number, default: 0 },
+    feeDueDay: { type: Number, default: 1, min: 1, max: 31 },
 }, {
     timestamps: true
 });

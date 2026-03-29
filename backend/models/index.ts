@@ -1,6 +1,7 @@
 const User = require("./User.model");
 const Deal = require("./Deal.model");
 const Team = require("./Team.model");
+const FeePayment = require("./FeePayment.model");
 const WithdrawnOauth = require("./withdrawnOauth.model");
 
-module.exports = { User, Deal, Team, WithdrawnOauth };
+module.exports = { User, Deal, Team, FeePayment, WithdrawnOauth };
