@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert, Modal, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
-import { ChevronLeft, ChevronRight, Share2 } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, Share2, FileText } from "lucide-react-native";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
+import * as Print from "expo-print";
+import { generateReportHtml } from "@/utils/generateReportHtml";
 import { useTeamStore } from "@/store/teamStore";
 import { Card } from "@/components/ui/Card";
 import { ListItem } from "@/components/ui/ListItem";
@@ -19,6 +21,7 @@ export default function HistoryScreen() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [sharing, setSharing] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [showSharePreview, setShowSharePreview] = useState(false);
   const cardRef = useRef<View>(null);
 
@@ -97,6 +100,31 @@ export default function HistoryScreen() {
     }
   };
 
+  const handleExportPdf = async () => {
+    setPdfLoading(true);
+    try {
+      const html = generateReportHtml({
+        teamName: currentTeam?.name || "모임",
+        year,
+        month,
+        income,
+        expense,
+        categoryBreakdown,
+        transactions,
+      });
+      const { uri } = await Print.printToFileAsync({ html, base64: false });
+      await Sharing.shareAsync(uri, {
+        mimeType: "application/pdf",
+        dialogTitle: `${currentTeam?.name} ${year}년 ${month}월 정산 리포트`,
+        UTI: "com.adobe.pdf",
+      });
+    } catch {
+      Alert.alert("오류", "PDF를 생성하는 중 문제가 발생했습니다.");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   const fmt = (n: number) => `₩${n.toLocaleString()}`;
 
   return (
@@ -127,34 +155,57 @@ export default function HistoryScreen() {
           </Card>
         </View>
 
-        {/* 공유 버튼 */}
+        {/* 공유 버튼 영역 */}
         {(income > 0 || expense > 0) && (
-          <Pressable
-            onPress={handleShare}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              paddingVertical: 12,
-              paddingHorizontal: 20,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: "#3DD598",
-              marginBottom: 20,
-            }}
-          >
-            <Share2 size={18} color="#3DD598" />
-            <Text
+          <View style={{ flexDirection: "row", gap: 10, marginBottom: 20 }}>
+            {/* 카드 이미지 공유 */}
+            <Pressable
+              onPress={handleShare}
               style={{
-                fontSize: 14,
-                fontFamily: "Pretendard-SemiBold",
-                color: "#3DD598",
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                paddingVertical: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "#3DD598",
               }}
             >
-              이번 달 정산 카드 공유하기
-            </Text>
-          </Pressable>
+              <Share2 size={16} color="#3DD598" />
+              <Text style={{ fontSize: 13, fontFamily: "Pretendard-SemiBold", color: "#3DD598" }}>
+                카드 공유
+              </Text>
+            </Pressable>
+
+            {/* PDF 내보내기 */}
+            <Pressable
+              onPress={handleExportPdf}
+              disabled={pdfLoading}
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                paddingVertical: 12,
+                borderRadius: 12,
+                backgroundColor: "#3DD598",
+              }}
+            >
+              {pdfLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <FileText size={16} color="#FFFFFF" />
+                  <Text style={{ fontSize: 13, fontFamily: "Pretendard-SemiBold", color: "#FFFFFF" }}>
+                    PDF 저장
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
         )}
 
         {/* 카테고리별 지출 */}
