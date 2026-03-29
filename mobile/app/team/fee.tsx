@@ -391,7 +391,7 @@ export default function FeeScreen() {
             >
               <Send size={16} color="#8B95A1" />
               <Text style={{ fontSize: 14, fontFamily: "Pretendard-SemiBold", color: "#8B95A1" }}>
-                미납자 전체 독촉하기
+                납부 알림 보내기
               </Text>
             </Pressable>
           )}
