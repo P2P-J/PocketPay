@@ -163,6 +163,57 @@ const removeMember = async (teamId, ownerId, targetUserId) => {
   await team.save();
 };
 
+const generateInviteToken = async (teamId, ownerId) => {
+  if (!isValidObjectId(teamId)) {
+    throw AppError.badRequest("올바른 팀 ID가 아닙니다.");
+  }
+
+  const team = await Team.findOne({ _id: teamId, owner: ownerId });
+  if (!team) {
+    throw AppError.forbidden("초대 링크 생성 권한이 없습니다.");
+  }
+
+  // 기존 토큰이 유효하면 재사용
+  if (team.inviteToken && team.inviteTokenExpiry && team.inviteTokenExpiry > new Date()) {
+    return { token: team.inviteToken, expiry: team.inviteTokenExpiry };
+  }
+
+  // 새 토큰 생성 (8자 랜덤 대문자+숫자, 24시간 유효)
+  const { v4: uuidv4 } = require("uuid");
+  const token = uuidv4().replace(/-/g, "").substring(0, 10).toUpperCase();
+  const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  team.inviteToken = token;
+  team.inviteTokenExpiry = expiry;
+  await team.save();
+
+  return { token, expiry };
+};
+
+const joinByToken = async (token, userId) => {
+  const team = await Team.findOne({
+    inviteToken: token,
+    inviteTokenExpiry: { $gt: new Date() },
+  });
+
+  if (!team) {
+    throw AppError.notFound("유효하지 않거나 만료된 초대 링크입니다.");
+  }
+
+  const alreadyMember = team.members.some(
+    (m) => m.user.toString() === userId
+  );
+
+  if (alreadyMember) {
+    return { team, alreadyMember: true };
+  }
+
+  team.members.push({ user: userId, role: "member" });
+  await team.save();
+
+  return { team, alreadyMember: false };
+};
+
 const leaveTeam = async (teamId, userId) => {
   if (!isValidObjectId(teamId)) {
     throw AppError.badRequest("올바른 팀 ID가 아닙니다.");
@@ -196,4 +247,6 @@ module.exports = {
   inviteMember,
   removeMember,
   leaveTeam,
+  generateInviteToken,
+  joinByToken,
 };

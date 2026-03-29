@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Alert, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { UserPlus, Trash2, ChevronDown } from "lucide-react-native";
+import { UserPlus, Trash2, ChevronDown, QrCode } from "lucide-react-native";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { ListItem } from "@/components/ui/ListItem";
@@ -201,13 +201,26 @@ export default function TeamDetailScreen() {
             멤버 ({team?.members?.length || 0})
           </Text>
           {isOwner && (
-            <Button
-              label="초대"
-              variant="ghost"
-              size="sm"
-              icon={<UserPlus size={16} color="#3DD598" />}
-              onPress={() => router.push(`/team/invite?teamId=${selectedTeamId}`)}
-            />
+            <View className="flex-row gap-2">
+              <Button
+                label="QR 초대"
+                variant="ghost"
+                size="sm"
+                icon={<QrCode size={16} color="#3DD598" />}
+                onPress={() =>
+                  router.push(
+                    `/team/qr?teamId=${selectedTeamId}&teamName=${encodeURIComponent(team?.name || "")}`
+                  )
+                }
+              />
+              <Button
+                label="이메일 초대"
+                variant="ghost"
+                size="sm"
+                icon={<UserPlus size={16} color="#3DD598" />}
+                onPress={() => router.push(`/team/invite?teamId=${selectedTeamId}`)}
+              />
+            </View>
           )}
         </View>
 

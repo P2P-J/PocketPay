@@ -28,4 +28,15 @@ export const teamApi = {
 
   leaveTeam: (teamId: string) =>
     apiClient.delete(`/teams/${teamId}/members/me`),
+
+  generateInviteToken: (teamId: string) =>
+    apiClient.post(`/teams/${teamId}/invite-token`) as Promise<{
+      data: { token: string; expiry: string };
+    }>,
+
+  joinByToken: (token: string) =>
+    apiClient.post(`/teams/join/${token}`) as Promise<{
+      data: { team: unknown };
+      message: string;
+    }>,
 };

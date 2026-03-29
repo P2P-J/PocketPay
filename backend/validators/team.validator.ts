@@ -45,10 +45,17 @@ const removeMemberSchema = {
   }),
 };
 
+const inviteTokenParamSchema = {
+  params: z.object({
+    token: z.string().min(1, "토큰이 필요합니다."),
+  }),
+};
+
 module.exports = {
   createTeamSchema,
   updateTeamSchema,
   teamIdParamSchema,
   inviteMemberSchema,
   removeMemberSchema,
+  inviteTokenParamSchema,
 };

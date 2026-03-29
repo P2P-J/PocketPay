@@ -73,6 +73,27 @@ const leaveTeam = async (req, res) => {
   }
 };
 
+const generateInviteToken = async (req, res) => {
+  try {
+    const result = await teamService.generateInviteToken(req.params.teamId, req.user.userId);
+    res.status(200).json({ data: result });
+  } catch (err) {
+    handleError(res, err);
+  }
+};
+
+const joinByToken = async (req, res) => {
+  try {
+    const { alreadyMember, team } = await teamService.joinByToken(req.params.token, req.user.userId);
+    if (alreadyMember) {
+      return res.status(200).json({ data: team, message: "이미 팀원입니다." });
+    }
+    res.status(200).json({ data: team, message: "팀에 참가했습니다." });
+  } catch (err) {
+    handleError(res, err);
+  }
+};
+
 module.exports = {
   createTeam,
   getMyTeams,
@@ -82,4 +103,6 @@ module.exports = {
   inviteMember,
   removeMember,
   leaveTeam,
+  generateInviteToken,
+  joinByToken,
 };

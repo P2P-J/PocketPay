@@ -20,6 +20,8 @@ interface ITeam extends Document {
   description: string;
   owner: Types.ObjectId;
   members: ITeamMember[];
+  inviteToken?: string;
+  inviteTokenExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,7 +34,9 @@ const TeamSchema = new mongoose.Schema<ITeam>({
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         role: { type: String, enum: ["owner", "member"], default: "member" },
         joinedAt: { type: Date, default: Date.now },
-    }]
+    }],
+    inviteToken: { type: String, index: true, sparse: true },
+    inviteTokenExpiry: { type: Date },
 }, {
     timestamps: true
 });

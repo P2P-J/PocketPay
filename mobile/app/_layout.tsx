@@ -10,6 +10,8 @@ import Toast from "react-native-toast-message";
 import { toastConfig, showToast } from "../src/components/ui/Toast";
 import { useAppInit } from "../src/hooks/useAppInit";
 import { useAuthStore } from "../src/store/authStore";
+import { teamApi } from "../src/api/team";
+import { useTeamStore } from "../src/store/teamStore";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,28 +40,58 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isReady } = useAppInit();
 
-  // OAuth 딥링크 수신 처리 (pocketpay://auth/callback?accessToken=...&refreshToken=...)
+  // 딥링크 수신 처리
   useEffect(() => {
     const handleDeepLink = async (event: { url: string }) => {
       const url = event.url;
-      if (!url.includes("auth/callback")) return;
 
-      const params = new URLSearchParams(url.split("?")[1] || "");
-      const accessToken = params.get("accessToken");
-      const refreshToken = params.get("refreshToken");
-      const error = params.get("error");
+      // OAuth 콜백: pocketpay://auth/callback?accessToken=...
+      if (url.includes("auth/callback")) {
+        const params = new URLSearchParams(url.split("?")[1] || "");
+        const accessToken = params.get("accessToken");
+        const refreshToken = params.get("refreshToken");
+        const error = params.get("error");
 
-      if (error) {
-        showToast("error", "로그인 실패", decodeURIComponent(error));
+        if (error) {
+          showToast("error", "로그인 실패", decodeURIComponent(error));
+          return;
+        }
+
+        if (accessToken && refreshToken) {
+          try {
+            await loginWithOAuth(accessToken, refreshToken);
+            showToast("success", "로그인 성공");
+          } catch {
+            showToast("error", "로그인 실패", "다시 시도해주세요");
+          }
+        }
         return;
       }
 
-      if (accessToken && refreshToken) {
+      // QR 초대 링크: pocketpay://join?token=XXXXXX
+      if (url.includes("join")) {
+        const params = new URLSearchParams(url.split("?")[1] || "");
+        const token = params.get("token");
+        if (!token) return;
+
+        // 로그인 상태 확인
+        const currentUser = useAuthStore.getState().user;
+        if (!currentUser) {
+          showToast("info", "로그인이 필요해요", "로그인 후 다시 시도해주세요");
+          return;
+        }
+
         try {
-          await loginWithOAuth(accessToken, refreshToken);
-          showToast("success", "로그인 성공");
+          const res = await teamApi.joinByToken(token);
+          if (res.message === "이미 팀원입니다.") {
+            showToast("info", "이미 참가중인 모임이에요");
+          } else {
+            showToast("success", "모임 참가 완료!", "홈에서 확인해보세요");
+            // 팀 목록 새로고침
+            await useTeamStore.getState().fetchTeams();
+          }
         } catch {
-          showToast("error", "로그인 실패", "다시 시도해주세요");
+          showToast("error", "참가 실패", "유효하지 않거나 만료된 초대 코드예요");
         }
       }
     };
