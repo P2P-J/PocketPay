@@ -50,8 +50,9 @@ export default function DutchScreen() {
   // 팀 없을 때 수동 인원 수
   const [manualCount, setManualCount] = useState(2);
 
-  // 팀 멤버 초기 로드
+  // 팀 멤버 초기 로드 — 이미 로드된 경우 재초기화 방지 (체크박스 선택 유지)
   useEffect(() => {
+    if (participants.length > 0) return;
     if (currentTeam?.members && currentTeam.members.length > 0) {
       const loaded: Participant[] = currentTeam.members.map((m) => {
         const u = typeof m.user === "string" ? null : m.user;
@@ -78,14 +79,16 @@ export default function DutchScreen() {
     [total, participants]
   );
 
-  // 직접 입력 합계
+  // 직접 입력 합계 — selectedParticipants는 매 렌더 새 배열이므로 participants를 의존성으로
   const customTotal = useMemo(
     () =>
-      selectedParticipants.reduce(
-        (sum, p) => sum + (parseInt(p.customAmount.replace(/,/g, ""), 10) || 0),
-        0
-      ),
-    [selectedParticipants]
+      participants
+        .filter((p) => p.selected)
+        .reduce(
+          (sum, p) => sum + (parseInt(p.customAmount.replace(/,/g, ""), 10) || 0),
+          0
+        ),
+    [participants]
   );
   const customDiff = customTotal - total;
 
@@ -247,7 +250,11 @@ export default function DutchScreen() {
                 {participants.map((p, i) => (
                   <Pressable
                     key={p.userId}
-                    onPress={() => toggleParticipant(p.userId)}
+                    onPress={() => {
+                      // 직접 입력 모드에서 선택된 항목은 탭해도 해제 안 됨 (TextInput 포커스 보호)
+                      if (splitMode === "custom" && p.selected) return;
+                      toggleParticipant(p.userId);
+                    }}
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
@@ -398,34 +405,39 @@ export default function DutchScreen() {
                   marginBottom: 16,
                 }}
               >
-                {(["equal", "custom"] as SplitMode[]).map((mode) => (
-                  <Pressable
-                    key={mode}
-                    onPress={() => setSplitMode(mode)}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 8,
-                      borderRadius: 8,
-                      alignItems: "center",
-                      backgroundColor: splitMode === mode ? "#FFFFFF" : "transparent",
-                      shadowColor: splitMode === mode ? "#000" : "transparent",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: splitMode === mode ? 0.08 : 0,
-                      shadowRadius: 2,
-                      elevation: splitMode === mode ? 2 : 0,
-                    }}
-                  >
-                    <Text
+                {(["equal", "custom"] as SplitMode[]).map((mode) => {
+                  const disabled = mode === "custom" && !hasTeam;
+                  const isActive = splitMode === mode;
+                  return (
+                    <Pressable
+                      key={mode}
+                      onPress={() => { if (!disabled) setSplitMode(mode); }}
                       style={{
-                        fontSize: 14,
-                        fontFamily: "Pretendard-SemiBold",
-                        color: splitMode === mode ? "#191F28" : "#8B95A1",
+                        flex: 1,
+                        paddingVertical: 8,
+                        borderRadius: 8,
+                        alignItems: "center",
+                        opacity: disabled ? 0.4 : 1,
+                        backgroundColor: isActive ? "#FFFFFF" : "transparent",
+                        shadowColor: isActive ? "#000" : "transparent",
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: isActive ? 0.08 : 0,
+                        shadowRadius: 2,
+                        elevation: isActive ? 2 : 0,
                       }}
                     >
-                      {mode === "equal" ? "균등 분할" : "직접 입력"}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontFamily: "Pretendard-SemiBold",
+                          color: isActive ? "#191F28" : "#8B95A1",
+                        }}
+                      >
+                        {mode === "equal" ? "균등 분할" : "직접 입력"}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
 
               {/* 결과 */}
