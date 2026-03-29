@@ -26,9 +26,11 @@ const getFeeStatus = async (teamId, requesterId, year, month) => {
     .lean();
 
   // 납부 맵 (userId → payment)
+  // populate 성공 시 p.userId는 { _id, name, email } 객체, 실패 시 ObjectId
   const paymentMap: Record<string, any> = {};
   for (const p of payments) {
-    paymentMap[p.userId._id.toString()] = p;
+    const key = p.userId?._id?.toString() || p.userId?.toString();
+    if (key) paymentMap[key] = p;
   }
 
   // 멤버 목록 + 납부 상태 조합

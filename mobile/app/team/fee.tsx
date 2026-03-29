@@ -12,7 +12,7 @@ import { showToast } from "@/components/ui/Toast";
 import { feeApi, type FeeStatus, type FeeMember } from "@/api/fee";
 import { useAuthStore } from "@/store/authStore";
 import { useTeamStore } from "@/store/teamStore";
-import { getTeamId } from "@/types/team";
+import { getTeamId, isTeamOwner } from "@/types/team";
 
 export default function FeeScreen() {
   const { teamId } = useLocalSearchParams<{ teamId: string }>();
@@ -40,10 +40,7 @@ export default function FeeScreen() {
   const [ruleDueDay, setRuleDueDay] = useState("");
   const [ruleLoading, setRuleLoading] = useState(false);
 
-  const isOwner = currentTeam?.members?.some((m: any) => {
-    const memberId = typeof m.user === "string" ? m.user : m.user?._id;
-    return memberId === (user?.id || user?._id) && m.role === "owner";
-  });
+  const isOwner = isTeamOwner(currentTeam?.members, user);
 
   const loadData = useCallback(async () => {
     if (!teamId) return;
