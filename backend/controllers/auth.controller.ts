@@ -155,7 +155,7 @@ const verifyCodeController = async (req, res) => {
     if (!email || !code) throw AppError.badRequest("이메일과 인증코드를 입력해주세요.");
 
     const verificationService = require("../services/auth/verification.service");
-    const result = verificationService.verifyCode(email, code, purpose || "이메일 인증");
+    const result = await verificationService.verifyCode(email, code, purpose || "이메일 인증");
     res.status(200).json(result);
   } catch (err) {
     return handleError(res, err);
@@ -175,7 +175,7 @@ const resetPasswordController = async (req, res) => {
 
     // 인증코드 검증
     const verificationService = require("../services/auth/verification.service");
-    verificationService.verifyCode(email, code, "비밀번호 재설정");
+    await verificationService.verifyCode(email, code, "비밀번호 재설정");
 
     // 사용자 찾기
     const user = await User.findOne({ email, provider: "local" });
@@ -187,7 +187,7 @@ const resetPasswordController = async (req, res) => {
     await user.save();
 
     // 인증코드 삭제 (재사용 방지)
-    verificationService.deleteCode(email, "비밀번호 재설정");
+    await verificationService.deleteCode(email, "비밀번호 재설정");
 
     res.status(200).json({ message: "비밀번호가 재설정되었습니다." });
   } catch (err) {

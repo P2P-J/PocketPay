@@ -16,7 +16,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   loginWithOAuth: (accessToken: string, refreshToken: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => {
@@ -116,9 +116,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
     },
 
-    logout: () => {
-      SecureStore.deleteItemAsync("accessToken");
-      SecureStore.deleteItemAsync("refreshToken");
+    logout: async () => {
+      await SecureStore.deleteItemAsync("accessToken");
+      await SecureStore.deleteItemAsync("refreshToken");
       set({
         user: null,
         accessToken: null,
