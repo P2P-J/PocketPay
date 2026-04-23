@@ -1,13 +1,11 @@
-// 개발 환경: ngrok으로 백엔드 HTTPS 터널링
-// 터미널에서 `npx ngrok http 3000` 실행 후 URL 입력
-// 프로덕션: 실제 서버 URL로 변경
-const DEV_API_URL = "https://marielle-superangelic-nerissa.ngrok-free.dev";
+// 백엔드 API 서버 URL
+// - 개발: 로컬 + ngrok 또는 Railway production 사용
+// - 프로덕션: Railway
+const RAILWAY_URL = "https://pocketpay-backend-production.up.railway.app";
 
 function getApiBaseUrl(): string {
-  if (__DEV__) {
-    return DEV_API_URL;
-  }
-  return "https://api.pocketpay.app";
+  // 개발 빌드에서도 Railway 백엔드 사용 (ngrok URL 스위칭 불필요)
+  return RAILWAY_URL;
 }
 
 export const API_BASE_URL = getApiBaseUrl();

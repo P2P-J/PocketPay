@@ -1,28 +1,36 @@
 const ocrService = require("../services/ocr/ocr.service");
 const AppError = require("../utils/AppError");
 const { handleError } = require("../utils/errorHandler");
-const fs = require("fs/promises");
-
-const cleanupFile = async (filePath) => {
-  try {
-    if (filePath) await fs.unlink(filePath);
-  } catch {
-    // 파일이 이미 없는 경우 무시
-  }
-};
+const { uploadBuffer, isCloudinaryConfigured } = require("../config/cloudinary");
 
 const analyzeImage = async (req, res) => {
   try {
-    if (!req.file) {
+    if (!req.file?.buffer) {
       throw AppError.badRequest("이미지 파일이 필요합니다.");
     }
 
-    const data = await ocrService.processReceiptImage(req.file.path);
-    await cleanupFile(req.file.path);
+    const { buffer, originalname } = req.file;
 
-    return res.status(200).json({ message: "분석 성공", data });
+    // OCR 처리 + Cloudinary 업로드 병렬 실행
+    const cloudinaryPromise = isCloudinaryConfigured()
+      ? uploadBuffer(buffer).catch((err) => {
+          console.error("[Cloudinary upload failed]", err?.message);
+          return null;
+        })
+      : Promise.resolve(null);
+
+    const [ocrData, uploadResult] = await Promise.all([
+      ocrService.processReceiptImage(buffer, originalname),
+      cloudinaryPromise,
+    ]);
+
+    const receiptUrl = uploadResult?.secure_url || null;
+
+    return res.status(200).json({
+      message: "분석 성공",
+      data: { ...ocrData, receiptUrl },
+    });
   } catch (error) {
-    await cleanupFile(req.file?.path);
     return handleError(res, error);
   }
 };

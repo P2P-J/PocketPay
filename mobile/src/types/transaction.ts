@@ -7,6 +7,7 @@ export interface Deal {
   price: number;
   date: string;
   businessNumber?: string;
+  receiptUrl?: string;
   createdBy?: string;
   createdAt?: string;
 }
@@ -19,6 +20,7 @@ export interface Transaction {
   category: string;
   amount: number;
   date: string;
+  receiptUrl?: string;
 }
 
 export interface DealPayload {
@@ -30,6 +32,7 @@ export interface DealPayload {
   date: string;
   teamId?: string;
   businessNumber?: string;
+  receiptUrl?: string;
 }
 
 // 백엔드 division: "수입" | "지출" ↔ 프론트 type: "income" | "expense"
@@ -52,6 +55,7 @@ export function dealToTransaction(deal: Deal): Transaction {
     category: deal.category || "",
     amount: deal.price || 0,
     date: deal.date || "",
+    receiptUrl: deal.receiptUrl,
   };
 }
 
@@ -67,5 +71,6 @@ export function transactionToDealPayload(
     date: transaction.date || new Date().toISOString().split("T")[0],
     teamId: transaction.teamId,
     businessNumber: transaction.businessNumber,
+    receiptUrl: transaction.receiptUrl,
   };
 }

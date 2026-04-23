@@ -11,6 +11,7 @@ const createDealSchema = {
     price: z.number().min(0, "가격은 0 이상이어야 합니다."),
     businessNumber: z.string().max(20).optional(),
     date: z.string().optional(),
+    receiptUrl: z.string().url("올바른 URL이 아닙니다.").max(500).optional(),
     teamId: z.string().regex(objectIdRegex, "올바른 팀 ID가 아닙니다."),
   }),
 };
@@ -24,6 +25,7 @@ const updateDealSchema = {
     price: z.number().min(0, "가격은 0 이상이어야 합니다.").optional(),
     businessNumber: z.string().max(20).optional(),
     date: z.string().optional(),
+    receiptUrl: z.string().url("올바른 URL이 아닙니다.").max(500).optional(),
   }),
   params: z.object({
     dealId: z.string().regex(objectIdRegex, "올바른 영수증 ID가 아닙니다."),

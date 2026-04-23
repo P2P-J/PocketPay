@@ -6,6 +6,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
+  Pressable,
+  Modal,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -36,6 +39,8 @@ export default function EditTransactionScreen() {
   const [category, setCategory] = useState("etc");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [showReceiptFull, setShowReceiptFull] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -56,6 +61,7 @@ export default function EditTransactionScreen() {
       setCategory(t.category);
       setDescription(t.description);
       setDate(t.date?.split("T")[0] || "");
+      setReceiptUrl(t.receiptUrl || null);
     } catch {
       showToast("error", "거래 정보를 불러올 수 없습니다");
       router.back();
@@ -202,6 +208,22 @@ export default function EditTransactionScreen() {
           ))}
         </View>
 
+        {/* 영수증 이미지 */}
+        {receiptUrl && (
+          <View className="mb-6">
+            <Text className="text-sub font-pretendard-medium text-text-secondary mb-2">
+              영수증
+            </Text>
+            <Pressable onPress={() => setShowReceiptFull(true)}>
+              <Image
+                source={{ uri: receiptUrl }}
+                className="w-full h-60 rounded-lg bg-gray-100"
+                resizeMode="cover"
+              />
+            </Pressable>
+          </View>
+        )}
+
         {/* 저장/삭제 버튼 */}
         <Button
           label="저장"
@@ -219,6 +241,27 @@ export default function EditTransactionScreen() {
           className="mb-8"
         />
       </ScrollView>
+
+      {/* 영수증 전체화면 뷰 */}
+      <Modal
+        visible={showReceiptFull}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReceiptFull(false)}
+      >
+        <Pressable
+          onPress={() => setShowReceiptFull(false)}
+          className="flex-1 bg-black/90 items-center justify-center"
+        >
+          {receiptUrl && (
+            <Image
+              source={{ uri: receiptUrl }}
+              className="w-full h-full"
+              resizeMode="contain"
+            />
+          )}
+        </Pressable>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }

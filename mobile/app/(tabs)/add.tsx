@@ -47,6 +47,7 @@ export default function AddScreen() {
   const [category, setCategory] = useState("etc");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
 
@@ -63,6 +64,7 @@ export default function AddScreen() {
       if (data.storeInfo) setMerchant(data.storeInfo);
       if (data.price) setAmount(Number(data.price).toLocaleString("ko-KR"));
       if (data.date) setDate(data.date);
+      if (data.receiptUrl) setReceiptUrl(data.receiptUrl);
       showToast("success", "영수증 인식 완료");
     } catch (err) {
       if (__DEV__) console.log("[OCR] 에러:", err instanceof Error ? err.message : err);
@@ -126,6 +128,7 @@ export default function AddScreen() {
         category,
         description,
         date,
+        receiptUrl: receiptUrl ?? undefined,
       });
       showToast("success", "거래가 추가되었습니다");
       // 폼 초기화 (날짜 제외)
@@ -134,6 +137,7 @@ export default function AddScreen() {
       setAmount("");
       setCategory("etc");
       setDescription("");
+      setReceiptUrl(null);
       router.back();
     } catch {
       showToast("error", "거래 추가 실패");

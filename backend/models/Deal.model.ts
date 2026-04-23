@@ -8,6 +8,7 @@ interface IDeal extends Document {
   price: number;
   businessNumber?: string;
   date?: Date;
+  receiptUrl?: string;
   teamId: Types.ObjectId;
   createdBy?: Types.ObjectId;
   createdAt: Date;
@@ -22,6 +23,7 @@ const DealSchema = new mongoose.Schema<IDeal>({
   price: { type: Number, required: true, min: 0 }, // 가격
   businessNumber: { type: String }, // 사업자 번호
   date: { type: Date }, // 날짜
+  receiptUrl: { type: String }, // 영수증 이미지 URL (Cloudinary)
   teamId: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true, index: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 }, {

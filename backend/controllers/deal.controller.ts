@@ -11,6 +11,7 @@ const registerDeal = async (req, res) => {
       price,
       businessNumber,
       date,
+      receiptUrl,
       teamId,
     } = req.body;
 
@@ -26,6 +27,7 @@ const registerDeal = async (req, res) => {
       price,
       businessNumber,
       date,
+      receiptUrl,
       teamId,
       createdBy: userId,
     });
@@ -71,9 +73,9 @@ const updateDeal = async (req, res) => {
     const userId = req.user.userId;
 
     // Mass Assignment 방지: 허용된 필드만 추출
-    const { storeInfo, division, description, category, price, date, businessNumber } = req.body;
+    const { storeInfo, division, description, category, price, date, businessNumber, receiptUrl } = req.body;
     const safeUpdate = Object.fromEntries(
-      Object.entries({ storeInfo, division, description, category, price, date, businessNumber })
+      Object.entries({ storeInfo, division, description, category, price, date, businessNumber, receiptUrl })
         .filter(([, v]) => v !== undefined)
     );
 

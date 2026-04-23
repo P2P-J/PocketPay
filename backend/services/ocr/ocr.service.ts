@@ -1,7 +1,5 @@
 const axios = require("axios");
 const FormData = require("form-data");
-const fs = require("fs");
-const path = require("path");
 const AppError = require("../../utils/AppError");
 
 // API URL/키는 함수 호출 시점에 바인딩 (모듈 로드 시점에는 env가 아직 세팅 안 될 수 있음)
@@ -35,16 +33,16 @@ const DATE_PATTERNS = [
 const CANCEL_PATTERN = /(?:취소|요청|선승인)[^0-9]*[0-9,]+\s*원[^0-9]*/gi;
 
 // 1. 공통 API 호출 함수
-async function callClovaAPI(url, secretKey, requestIdPrefix, imagePath) {
+async function callClovaAPI(url, secretKey, requestIdPrefix, imageBuffer, filename) {
   try {
     const formData = new FormData();
-    formData.append("file", fs.createReadStream(imagePath));
+    formData.append("file", imageBuffer, { filename });
 
     const message = {
       version: "V2",
       requestId: requestIdPrefix + Date.now(),
       timestamp: Date.now(),
-      images: [{ format: "jpg", name: path.basename(imagePath) }],
+      images: [{ format: "jpg", name: filename }],
     };
 
     formData.append("message", JSON.stringify(message));
@@ -173,7 +171,7 @@ function extractReceiptData(receiptResult, fullText) {
 }
 
 // 4. 메인 함수 (병렬 API 호출)
-const processReceiptImage = async (imagePath) => {
+const processReceiptImage = async (imageBuffer, filename = "receipt.jpg") => {
   const RECEIPT_API_URL = process.env.DOCUMENT_APIGW_URL;
   const RECEIPT_SECRET_KEY = process.env.DOCUMENT_SECRET_KEY;
   const GENERAL_API_URL = process.env.GENERAL_APIGW_URL;
@@ -181,8 +179,8 @@ const processReceiptImage = async (imagePath) => {
 
   // 영수증 Document OCR + General OCR 병렬 호출
   const [receiptResult, generalResult] = await Promise.all([
-    callClovaAPI(RECEIPT_API_URL, RECEIPT_SECRET_KEY, "receipt-", imagePath),
-    callClovaAPI(GENERAL_API_URL, GENERAL_SECRET_KEY, "general-", imagePath),
+    callClovaAPI(RECEIPT_API_URL, RECEIPT_SECRET_KEY, "receipt-", imageBuffer, filename),
+    callClovaAPI(GENERAL_API_URL, GENERAL_SECRET_KEY, "general-", imageBuffer, filename),
   ]);
 
   const fullText = extractFullText(generalResult);

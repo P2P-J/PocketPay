@@ -5,6 +5,7 @@ interface OcrResult {
   price?: number;
   date?: string;
   businessNumber?: string;
+  receiptUrl?: string | null;
 }
 
 export const ocrApi = {
