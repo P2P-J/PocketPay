@@ -13,11 +13,21 @@ interface ReportData {
   month: number;
   income: number;
   expense: number;
-  categoryBreakdown: CategoryItem[];
+  expenseBreakdown: CategoryItem[];
+  incomeBreakdown: CategoryItem[];
   transactions: Transaction[];
 }
 
 const fmt = (n: number) => `₩${Math.abs(n).toLocaleString()}`;
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 function groupByDate(transactions: Transaction[]): Record<string, Transaction[]> {
   const groups: Record<string, Transaction[]> = {};
@@ -37,148 +47,196 @@ function formatDateLabel(dateStr: string): string {
   return `${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
 }
 
-export function generateReportHtml(data: ReportData): string {
-  const { teamName, year, month, income, expense, categoryBreakdown, transactions } = data;
-  const balance = income - expense;
-  const balanceColor = balance >= 0 ? "#3DD598" : "#F04452";
-  const generatedAt = new Date().toLocaleDateString("ko-KR");
+function renderCategoryRows(items: CategoryItem[], accentColor: string): string {
+  return items.slice(0, 8).map((item) => {
+    const widthPct = Math.min(item.percent, 100);
+    return `
+      <tr>
+        <td style="padding: 6px 0; font-size: 11pt; color: #1a1a1a; width: 40%;">
+          ${escapeHtml(getCategoryEmoji(item.category))} ${escapeHtml(getCategoryLabel(item.category))}
+        </td>
+        <td style="padding: 6px 8px; width: 35%;">
+          <div style="height: 6px; background: #eef0f2; border-radius: 3px; overflow: hidden;">
+            <div style="height: 6px; width: ${widthPct}%; background: ${accentColor};"></div>
+          </div>
+        </td>
+        <td style="padding: 6px 0; font-size: 11pt; font-weight: 600; text-align: right; color: ${accentColor}; white-space: nowrap;">
+          ${fmt(item.total)}
+        </td>
+        <td style="padding: 6px 0 6px 8px; font-size: 9.5pt; color: #6b7684; text-align: right; width: 40px;">
+          ${item.percent}%
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
 
-  const top5 = categoryBreakdown.slice(0, 5);
+export function generateReportHtml(data: ReportData): string {
+  const { teamName, year, month, income, expense, expenseBreakdown, incomeBreakdown, transactions } = data;
+  const balance = income - expense;
+  const balanceColor = balance >= 0 ? "#0064ff" : "#d6293e";
+  const generatedAt = new Date().toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   const groups = groupByDate(transactions);
   const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
 
-  // 카테고리 섹션
-  const categoryRows = top5.map((item) => {
-    const barColor = item.percent >= 40 ? "#F04452" : item.percent >= 20 ? "#FF8C42" : "#3DD598";
-    return `
-      <div style="margin-bottom: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <span style="font-size: 13px; color: #191F28; font-weight: 600;">
-            ${getCategoryEmoji(item.category)} ${getCategoryLabel(item.category)}
-          </span>
-          <div style="text-align: right;">
-            <span style="font-size: 13px; font-weight: 700; color: #F04452;">${fmt(item.total)}</span>
-            <span style="font-size: 11px; color: #8B95A1; margin-left: 6px;">${item.percent}%</span>
-          </div>
-        </div>
-        <div style="height: 5px; background: #F2F4F6; border-radius: 3px; overflow: hidden;">
-          <div style="height: 5px; width: ${Math.min(item.percent, 100)}%; background: ${barColor}; border-radius: 3px;"></div>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  // 거래 내역 섹션
-  const transactionSection = sortedDates.map((dateKey) => {
+  const transactionRows = sortedDates.map((dateKey) => {
     const txs = groups[dateKey];
-    const dayTotal = txs.reduce((sum, t) => {
-      return sum + (t.type === "income" ? t.amount : -t.amount);
-    }, 0);
+    const dayRows = txs.map((t) => {
+      const sign = t.type === "income" ? "+" : "-";
+      const color = t.type === "income" ? "#0064ff" : "#d6293e";
+      return `
+        <tr style="border-bottom: 1px solid #eef0f2;">
+          <td style="padding: 8px 12px 8px 0; font-size: 10pt; color: #1a1a1a; vertical-align: top;">
+            ${escapeHtml(getCategoryEmoji(t.category))} ${escapeHtml(t.merchant || getCategoryLabel(t.category))}
+          </td>
+          <td style="padding: 8px 12px 8px 0; font-size: 9.5pt; color: #6b7684; vertical-align: top;">
+            ${escapeHtml(t.description || "-")}
+          </td>
+          <td style="padding: 8px 0; font-size: 10pt; font-weight: 600; text-align: right; color: ${color}; white-space: nowrap; vertical-align: top;">
+            ${sign}${fmt(t.amount)}
+          </td>
+        </tr>
+      `;
+    }).join("");
 
-    const rows = txs.map((t) => `
-      <tr style="border-bottom: 1px solid #F2F4F6;">
-        <td style="padding: 8px 4px; font-size: 12px; color: #191F28;">
-          ${getCategoryEmoji(t.category)} ${t.merchant || getCategoryLabel(t.category)}
-        </td>
-        <td style="padding: 8px 4px; font-size: 11px; color: #8B95A1;">${t.description || "-"}</td>
-        <td style="padding: 8px 4px; font-size: 12px; font-weight: 700; text-align: right; color: ${t.type === "income" ? "#3182F6" : "#F04452"};">
-          ${t.type === "income" ? "+" : "-"}${fmt(t.amount)}
+    return `
+      <tr>
+        <td colspan="3" style="padding: 16px 0 6px;">
+          <div style="font-size: 10pt; font-weight: 700; color: #6b7684; letter-spacing: 0.3px;">
+            ${formatDateLabel(dateKey)}
+          </div>
         </td>
       </tr>
-    `).join("");
-
-    return `
-      <div style="margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 2px solid #E5E8EB; margin-bottom: 4px;">
-          <span style="font-size: 12px; font-weight: 700; color: #8B95A1;">${formatDateLabel(dateKey)}</span>
-          <span style="font-size: 12px; font-weight: 700; color: ${dayTotal >= 0 ? "#3182F6" : "#F04452"};">
-            ${dayTotal >= 0 ? "+" : ""}${dayTotal >= 0 ? fmt(dayTotal) : `-${fmt(dayTotal)}`}
-          </span>
-        </div>
-        <table style="width: 100%; border-collapse: collapse;">
-          ${rows}
-        </table>
-      </div>
+      ${dayRows}
     `;
   }).join("");
 
-  return `
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Noto Sans KR', -apple-system, sans-serif; background: #F8F9FA; color: #191F28; }
-        .page { max-width: 600px; margin: 0 auto; background: #FFFFFF; }
-      </style>
-    </head>
-    <body>
-      <div class="page">
+  const safeTeamName = escapeHtml(teamName);
 
-        <!-- 헤더 -->
-        <div style="background: linear-gradient(135deg, #3DD598 0%, #26C07F 100%); padding: 32px 28px; color: white;">
-          <div style="font-size: 11px; opacity: 0.8; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase;">
-            Monthly Report
-          </div>
-          <div style="font-size: 26px; font-weight: 700; margin-bottom: 4px;">${teamName}</div>
-          <div style="font-size: 14px; opacity: 0.9;">${year}년 ${month}월 정산 리포트</div>
-          <div style="margin-top: 16px; font-size: 11px; opacity: 0.7;">생성일: ${generatedAt} · 작은 모임</div>
-        </div>
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${safeTeamName} ${year}년 ${month}월 정산 리포트</title>
+  <style>
+    @page { size: A4; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "맑은 고딕", "AppleGothic", "Helvetica Neue", Arial, sans-serif;
+      background: #ffffff;
+      color: #1a1a1a;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      font-size: 11pt;
+      line-height: 1.5;
+    }
+    .page { padding: 32pt 36pt; }
+    h1, h2, h3 { font-weight: 700; }
+    table { border-collapse: collapse; width: 100%; }
+    .section { margin-top: 28pt; }
+    .section-label {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #6b7684;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding-bottom: 8pt;
+      border-bottom: 1.5pt solid #1a1a1a;
+      margin-bottom: 14pt;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
 
-        <!-- 요약 카드 -->
-        <div style="padding: 24px 28px; background: #FFFFFF;">
-          <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-            <div style="flex: 1; background: #F0F9FF; border-radius: 12px; padding: 16px;">
-              <div style="font-size: 11px; color: #8B95A1; margin-bottom: 4px;">이번 달 수입</div>
-              <div style="font-size: 20px; font-weight: 700; color: #3182F6;">+${fmt(income)}</div>
-            </div>
-            <div style="flex: 1; background: #FFF0F0; border-radius: 12px; padding: 16px;">
-              <div style="font-size: 11px; color: #8B95A1; margin-bottom: 4px;">이번 달 지출</div>
-              <div style="font-size: 20px; font-weight: 700; color: #F04452;">-${fmt(expense)}</div>
-            </div>
-          </div>
-          <div style="background: #F8F9FA; border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 600; color: #191F28;">이번 달 순수익</span>
-            <span style="font-size: 22px; font-weight: 700; color: ${balanceColor};">
-              ${balance >= 0 ? "+" : "-"}${fmt(balance)}
-            </span>
-          </div>
-        </div>
-
-        ${top5.length > 0 ? `
-        <!-- 카테고리별 지출 -->
-        <div style="padding: 0 28px 24px; background: #FFFFFF;">
-          <div style="height: 1px; background: #F2F4F6; margin-bottom: 20px;"></div>
-          <div style="font-size: 13px; font-weight: 700; color: #8B95A1; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
-            지출 카테고리 TOP ${top5.length}
-          </div>
-          ${categoryRows}
-        </div>
-        ` : ""}
-
-        ${transactions.length > 0 ? `
-        <!-- 거래 내역 -->
-        <div style="padding: 0 28px 32px; background: #FFFFFF;">
-          <div style="height: 1px; background: #F2F4F6; margin-bottom: 20px;"></div>
-          <div style="font-size: 13px; font-weight: 700; color: #8B95A1; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
-            전체 거래 내역 (${transactions.length}건)
-          </div>
-          ${transactionSection}
-        </div>
-        ` : ""}
-
-        <!-- 푸터 -->
-        <div style="background: #F8F9FA; padding: 16px 28px; text-align: center; border-top: 1px solid #E5E8EB;">
-          <div style="font-size: 11px; color: #B0B8C1;">
-            작은 모임 · 모임 회계, 이제 간편하게
-          </div>
-        </div>
-
+    <!-- 표지 -->
+    <header style="border-bottom: 2pt solid #1a1a1a; padding-bottom: 18pt; margin-bottom: 28pt;">
+      <div style="font-size: 9pt; color: #6b7684; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6pt;">
+        Monthly Settlement Report
       </div>
-    </body>
-    </html>
-  `;
+      <div style="font-size: 22pt; font-weight: 700; color: #1a1a1a; margin-bottom: 4pt;">
+        ${safeTeamName}
+      </div>
+      <div style="font-size: 13pt; color: #1a1a1a; margin-bottom: 14pt;">
+        ${year}년 ${month}월 정산 리포트
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 9pt; color: #6b7684;">
+        <span>발행일: ${generatedAt}</span>
+        <span>발행: 작은 모임</span>
+      </div>
+    </header>
+
+    <!-- 요약 -->
+    <section>
+      <div class="section-label">Summary</div>
+      <table style="margin-bottom: 12pt;">
+        <tr>
+          <td style="padding: 12pt 14pt; background: #f7f9fc; border-radius: 6pt; width: 50%; vertical-align: top;">
+            <div style="font-size: 9.5pt; color: #6b7684; margin-bottom: 4pt;">수입 합계</div>
+            <div style="font-size: 16pt; font-weight: 700; color: #0064ff;">+${fmt(income)}</div>
+          </td>
+          <td style="width: 8pt;"></td>
+          <td style="padding: 12pt 14pt; background: #f7f9fc; border-radius: 6pt; width: 50%; vertical-align: top;">
+            <div style="font-size: 9.5pt; color: #6b7684; margin-bottom: 4pt;">지출 합계</div>
+            <div style="font-size: 16pt; font-weight: 700; color: #d6293e;">-${fmt(expense)}</div>
+          </td>
+        </tr>
+      </table>
+      <div style="background: #1a1a1a; color: #ffffff; padding: 14pt 16pt; border-radius: 6pt; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 11pt; font-weight: 600;">순잔액 (수입 − 지출)</span>
+        <span style="font-size: 18pt; font-weight: 700; color: ${balance >= 0 ? "#7cd4ff" : "#ff8a96"};">
+          ${balance >= 0 ? "+" : "−"}${fmt(balance)}
+        </span>
+      </div>
+    </section>
+
+    ${expenseBreakdown.length > 0 ? `
+    <section class="section">
+      <div class="section-label">지출 카테고리</div>
+      <table>
+        ${renderCategoryRows(expenseBreakdown, "#d6293e")}
+      </table>
+    </section>
+    ` : ""}
+
+    ${incomeBreakdown.length > 0 ? `
+    <section class="section">
+      <div class="section-label">수입 카테고리</div>
+      <table>
+        ${renderCategoryRows(incomeBreakdown, "#0064ff")}
+      </table>
+    </section>
+    ` : ""}
+
+    ${transactions.length > 0 ? `
+    <section class="section">
+      <div class="section-label">전체 거래 내역 · ${transactions.length}건</div>
+      <table>
+        <thead>
+          <tr style="border-bottom: 1pt solid #1a1a1a;">
+            <th style="padding: 6pt 12pt 6pt 0; text-align: left; font-size: 9pt; color: #6b7684; font-weight: 700; letter-spacing: 0.5px;">항목</th>
+            <th style="padding: 6pt 12pt 6pt 0; text-align: left; font-size: 9pt; color: #6b7684; font-weight: 700; letter-spacing: 0.5px;">메모</th>
+            <th style="padding: 6pt 0; text-align: right; font-size: 9pt; color: #6b7684; font-weight: 700; letter-spacing: 0.5px;">금액</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${transactionRows}
+        </tbody>
+      </table>
+    </section>
+    ` : ""}
+
+    <footer style="margin-top: 36pt; padding-top: 14pt; border-top: 1pt solid #eef0f2; text-align: center; font-size: 8.5pt; color: #b0b8c1;">
+      본 리포트는 작은 모임 앱에서 자동 생성되었습니다 · ${generatedAt}
+    </footer>
+
+  </div>
+</body>
+</html>`;
 }

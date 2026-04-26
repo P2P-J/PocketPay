@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Share2, FileText } from "lucide-react-native
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import * as Print from "expo-print";
+import * as FileSystem from "expo-file-system";
 import { generateReportHtml } from "@/utils/generateReportHtml";
 import { useTeamStore } from "@/store/teamStore";
 import { Card } from "@/components/ui/Card";
@@ -55,7 +56,7 @@ export default function HistoryScreen() {
     return { income: inc, expense: exp };
   }, [transactions]);
 
-  const categoryBreakdown = useMemo(() => {
+  const expenseBreakdown = useMemo(() => {
     const map: Record<string, number> = {};
     for (const t of transactions) {
       if (t.type === "income") continue;
@@ -70,6 +71,22 @@ export default function HistoryScreen() {
         percent: expense > 0 ? Math.round((total / expense) * 100) : 0,
       }));
   }, [transactions, expense]);
+
+  const incomeBreakdown = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const t of transactions) {
+      if (t.type !== "income") continue;
+      const cat = t.category || "etc";
+      map[cat] = (map[cat] || 0) + t.amount;
+    }
+    return Object.entries(map)
+      .sort(([, a], [, b]) => b - a)
+      .map(([cat, total]) => ({
+        category: cat,
+        total,
+        percent: income > 0 ? Math.round((total / income) * 100) : 0,
+      }));
+  }, [transactions, income]);
 
   const handleShare = async () => {
     const isAvailable = await Sharing.isAvailableAsync();
@@ -100,6 +117,10 @@ export default function HistoryScreen() {
     }
   };
 
+  // 파일명 안전 변환: 한글 유지, 공백/특수문자만 정리
+  const sanitizeFilename = (s: string) =>
+    s.trim().replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, "_") || "team";
+
   const handleExportPdf = async () => {
     setPdfLoading(true);
     try {
@@ -109,13 +130,29 @@ export default function HistoryScreen() {
         month,
         income,
         expense,
-        categoryBreakdown,
+        expenseBreakdown,
+        incomeBreakdown,
         transactions,
       });
       const { uri } = await Print.printToFileAsync({ html, base64: false });
-      await Sharing.shareAsync(uri, {
+
+      // 친숙한 파일명으로 복사: {팀명}_{YYYYMM}_report.pdf
+      const ym = `${year}${String(month).padStart(2, "0")}`;
+      const filename = `${sanitizeFilename(currentTeam?.name || "team")}_${ym}_report.pdf`;
+      const renamedUri = `${FileSystem.cacheDirectory}${filename}`;
+      try {
+        // 기존 파일이 있으면 덮어쓰기 위해 사전 정리
+        await FileSystem.deleteAsync(renamedUri, { idempotent: true });
+        await FileSystem.copyAsync({ from: uri, to: renamedUri });
+      } catch (copyErr) {
+        if (__DEV__) console.warn("[PDF rename] failed, using original uri:", copyErr);
+      }
+
+      const finalUri = (await FileSystem.getInfoAsync(renamedUri)).exists ? renamedUri : uri;
+
+      await Sharing.shareAsync(finalUri, {
         mimeType: "application/pdf",
-        dialogTitle: `${currentTeam?.name} ${year}년 ${month}월 정산 리포트`,
+        dialogTitle: filename,
         UTI: "com.adobe.pdf",
       });
     } catch {
@@ -209,23 +246,44 @@ export default function HistoryScreen() {
         )}
 
         {/* 카테고리별 지출 */}
-        {categoryBreakdown.length > 0 ? (
-          <View>
+        {expenseBreakdown.length > 0 && (
+          <View className="mb-section-gap">
             <Text className="text-section font-pretendard-semibold text-text-primary mb-3">
               카테고리별 지출
             </Text>
-            {categoryBreakdown.map((item, i) => (
+            {expenseBreakdown.map((item, i) => (
               <ListItem
-                key={item.category}
+                key={`exp-${item.category}`}
                 icon={<Text className="text-[18px]">{getCategoryEmoji(item.category)}</Text>}
                 title={getCategoryLabel(item.category)}
                 subtitle={`${item.percent}%`}
-                amountLabel={fmt(item.total)}
-                showDivider={i < categoryBreakdown.length - 1}
+                amountLabel={`-${fmt(item.total)}`}
+                showDivider={i < expenseBreakdown.length - 1}
               />
             ))}
           </View>
-        ) : (
+        )}
+
+        {/* 카테고리별 수입 */}
+        {incomeBreakdown.length > 0 && (
+          <View className="mb-section-gap">
+            <Text className="text-section font-pretendard-semibold text-text-primary mb-3">
+              카테고리별 수입
+            </Text>
+            {incomeBreakdown.map((item, i) => (
+              <ListItem
+                key={`inc-${item.category}`}
+                icon={<Text className="text-[18px]">{getCategoryEmoji(item.category)}</Text>}
+                title={getCategoryLabel(item.category)}
+                subtitle={`${item.percent}%`}
+                amountLabel={`+${fmt(item.total)}`}
+                showDivider={i < incomeBreakdown.length - 1}
+              />
+            ))}
+          </View>
+        )}
+
+        {expenseBreakdown.length === 0 && incomeBreakdown.length === 0 && (
           <EmptyState
             title="이번 달 내역이 없어요"
             description="거래를 추가하면 분석을 볼 수 있어요"
@@ -259,7 +317,7 @@ export default function HistoryScreen() {
             month={month}
             income={income}
             expense={expense}
-            categoryBreakdown={categoryBreakdown}
+            categoryBreakdown={expenseBreakdown}
           />
 
           {/* 액션 버튼 */}

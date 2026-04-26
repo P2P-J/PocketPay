@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Check, Minus, Plus } from "lucide-react-native";
 import { Header } from "@/components/ui/Header";
@@ -43,8 +44,16 @@ function calcEqualSplit(total: number, participants: Participant[]) {
 export default function DutchScreen() {
   const insets = useSafeAreaInsets();
   const currentTeam = useTeamStore((s) => s.currentTeam);
+  const { amount: prefillAmount } = useLocalSearchParams<{ amount?: string }>();
 
-  const [totalInput, setTotalInput] = useState("");
+  // 거래 상세에서 진입 시 ?amount=15000 형태로 받아 초기값 설정
+  const initialTotal = useMemo(() => {
+    if (!prefillAmount) return "";
+    const n = Number(prefillAmount);
+    return Number.isFinite(n) && n > 0 ? n.toLocaleString("ko-KR") : "";
+  }, [prefillAmount]);
+
+  const [totalInput, setTotalInput] = useState(initialTotal);
   const [splitMode, setSplitMode] = useState<SplitMode>("equal");
   const [participants, setParticipants] = useState<Participant[]>([]);
   // 팀 없을 때 수동 인원 수

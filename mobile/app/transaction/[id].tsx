@@ -226,6 +226,20 @@ export default function EditTransactionScreen() {
           </View>
         )}
 
+        {/* 더치페이 진입 버튼 (지출 거래만) */}
+        {type === "expense" && amount && (
+          <Button
+            label="이 거래로 더치페이"
+            variant="outline"
+            size="full"
+            onPress={() => {
+              const raw = amount.replace(/,/g, "");
+              router.push(`/dutch?amount=${encodeURIComponent(raw)}`);
+            }}
+            className="mb-3"
+          />
+        )}
+
         {/* 저장/삭제 버튼 */}
         <Button
           label="저장"
