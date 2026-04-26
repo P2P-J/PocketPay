@@ -50,19 +50,23 @@ app.use(
 app.use(cookieParser());
 
 // Rate Limiting
+// 모바일 SPA + NAT 공유(가족/회사/캐리어) 환경 고려해 한도를 크게 잡음.
+// 화면 1회 진입에 5~10개 요청이 발생하므로 분당 ~150 수준으로 설정.
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15분
-  max: 100,
+  windowMs: 1 * 60 * 1000, // 1분
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
 });
 app.use(limiter);
 
-// 인증 엔드포인트 별도 rate limit (브루트포스 방지)
+// 인증 엔드포인트 별도 rate limit (브루트포스 방지) - 짧은 창 + 적은 횟수 유지
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: { message: "로그인 시도가 너무 많습니다. 15분 후 다시 시도해주세요." },
 });
 app.use("/auth/login", authLimiter);
