@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { transformCloudinaryUrl } from "@/utils/cloudinary";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -33,7 +34,7 @@ export default function EditTransactionScreen() {
   const updateTransaction = useTeamStore((s) => s.updateTransaction);
   const deleteTransaction = useTeamStore((s) => s.deleteTransaction);
 
-  const [type, setType] = useState("expense");
+  const [type, setType] = useState<"expense" | "income">("expense");
   const [merchant, setMerchant] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("etc");
@@ -216,7 +217,7 @@ export default function EditTransactionScreen() {
             </Text>
             <Pressable onPress={() => setShowReceiptFull(true)}>
               <Image
-                source={{ uri: receiptUrl }}
+                source={{ uri: transformCloudinaryUrl(receiptUrl, 800) ?? receiptUrl }}
                 className="w-full h-60 rounded-lg bg-gray-100"
                 resizeMode="cover"
               />
@@ -255,7 +256,7 @@ export default function EditTransactionScreen() {
         >
           {receiptUrl && (
             <Image
-              source={{ uri: receiptUrl }}
+              source={{ uri: transformCloudinaryUrl(receiptUrl, 1600) ?? receiptUrl }}
               className="w-full h-full"
               resizeMode="contain"
             />

@@ -15,7 +15,7 @@ export interface Deal {
 export interface Transaction {
   id: string;
   merchant: string;
-  type: string;
+  type: "income" | "expense";
   description: string;
   category: string;
   amount: number;
@@ -36,12 +36,12 @@ export interface DealPayload {
 }
 
 // 백엔드 division: "수입" | "지출" ↔ 프론트 type: "income" | "expense"
-function divisionToType(division: string): string {
+function divisionToType(division: string): "income" | "expense" {
   if (division === "수입" || division === "income") return "income";
   return "expense";
 }
 
-function typeToDivision(type: string): string {
+function typeToDivision(type: string): "수입" | "지출" {
   if (type === "income" || type === "수입") return "수입";
   return "지출";
 }

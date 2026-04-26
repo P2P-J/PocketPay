@@ -3,6 +3,8 @@ export const TRANSACTION_TYPE = {
   EXPENSE: "expense",
 } as const;
 
+export type TransactionType = (typeof TRANSACTION_TYPE)[keyof typeof TRANSACTION_TYPE];
+
 // 지출 카테고리 (가계부 앱 + 소모임 장부 기반)
 export const EXPENSE_CATEGORIES = [
   // 식비/음료

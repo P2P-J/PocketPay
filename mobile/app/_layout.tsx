@@ -105,7 +105,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.remove();
-  }, []);
+  }, [loginWithOAuth]);
 
   // 인증 상태에 따라 라우팅
   useEffect(() => {

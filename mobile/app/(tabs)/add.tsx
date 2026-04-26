@@ -25,6 +25,7 @@ import {
   TRANSACTION_TYPE,
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
+  type TransactionType,
 } from "@/constants/categories";
 
 export default function AddScreen() {
@@ -41,7 +42,7 @@ export default function AddScreen() {
     setTimeout(() => merchantRef.current?.focus(), 300);
   }, []);
 
-  const [type, setType] = useState(TRANSACTION_TYPE.EXPENSE);
+  const [type, setType] = useState<TransactionType>(TRANSACTION_TYPE.EXPENSE);
   const [merchant, setMerchant] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("etc");
