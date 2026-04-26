@@ -72,7 +72,11 @@ const updateTeam = async (teamId, userId, data) => {
     throw AppError.forbidden("팀 수정 권한이 없습니다.");
   }
 
-  Object.assign(team, data);
+  // Mass Assignment 방지: 허용 필드만 추출
+  const ALLOWED_FIELDS = ["name", "description"];
+  for (const key of ALLOWED_FIELDS) {
+    if (data[key] !== undefined) team[key] = data[key];
+  }
   await team.save();
   return team;
 };

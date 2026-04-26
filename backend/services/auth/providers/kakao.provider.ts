@@ -45,7 +45,7 @@ const getUserProfile = async (accessToken) => {
   return {
     provider: "kakao",
     providerId: String(data.id),
-    email: data.kakao_account?.email || `kakao_${data.id}_${Date.now()}@noreply.pocketpay.app`,
+    email: data.kakao_account?.email || `kakao_${data.id}@noreply.pocketpay.app`,
     name: data.kakao_account?.profile?.nickname || `카카오유저${data.id}`,
   };
 };

@@ -1,5 +1,6 @@
 const dealService = require("../services/deal/deal.service");
 const { handleError } = require("../utils/errorHandler");
+const { destroyAsset } = require("../config/cloudinary");
 
 const registerDeal = async (req, res) => {
   try {
@@ -98,6 +99,12 @@ const deleteDeal = async (req, res) => {
     await dealService.checkTeamMembership(deal.teamId, userId);
 
     await dealService.deleteDeal(dealId);
+
+    // Cloudinary 영수증 자원 정리 (실패해도 응답엔 영향 없음)
+    if (deal.receiptUrl) {
+      destroyAsset(deal.receiptUrl).catch(() => {});
+    }
+
     return res.status(204).end();
   } catch (error) {
     return handleError(res, error);
