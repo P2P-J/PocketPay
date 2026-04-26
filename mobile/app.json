@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.jageunmoim.app",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "영수증 사진을 선택하여 OCR 자동 입력에 사용합니다.",
+        "NSPhotoLibraryAddUsageDescription": "거래에 첨부된 영수증을 사진 앨범에 저장합니다.",
         "NSCameraUsageDescription": "영수증을 촬영하여 OCR 자동 입력에 사용합니다.",
         "ITSAppUsesNonExemptEncryption": false
       }

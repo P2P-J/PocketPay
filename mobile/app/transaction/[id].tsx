@@ -9,9 +9,13 @@ import {
   Image,
   Pressable,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system";
+import { Download } from "lucide-react-native";
 import { transformCloudinaryUrl } from "@/utils/cloudinary";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
@@ -42,8 +46,49 @@ export default function EditTransactionScreen() {
   const [date, setDate] = useState("");
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [showReceiptFull, setShowReceiptFull] = useState(false);
+  const [savingReceipt, setSavingReceipt] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  const handleSaveReceipt = async () => {
+    if (!receiptUrl || savingReceipt) return;
+    setSavingReceipt(true);
+    try {
+      // 1. 권한 요청 (iOS Photos 라이브러리 추가 권한)
+      const { status, canAskAgain } = await MediaLibrary.requestPermissionsAsync(
+        true // writeOnly: 추가 전용
+      );
+      if (status !== "granted") {
+        if (canAskAgain) {
+          showToast("error", "사진 저장 권한이 필요해요");
+        } else {
+          Alert.alert(
+            "권한 필요",
+            "설정 → 작은 모임 → 사진 → '사진 추가만' 이상 허용해주세요.",
+          );
+        }
+        return;
+      }
+
+      // 2. Cloudinary 원본 URL 다운로드 (변환 URL 아닌 원본)
+      const ext = (receiptUrl.match(/\.(jpg|jpeg|png|webp|heic)(?:$|\?)/i)?.[1] || "jpg").toLowerCase();
+      const localUri = `${FileSystem.cacheDirectory}receipt_${Date.now()}.${ext}`;
+      const downloaded = await FileSystem.downloadAsync(receiptUrl, localUri);
+      if (downloaded.status !== 200) {
+        throw new Error(`download status ${downloaded.status}`);
+      }
+
+      // 3. 사진 앨범에 저장
+      await MediaLibrary.saveToLibraryAsync(downloaded.uri);
+      showToast("success", "영수증이 사진 앨범에 저장되었어요");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "다시 시도해주세요";
+      showToast("error", "영수증 저장에 실패했어요", detail);
+      if (__DEV__) console.error("[handleSaveReceipt]", err);
+    } finally {
+      setSavingReceipt(false);
+    }
+  };
 
   const categories =
     type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
@@ -265,18 +310,75 @@ export default function EditTransactionScreen() {
         animationType="fade"
         onRequestClose={() => setShowReceiptFull(false)}
       >
-        <Pressable
-          onPress={() => setShowReceiptFull(false)}
-          className="flex-1 bg-black/90 items-center justify-center"
-        >
-          {receiptUrl && (
-            <Image
-              source={{ uri: transformCloudinaryUrl(receiptUrl, 1600) ?? receiptUrl }}
-              className="w-full h-full"
-              resizeMode="contain"
-            />
-          )}
-        </Pressable>
+        <View className="flex-1 bg-black/95">
+          {/* 이미지 영역 — 탭하면 닫힘 */}
+          <Pressable
+            onPress={() => setShowReceiptFull(false)}
+            className="flex-1 items-center justify-center"
+          >
+            {receiptUrl && (
+              <Image
+                source={{ uri: transformCloudinaryUrl(receiptUrl, 1600) ?? receiptUrl }}
+                className="w-full h-full"
+                resizeMode="contain"
+              />
+            )}
+          </Pressable>
+
+          {/* 상단 액션 바 (저장 + 닫기) */}
+          <View
+            style={{
+              position: "absolute",
+              top: insets.top + 8,
+              left: 0,
+              right: 0,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingHorizontal: 16,
+            }}
+          >
+            <Pressable
+              onPress={() => setShowReceiptFull(false)}
+              hitSlop={12}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 20,
+                backgroundColor: "rgba(255,255,255,0.15)",
+              }}
+            >
+              <Text style={{ color: "#FFFFFF", fontSize: 14, fontFamily: "Pretendard-SemiBold" }}>
+                닫기
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={handleSaveReceipt}
+              disabled={savingReceipt}
+              hitSlop={12}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 20,
+                backgroundColor: "rgba(255,255,255,0.15)",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                opacity: savingReceipt ? 0.6 : 1,
+              }}
+            >
+              {savingReceipt ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Download size={16} color="#FFFFFF" />
+              )}
+              <Text style={{ color: "#FFFFFF", fontSize: 14, fontFamily: "Pretendard-SemiBold" }}>
+                {savingReceipt ? "저장 중..." : "사진 저장"}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
       </Modal>
     </KeyboardAvoidingView>
   );
