@@ -178,9 +178,14 @@ const generateInviteToken = async (teamId, ownerId) => {
     return { token: team.inviteToken, expiry: team.inviteTokenExpiry };
   }
 
-  // 새 토큰 생성 (8자 랜덤 대문자+숫자, 24시간 유효)
-  const { v4: uuidv4 } = require("uuid");
-  const token = uuidv4().replace(/-/g, "").substring(0, 10).toUpperCase();
+  // 새 토큰 생성 (10자 랜덤 base32, 24시간 유효)
+  const crypto = require("crypto");
+  const token = crypto
+    .randomBytes(8)
+    .toString("base64")
+    .replace(/[+/=]/g, "")
+    .substring(0, 10)
+    .toUpperCase();
   const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   team.inviteToken = token;

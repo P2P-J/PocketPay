@@ -14,7 +14,7 @@
     "@react-native-community/datetimepicker": "8.4.4",
     "@types/react": "~19.1.10",
     "babel-plugin-module-resolver": "^5.0.3",
-    "babel-preset-expo": "^55.0.12",
+    "babel-preset-expo": "~54.0.10",
     "expo": "^54.0.33",
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.20",
