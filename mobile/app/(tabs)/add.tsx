@@ -132,12 +132,13 @@ export default function AddScreen() {
         receiptUrl: receiptUrl ?? undefined,
       });
       showToast("success", "거래가 추가되었습니다");
-      // 폼 초기화 (날짜 제외)
+      // 폼 초기화 — 날짜는 오늘로 복원 (다음 거래 입력 시 헷갈림 방지)
       setType(TRANSACTION_TYPE.EXPENSE);
       setMerchant("");
       setAmount("");
       setCategory("etc");
       setDescription("");
+      setDate(new Date().toISOString().split("T")[0]);
       setReceiptUrl(null);
       router.back();
     } catch {

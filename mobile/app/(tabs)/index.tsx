@@ -289,7 +289,11 @@ export default function HomeScreen() {
             subtitle={item.description}
             amount={item.type === "income" ? item.amount : -item.amount}
             showDivider={index < section.data.length - 1}
-            onPress={() => router.push(`/transaction/${item.id}`)}
+            onPress={() => {
+              if (__DEV__) console.log("[home] tap transaction id=", item.id);
+              if (!item.id) return;
+              router.push(`/transaction/${item.id}`);
+            }}
           />
         )}
         ListFooterComponent={

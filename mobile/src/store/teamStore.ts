@@ -107,8 +107,9 @@ export const useTeamStore = create<TeamState>((set, get) => ({
     try {
       const res = await dealApi.getSummary(teamId);
       set({ summary: res.data });
-    } catch {
-      set({ summary: { income: 0, expense: 0, balance: 0 } });
+    } catch (err) {
+      // 실패 시 이전 summary 유지 — 0으로 덮어쓰면 사용자에게 "갑자기 잔액 0"으로 보임
+      if (__DEV__) console.warn("[fetchSummary] failed:", err);
     }
   },
 
@@ -122,8 +123,10 @@ export const useTeamStore = create<TeamState>((set, get) => ({
       const res = await dealApi.getMonthly(teamId, y, m);
       const transactions = (res.data || []).map(dealToTransaction);
       set({ transactions, loading: false });
-    } catch {
-      set({ transactions: [], loading: false });
+    } catch (err) {
+      // 실패 시 이전 transactions 유지 — 빈 배열로 덮어쓰면 "거래 사라짐"으로 보임
+      set({ loading: false });
+      if (__DEV__) console.warn("[fetchTransactions] failed:", err);
     }
   },
 

@@ -63,11 +63,12 @@ export default function EditTransactionScreen() {
       setDescription(t.description);
       setDate(t.date?.split("T")[0] || "");
       setReceiptUrl(t.receiptUrl || null);
-    } catch {
-      showToast("error", "거래 정보를 불러올 수 없습니다");
-      router.back();
-    } finally {
       setInitialLoading(false);
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "다시 시도해주세요";
+      showToast("error", "거래 정보를 불러올 수 없어요", detail);
+      if (__DEV__) console.error("[loadTransaction] id=", id, "error:", err);
+      router.back();
     }
   };
 
