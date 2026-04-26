@@ -1,7 +1,7 @@
 import { API_BASE_URL, REQUEST_TIMEOUT } from "@/constants/config";
 
 // authStore를 lazy import하여 순환 참조 방지
-let getAuthState: (() => { accessToken: string | null; refreshToken: string | null; setAccessToken: (t: string) => void; logout: () => void }) | null = null;
+let getAuthState: (() => { accessToken: string | null; refreshToken: string | null; setAccessToken: (t: string) => Promise<void> | void; logout: () => void }) | null = null;
 
 export function setAuthStateGetter(getter: typeof getAuthState) {
   getAuthState = getter;
@@ -78,7 +78,7 @@ const handleResponse = async (
     if (errorData.message === "TOKEN_EXPIRED" && retryFn) {
       const newAccessToken = await tryRefreshToken();
       if (newAccessToken) {
-        getAuthState?.()?.setAccessToken(newAccessToken);
+        await getAuthState?.()?.setAccessToken(newAccessToken);
         return retryFn();
       }
     }
@@ -123,6 +123,7 @@ export const apiClient = {
   get: (endpoint: string) => request("GET", endpoint),
   post: (endpoint: string, body?: unknown) => request("POST", endpoint, body),
   put: (endpoint: string, body?: unknown) => request("PUT", endpoint, body),
+  patch: (endpoint: string, body?: unknown) => request("PATCH", endpoint, body),
   delete: (endpoint: string) => request("DELETE", endpoint),
 
   uploadFile: async (

@@ -28,9 +28,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.jageunmoim.app",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": []
     },
     "plugins": [
       "expo-router",

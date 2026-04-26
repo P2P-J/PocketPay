@@ -11,7 +11,7 @@ interface AuthState {
   loading: boolean;
   error: string | null;
 
-  setAccessToken: (token: string) => void;
+  setAccessToken: (token: string) => Promise<void>;
   checkAuth: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   loginWithOAuth: (accessToken: string, refreshToken: string) => Promise<void>;
@@ -35,9 +35,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
     loading: false,
     error: null,
 
-    setAccessToken: (token: string) => {
+    setAccessToken: async (token: string) => {
       set({ accessToken: token });
-      SecureStore.setItemAsync("accessToken", token);
+      await SecureStore.setItemAsync("accessToken", token);
     },
 
     checkAuth: async () => {
