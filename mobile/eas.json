@@ -20,5 +20,15 @@
     "production": {
       "autoIncrement": true
     }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "47TJBU97ZL"
+      },
+      "android": {
+        "track": "internal"
+      }
+    }
   }
 }
