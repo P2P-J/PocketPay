@@ -7,6 +7,11 @@ const AppError = require("../../../utils/AppError");
 const APPLE_ISSUER = "https://appleid.apple.com";
 const APPLE_JWKS_URI = "https://appleid.apple.com/auth/keys";
 
+const APPLE_BUNDLE_ID = process.env.APPLE_BUNDLE_ID;
+if (!APPLE_BUNDLE_ID && process.env.NODE_ENV === "production") {
+  throw new Error("APPLE_BUNDLE_ID 환경변수가 필요합니다 (production)");
+}
+
 const client = jwksClient({
   jwksUri: APPLE_JWKS_URI,
   cache: true,
@@ -30,7 +35,7 @@ const verifyIdentityToken = (identityToken, expectedNonce) =>
       {
         algorithms: ["RS256"],
         issuer: APPLE_ISSUER,
-        audience: process.env.APPLE_BUNDLE_ID,
+        audience: APPLE_BUNDLE_ID,
       },
       (err, decoded) => {
         if (err) {
@@ -46,6 +51,10 @@ const verifyIdentityToken = (identityToken, expectedNonce) =>
     );
   });
 
+/**
+ * Apple은 userinfo endpoint가 없어 verified JWT claims를 직접 받음.
+ * 다른 provider의 getUserProfile(accessToken) 시그니처와 다름.
+ */
 const getUserProfile = (claims, name) => ({
   provider: "apple",
   providerId: claims.sub,
@@ -55,6 +64,7 @@ const getUserProfile = (claims, name) => ({
 
 // Apple client_secret JWT 생성 (revoke용)
 const generateClientSecret = () => {
+  // .env에 한 줄로 저장된 PEM의 \n 이스케이프를 실제 줄바꿈으로 복원
   const privateKey = (process.env.APPLE_PRIVATE_KEY || "").replace(
     /\\n/g,
     "\n"
@@ -67,7 +77,7 @@ const generateClientSecret = () => {
     expiresIn: "1h",
     issuer: process.env.APPLE_TEAM_ID,
     audience: APPLE_ISSUER,
-    subject: process.env.APPLE_BUNDLE_ID,
+    subject: APPLE_BUNDLE_ID,
     keyid: process.env.APPLE_KEY_ID,
   });
 };
@@ -80,7 +90,7 @@ const revokeToken = async (token) => {
     await axios.post(
       "https://appleid.apple.com/auth/revoke",
       qs.stringify({
-        client_id: process.env.APPLE_BUNDLE_ID,
+        client_id: APPLE_BUNDLE_ID,
         client_secret: clientSecret,
         token,
         token_type_hint: "refresh_token",
