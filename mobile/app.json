@@ -14,7 +14,9 @@
       "backgroundColor": "#FFFFFF"
     },
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
+      "buildNumber": "6",
+      "usesAppleSignIn": true,
       "bundleIdentifier": "com.jageunmoim.app",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "영수증 사진을 선택하여 OCR 자동 입력에 사용합니다.",
@@ -42,7 +44,8 @@
           "photosPermission": "영수증 사진을 선택하여 거래 내역을 자동으로 입력합니다.",
           "cameraPermission": "영수증을 촬영하여 거래 내역을 자동으로 입력합니다."
         }
-      ]
+      ],
+      "expo-apple-authentication"
     ],
     "extra": {
       "router": {},
