@@ -54,6 +54,7 @@ export const BottomSheet = forwardRef<BottomSheetMethods, BottomSheetProps>(
         enableDynamicSizing={enableDynamicSizing}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
+        style={sheetStyle}
         handleIndicatorStyle={{
           backgroundColor: colors.divider,
           width: 40,
@@ -69,7 +70,7 @@ export const BottomSheet = forwardRef<BottomSheetMethods, BottomSheetProps>(
           if (index === -1) onClose?.();
         }}
       >
-        <BottomSheetView style={sheetStyle}>
+        <BottomSheetView>
           <View className="px-screen-x pb-8">
             {/* 헤더 */}
             {title && (
