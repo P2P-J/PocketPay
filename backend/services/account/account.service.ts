@@ -12,7 +12,7 @@ const getMyAccount = async (userId) => {
 
 const deleteMyAccount = async (userId) => {
   const user = await User.findById(userId).select(
-    "+oauthTokens.naver.refreshToken +oauthTokens.google.refreshToken"
+    "+oauthTokens.naver.refreshToken +oauthTokens.google.refreshToken +oauthTokens.kakao.refreshToken +oauthTokens.apple.refreshToken"
   );
   if (!user) throw AppError.notFound("사용자를 찾을 수 없습니다.");
 
