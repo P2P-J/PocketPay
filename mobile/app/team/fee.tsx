@@ -185,7 +185,7 @@ export default function FeeScreen() {
   const paidRate = data ? Math.round((data.paidCount / Math.max(data.totalCount, 1)) * 100) : 0;
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
       <Header
         title="회비 현황"
         showBack
@@ -199,7 +199,7 @@ export default function FeeScreen() {
       />
 
       {/* 월 네비게이터 */}
-      <View className="flex-row items-center justify-center px-screen-x py-3 gap-4">
+      <View className="flex-row items-center justify-center py-3 gap-4">
         <Pressable onPress={() => changeMonth(-1)} className="p-2">
           <ChevronLeft size={22} color="#191F28" />
         </Pressable>
@@ -218,6 +218,7 @@ export default function FeeScreen() {
       ) : (
         <ScrollView
           className="flex-1 px-screen-x"
+          contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} />}
         >
           {/* 요약 카드 */}
@@ -396,7 +397,6 @@ export default function FeeScreen() {
             </Pressable>
           )}
 
-          <View style={{ height: 32 }} />
         </ScrollView>
       )}
 

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { View, KeyboardAvoidingView, Platform } from "react-native";
+import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -37,23 +38,20 @@ export default function InviteScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
-    >
-      <View style={{ paddingTop: insets.top }}>
-        <Header title="멤버 초대" showBack />
-      </View>
-      <View className="flex-1 px-screen-x mt-6">
-        <Input
-          label="이메일"
-          placeholder="초대할 멤버의 이메일을 입력해주세요"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          error={error}
-        />
+    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+      <Header title="멤버 초대" showBack />
+      <ScreenContainer scrollable withTopInset={false}>
+        <View className="mt-6">
+          <Input
+            label="이메일"
+            placeholder="초대할 멤버의 이메일을 입력해주세요"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            error={error}
+          />
+        </View>
         <View className="mt-6">
           <Button
             label="초대하기"
@@ -63,7 +61,7 @@ export default function InviteScreen() {
             loading={loading}
           />
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </ScreenContainer>
+    </View>
   );
 }

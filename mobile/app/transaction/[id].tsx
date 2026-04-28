@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
   Image,
   Pressable,
@@ -13,6 +10,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import * as MediaLibrary from "expo-media-library";
 import * as FileSystem from "expo-file-system";
 import { Download } from "lucide-react-native";
@@ -171,18 +169,9 @@ export default function EditTransactionScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
-    >
-      <View style={{ paddingTop: insets.top }}>
-        <Header title="거래 수정" showBack />
-      </View>
-
-      <ScrollView
-        className="flex-1 px-screen-x"
-        keyboardShouldPersistTaps="handled"
-      >
+    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+      <Header title="거래 수정" showBack />
+      <ScreenContainer scrollable withTopInset={false}>
         {/* 수입/지출 토글 */}
         <View className="flex-row gap-2 my-4">
           <Chip
@@ -301,7 +290,7 @@ export default function EditTransactionScreen() {
           onPress={handleDelete}
           className="mb-8"
         />
-      </ScrollView>
+      </ScreenContainer>
 
       {/* 영수증 전체화면 뷰 */}
       <Modal
@@ -380,6 +369,6 @@ export default function EditTransactionScreen() {
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

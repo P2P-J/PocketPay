@@ -195,7 +195,7 @@ export default function DutchScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+      <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
         <Header title="더치페이 계산기" showBack />
 
         <ScrollView

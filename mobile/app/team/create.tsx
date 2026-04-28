@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -36,14 +37,9 @@ export default function CreateTeamScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
-    >
-      <View style={{ paddingTop: insets.top }}>
-        <Header title="모임 만들기" showBack />
-      </View>
-      <ScrollView className="flex-1 px-screen-x" keyboardShouldPersistTaps="handled">
+    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+      <Header title="모임 만들기" showBack />
+      <ScreenContainer scrollable withTopInset={false}>
         <View className="gap-3 mt-6 mb-6">
           <Input
             label="모임 이름"
@@ -65,7 +61,7 @@ export default function CreateTeamScreen() {
           onPress={handleCreate}
           loading={loading}
         />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </ScreenContainer>
+    </View>
   );
 }

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -62,18 +63,9 @@ export default function ChangePasswordScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
-    >
-      <View style={{ paddingTop: insets.top }}>
-        <Header title="비밀번호 변경" showBack />
-      </View>
-
-      <ScrollView
-        className="flex-1 px-screen-x"
-        keyboardShouldPersistTaps="handled"
-      >
+    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+      <Header title="비밀번호 변경" showBack />
+      <ScreenContainer scrollable withTopInset={false}>
         <View className="gap-3 mt-6 mb-6">
           <Input
             label="현재 비밀번호"
@@ -117,7 +109,7 @@ export default function ChangePasswordScreen() {
           onPress={handleChange}
           loading={loading}
         />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </ScreenContainer>
+    </View>
   );
 }

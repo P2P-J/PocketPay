@@ -129,7 +129,7 @@ export default function TeamDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+      <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
         <Header title="팀 관리" showBack />
         <View className="flex-1 items-center justify-center">
           <Text className="text-sub text-text-secondary">불러오는 중...</Text>
@@ -139,10 +139,13 @@ export default function TeamDetailScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
       <Header title="모임 관리" showBack />
 
-      <ScrollView className="flex-1 px-screen-x">
+      <ScrollView
+        className="flex-1 px-screen-x"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+      >
         {/* 모임 선택 드롭다운 */}
         <Pressable
           onPress={() => setShowTeamPicker(!showTeamPicker)}

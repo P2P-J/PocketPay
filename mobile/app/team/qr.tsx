@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, Pressable, ActivityIndicator, Share } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, Share, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
@@ -69,7 +69,7 @@ export default function TeamQRScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
       <Header title="QR 초대" showBack />
 
       {loading ? (
@@ -78,7 +78,10 @@ export default function TeamQRScreen() {
           <Text className="text-sub text-text-secondary mt-3">초대 코드 생성 중...</Text>
         </View>
       ) : (
-        <View className="flex-1 px-screen-x">
+        <ScrollView
+          className="flex-1 px-screen-x"
+          contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+        >
           {/* 안내 텍스트 */}
           <View className="items-center mt-6 mb-8">
             <Text className="text-section font-pretendard-bold text-text-primary mb-2">
@@ -211,7 +214,7 @@ export default function TeamQRScreen() {
               2. 초대 링크를 탭하면 앱이 열리며 자동 가입됩니다
             </Text>
           </Card>
-        </View>
+        </ScrollView>
       )}
     </View>
   );
