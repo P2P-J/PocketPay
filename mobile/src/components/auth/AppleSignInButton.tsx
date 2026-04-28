@@ -46,10 +46,13 @@ export function AppleSignInButton({ onSuccess }: Props) {
         throw new Error("Apple identity token 누락");
       }
 
-      const fullName =
-        [credential.fullName?.familyName, credential.fullName?.givenName]
-          .filter(Boolean)
-          .join(" ") || undefined;
+      // 한국식 이름 합성: 성+이름 (공백 없음). 예: 홍길동
+      const fullName = (() => {
+        const family = credential.fullName?.familyName?.trim() || "";
+        const given = credential.fullName?.givenName?.trim() || "";
+        const composed = `${family}${given}`;
+        return composed.length > 0 ? composed : undefined;
+      })();
 
       const { accessToken, refreshToken } = await oauthApi.loginApple({
         identityToken: credential.identityToken,
@@ -61,10 +64,11 @@ export function AppleSignInButton({ onSuccess }: Props) {
       onSuccess?.();
     } catch (err: any) {
       if (err?.code === "ERR_REQUEST_CANCELED") return; // 사용자 취소
+      console.error("[Apple Sign-In] failed:", err);
       showToast(
         "error",
         "Apple 로그인 실패",
-        err?.message || "다시 시도해주세요"
+        "잠시 후 다시 시도해주세요"
       );
     }
   };
