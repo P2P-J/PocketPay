@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
@@ -11,7 +10,6 @@ import { useTeamStore } from "@/store/teamStore";
 
 export default function CreateTeamScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const createTeam = useTeamStore((s) => s.createTeam);
 
   const [name, setName] = useState("");
@@ -37,31 +35,29 @@ export default function CreateTeamScreen() {
   };
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+    <ScreenContainer scrollable>
       <Header title="모임 만들기" showBack />
-      <ScreenContainer scrollable withTopInset={false}>
-        <View className="gap-3 mt-6 mb-6">
-          <Input
-            label="모임 이름"
-            placeholder="모임 이름을 입력해주세요"
-            value={name}
-            onChangeText={setName}
-          />
-          <Input
-            label="설명 (선택)"
-            placeholder="모임에 대한 설명을 입력해주세요"
-            value={description}
-            onChangeText={setDescription}
-          />
-        </View>
-        <Button
-          label="만들기"
-          variant="primary"
-          size="full"
-          onPress={handleCreate}
-          loading={loading}
+      <View className="gap-3 mt-6 mb-6">
+        <Input
+          label="모임 이름"
+          placeholder="모임 이름을 입력해주세요"
+          value={name}
+          onChangeText={setName}
         />
-      </ScreenContainer>
-    </View>
+        <Input
+          label="설명 (선택)"
+          placeholder="모임에 대한 설명을 입력해주세요"
+          value={description}
+          onChangeText={setDescription}
+        />
+      </View>
+      <Button
+        label="만들기"
+        variant="primary"
+        size="full"
+        onPress={handleCreate}
+        loading={loading}
+      />
+    </ScreenContainer>
   );
 }

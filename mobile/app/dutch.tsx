@@ -6,12 +6,11 @@ import {
   Pressable,
   TextInput,
   Share,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Check, Minus, Plus } from "lucide-react-native";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -191,17 +190,14 @@ export default function DutchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
-        <Header title="더치페이 계산기" showBack />
+    <ScreenContainer scrollable={false}>
+      <Header title="더치페이 계산기" showBack />
 
-        <ScrollView
-          className="flex-1 px-screen-x"
-          keyboardShouldPersistTaps="handled"
-        >
+      <ScrollView
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 16 }}
+      >
           {/* ── 총 금액 ── */}
           <View className="mt-4 mb-3">
             <Text className="text-sub font-pretendard-semibold text-text-secondary mb-2">
@@ -596,41 +592,39 @@ export default function DutchScreen() {
             </Card>
           </View>
 
-          {/* 하단 여백 */}
-          <View style={{ height: 24 }} />
-        </ScrollView>
+        {/* 하단 여백 */}
+        <View style={{ height: 24 }} />
+      </ScrollView>
 
-        {/* ── 하단 버튼 ── */}
-        <View
-          style={{
-            paddingHorizontal: 20,
-            paddingBottom: insets.bottom + 16,
-            paddingTop: 12,
-            backgroundColor: "#FFFFFF",
-            borderTopWidth: 1,
-            borderTopColor: "#F2F4F6",
-            flexDirection: "row",
-            gap: 10,
-          }}
-        >
-          <Button
-            label="결과 복사"
-            variant="outline"
-            size="md"
-            onPress={handleCopy}
-            disabled={!isValid}
-            className="flex-1"
-          />
-          <Button
-            label="공유하기"
-            variant="primary"
-            size="md"
-            onPress={handleShare}
-            disabled={!isValid}
-            className="flex-1"
-          />
-        </View>
+      {/* ── 하단 버튼 ── */}
+      <View
+        style={{
+          paddingBottom: insets.bottom + 16,
+          paddingTop: 12,
+          backgroundColor: "#FFFFFF",
+          borderTopWidth: 1,
+          borderTopColor: "#F2F4F6",
+          flexDirection: "row",
+          gap: 10,
+        }}
+      >
+        <Button
+          label="결과 복사"
+          variant="outline"
+          size="md"
+          onPress={handleCopy}
+          disabled={!isValid}
+          className="flex-1"
+        />
+        <Button
+          label="공유하기"
+          variant="primary"
+          size="md"
+          onPress={handleShare}
+          disabled={!isValid}
+          className="flex-1"
+        />
       </View>
-    </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }

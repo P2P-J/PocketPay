@@ -169,9 +169,8 @@ export default function EditTransactionScreen() {
   }
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+    <ScreenContainer scrollable>
       <Header title="거래 수정" showBack />
-      <ScreenContainer scrollable withTopInset={false}>
         {/* 수입/지출 토글 */}
         <View className="flex-row gap-2 my-4">
           <Chip
@@ -290,7 +289,6 @@ export default function EditTransactionScreen() {
           onPress={handleDelete}
           className="mb-8"
         />
-      </ScreenContainer>
 
       {/* 영수증 전체화면 뷰 */}
       <Modal
@@ -369,6 +367,6 @@ export default function EditTransactionScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }

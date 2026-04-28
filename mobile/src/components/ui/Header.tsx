@@ -17,7 +17,7 @@ export function Header({ title, showBack = false, rightAction }: HeaderProps) {
   return (
     <View
       className="flex-row items-center border-b border-divider bg-background"
-      style={{ paddingHorizontal: t.screenX, height: t.headerHeight }}
+      style={{ height: t.headerHeight }}
     >
       {/* 좌측: 뒤로가기 */}
       <View className="w-11 h-11 items-center justify-center">

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Alert, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserPlus, Trash2, ChevronDown, QrCode, Wallet } from "lucide-react-native";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { ListItem } from "@/components/ui/ListItem";
@@ -129,21 +130,21 @@ export default function TeamDetailScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+      <ScreenContainer scrollable={false} withKeyboard={false}>
         <Header title="팀 관리" showBack />
         <View className="flex-1 items-center justify-center">
           <Text className="text-sub text-text-secondary">불러오는 중...</Text>
         </View>
-      </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+    <ScreenContainer scrollable={false} withKeyboard={false}>
       <Header title="모임 관리" showBack />
 
       <ScrollView
-        className="flex-1 px-screen-x"
+        className="flex-1"
         contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
       >
         {/* 모임 선택 드롭다운 */}
@@ -294,6 +295,6 @@ export default function TeamDetailScreen() {
           )}
         </View>
       </ScrollView>
-    </View>
+    </ScreenContainer>
   );
 }

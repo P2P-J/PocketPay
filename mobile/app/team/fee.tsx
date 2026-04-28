@@ -6,6 +6,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Settings, Send, Trash2 } from "lucide-react-native";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { showToast } from "@/components/ui/Toast";
@@ -185,7 +186,7 @@ export default function FeeScreen() {
   const paidRate = data ? Math.round((data.paidCount / Math.max(data.totalCount, 1)) * 100) : 0;
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+    <ScreenContainer scrollable={false} withKeyboard={false}>
       <Header
         title="회비 현황"
         showBack
@@ -217,7 +218,7 @@ export default function FeeScreen() {
         </View>
       ) : (
         <ScrollView
-          className="flex-1 px-screen-x"
+          className="flex-1"
           contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} />}
         >
@@ -571,6 +572,6 @@ export default function FeeScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }

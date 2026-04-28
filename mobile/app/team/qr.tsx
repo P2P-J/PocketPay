@@ -3,6 +3,7 @@ import { View, Text, Pressable, ActivityIndicator, Share, ScrollView } from "rea
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { showToast } from "@/components/ui/Toast";
@@ -69,7 +70,7 @@ export default function TeamQRScreen() {
   };
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+    <ScreenContainer scrollable={false} withKeyboard={false}>
       <Header title="QR 초대" showBack />
 
       {loading ? (
@@ -79,7 +80,7 @@ export default function TeamQRScreen() {
         </View>
       ) : (
         <ScrollView
-          className="flex-1 px-screen-x"
+          className="flex-1"
           contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
         >
           {/* 안내 텍스트 */}
@@ -216,6 +217,6 @@ export default function TeamQRScreen() {
           </Card>
         </ScrollView>
       )}
-    </View>
+    </ScreenContainer>
   );
 }

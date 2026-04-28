@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
@@ -11,7 +10,6 @@ import { authApi } from "@/api/auth";
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -63,53 +61,51 @@ export default function ChangePasswordScreen() {
   };
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+    <ScreenContainer scrollable>
       <Header title="비밀번호 변경" showBack />
-      <ScreenContainer scrollable withTopInset={false}>
-        <View className="gap-3 mt-6 mb-6">
-          <Input
-            label="현재 비밀번호"
-            placeholder="현재 비밀번호를 입력해주세요"
-            value={currentPassword}
-            onChangeText={(v) => {
-              setCurrentPassword(v);
-              clearError("currentPassword");
-            }}
-            secureTextEntry
-            error={errors.currentPassword}
-          />
-          <Input
-            label="새 비밀번호"
-            placeholder="8~20자"
-            value={newPassword}
-            onChangeText={(v) => {
-              setNewPassword(v);
-              clearError("newPassword");
-            }}
-            secureTextEntry
-            error={errors.newPassword}
-          />
-          <Input
-            label="새 비밀번호 확인"
-            placeholder="새 비밀번호를 다시 입력해주세요"
-            value={confirmPassword}
-            onChangeText={(v) => {
-              setConfirmPassword(v);
-              clearError("confirmPassword");
-            }}
-            secureTextEntry
-            error={errors.confirmPassword}
-          />
-        </View>
-
-        <Button
-          label="비밀번호 변경"
-          variant="primary"
-          size="full"
-          onPress={handleChange}
-          loading={loading}
+      <View className="gap-3 mt-6 mb-6">
+        <Input
+          label="현재 비밀번호"
+          placeholder="현재 비밀번호를 입력해주세요"
+          value={currentPassword}
+          onChangeText={(v) => {
+            setCurrentPassword(v);
+            clearError("currentPassword");
+          }}
+          secureTextEntry
+          error={errors.currentPassword}
         />
-      </ScreenContainer>
-    </View>
+        <Input
+          label="새 비밀번호"
+          placeholder="8~20자"
+          value={newPassword}
+          onChangeText={(v) => {
+            setNewPassword(v);
+            clearError("newPassword");
+          }}
+          secureTextEntry
+          error={errors.newPassword}
+        />
+        <Input
+          label="새 비밀번호 확인"
+          placeholder="새 비밀번호를 다시 입력해주세요"
+          value={confirmPassword}
+          onChangeText={(v) => {
+            setConfirmPassword(v);
+            clearError("confirmPassword");
+          }}
+          secureTextEntry
+          error={errors.confirmPassword}
+        />
+      </View>
+
+      <Button
+        label="비밀번호 변경"
+        variant="primary"
+        size="full"
+        onPress={handleChange}
+        loading={loading}
+      />
+    </ScreenContainer>
   );
 }

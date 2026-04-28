@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
@@ -12,7 +11,6 @@ import { teamApi } from "@/api/team";
 export default function InviteScreen() {
   const { teamId } = useLocalSearchParams<{ teamId: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,30 +36,28 @@ export default function InviteScreen() {
   };
 
   return (
-    <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: "#FFFFFF" }}>
+    <ScreenContainer scrollable>
       <Header title="멤버 초대" showBack />
-      <ScreenContainer scrollable withTopInset={false}>
-        <View className="mt-6">
-          <Input
-            label="이메일"
-            placeholder="초대할 멤버의 이메일을 입력해주세요"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={error}
-          />
-        </View>
-        <View className="mt-6">
-          <Button
-            label="초대하기"
-            variant="primary"
-            size="full"
-            onPress={handleInvite}
-            loading={loading}
-          />
-        </View>
-      </ScreenContainer>
-    </View>
+      <View className="mt-6">
+        <Input
+          label="이메일"
+          placeholder="초대할 멤버의 이메일을 입력해주세요"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          error={error}
+        />
+      </View>
+      <View className="mt-6">
+        <Button
+          label="초대하기"
+          variant="primary"
+          size="full"
+          onPress={handleInvite}
+          loading={loading}
+        />
+      </View>
+    </ScreenContainer>
   );
 }
