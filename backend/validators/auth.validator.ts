@@ -33,4 +33,13 @@ const changePasswordSchema = {
   }),
 };
 
-module.exports = { signupSchema, loginSchema, changePasswordSchema };
+// Apple Native Sign-In
+const appleNativeSchema = {
+  body: z.object({
+    identityToken: z.string().min(1, "identityToken은 필수입니다."),
+    name: z.string().max(50).optional(),
+    nonce: z.string().min(1, "nonce는 필수입니다."),
+  }),
+};
+
+module.exports = { signupSchema, loginSchema, changePasswordSchema, appleNativeSchema };

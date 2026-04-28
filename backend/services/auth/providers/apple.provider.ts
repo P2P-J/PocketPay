@@ -55,12 +55,15 @@ const verifyIdentityToken = (identityToken, expectedNonce) =>
  * Apple은 userinfo endpoint가 없어 verified JWT claims를 직접 받음.
  * 다른 provider의 getUserProfile(accessToken) 시그니처와 다름.
  */
-const getUserProfile = (claims, name) => ({
-  provider: "apple",
-  providerId: claims.sub,
-  email: claims.email || `apple_${claims.sub}@noreply.pocketpay.app`,
-  name: name || "Apple 사용자",
-});
+const getUserProfile = (claims, name) => {
+  const sanitizedName = (name || "Apple 사용자").trim().slice(0, 20) || "Apple 사용자";
+  return {
+    provider: "apple",
+    providerId: claims.sub,
+    email: claims.email || `apple_${claims.sub}@noreply.pocketpay.app`,
+    name: sanitizedName,
+  };
+};
 
 // Apple client_secret JWT 생성 (revoke용)
 const generateClientSecret = () => {

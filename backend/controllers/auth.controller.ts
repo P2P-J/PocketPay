@@ -201,8 +201,9 @@ const resetPasswordController = async (req, res) => {
 const loginAppleNativeController = async (req, res) => {
   try {
     const { identityToken, name, nonce } = req.body;
-    if (!identityToken) {
-      throw AppError.badRequest("identityToken이 필요합니다.");
+    // identityToken/nonce는 zod validate가 보장하지만 방어적 가드 유지
+    if (!identityToken || !nonce) {
+      throw AppError.badRequest("identityToken과 nonce가 필요합니다.");
     }
     const { accessToken, refreshToken } = await loginAppleNative(
       identityToken,
