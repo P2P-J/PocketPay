@@ -11,6 +11,7 @@ const {
   sendVerificationCodeController,
   verifyCodeController,
   resetPasswordController,
+  loginAppleNativeController,
 } = require("../controllers/auth.controller");
 const { validate } = require("../middleware/validate.middleware");
 const { signupSchema, loginSchema } = require("../validators/auth.validator");
@@ -44,6 +45,7 @@ router.post("/refresh", refreshTokenController);
 router.get("/login/oauth/:provider", redirectToOAuthProvider);
 router.get("/login/oauth/:provider/callback", loginOauthController);
 router.get("/oauth-tokens", getOAuthTokensController);
+router.post("/login/oauth/apple/native", loginAppleNativeController);
 
 // Email Verification (rate limited)
 router.post("/send-code", emailLimiter, sendVerificationCodeController);

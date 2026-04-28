@@ -2,7 +2,10 @@ const {
   signupLocal,
   loginLocal,
 } = require("../services/auth/auth.local.service");
-const { loginOauth } = require("../services/auth/auth.oauth.service");
+const {
+  loginOauth,
+  loginAppleNative,
+} = require("../services/auth/auth.oauth.service");
 const providers = require("../services/auth/providers");
 const { handleError } = require("../utils/errorHandler");
 const { verifyToken, issueAccessToken } = require("../utils/jwt.util");
@@ -195,6 +198,23 @@ const resetPasswordController = async (req, res) => {
   }
 };
 
+const loginAppleNativeController = async (req, res) => {
+  try {
+    const { identityToken, name, nonce } = req.body;
+    if (!identityToken) {
+      throw AppError.badRequest("identityToken이 필요합니다.");
+    }
+    const { accessToken, refreshToken } = await loginAppleNative(
+      identityToken,
+      name,
+      nonce
+    );
+    res.status(200).json({ accessToken, refreshToken });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
 module.exports = {
   signupLocalController,
   loginLocalController,
@@ -205,4 +225,5 @@ module.exports = {
   sendVerificationCodeController,
   verifyCodeController,
   resetPasswordController,
+  loginAppleNativeController,
 };

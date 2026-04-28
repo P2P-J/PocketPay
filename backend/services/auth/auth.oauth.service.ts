@@ -60,4 +60,26 @@ const loginOauth = async (providerName, code, state) => {
   return { user, ...tokens };
 };
 
-module.exports = { loginOauth };
+const loginAppleNative = async (identityToken, name, nonce) => {
+  const claims = await providers.apple.verifyIdentityToken(identityToken, nonce);
+  const profile = providers.apple.getUserProfile(claims, name);
+
+  let user = await User.findOne({
+    provider: "apple",
+    providerId: profile.providerId,
+  });
+
+  if (!user) {
+    user = await User.create({
+      email: profile.email,
+      name: profile.name,
+      provider: "apple",
+      providerId: profile.providerId,
+    });
+  }
+
+  const tokens = issueTokenPair(user);
+  return { user, ...tokens };
+};
+
+module.exports = { loginOauth, loginAppleNative };
