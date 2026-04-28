@@ -4,13 +4,10 @@ import {
   View,
   Text,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { Camera } from "lucide-react-native";
 import { Header } from "@/components/ui/Header";
@@ -27,10 +24,10 @@ import {
   INCOME_CATEGORIES,
   type TransactionType,
 } from "@/constants/categories";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 export default function AddScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const createTransaction = useTeamStore((s) => s.createTransaction);
   const currentTeam = useTeamStore((s) => s.currentTeam);
   const merchantRef = useRef<RNTextInput>(null);
@@ -149,17 +146,12 @@ export default function AddScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
-    >
-      <View style={{ paddingTop: insets.top }}>
-        <Header title="거래 추가" showBack />
-      </View>
+    <ScreenContainer scrollable={false}>
+      <Header title="거래 추가" showBack />
 
       <ScrollView
         ref={scrollRef}
-        className="flex-1 px-screen-x"
+        className="flex-1"
         keyboardShouldPersistTaps="handled"
       >
         {/* 수입/지출 토글 */}
@@ -255,6 +247,6 @@ export default function AddScreen() {
           className="mb-8"
         />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }

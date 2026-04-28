@@ -15,8 +15,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ShareCard } from "@/components/ShareCard";
 import { getCategoryLabel, getCategoryEmoji } from "@/constants/categories";
 import { getTeamId } from "@/types/team";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 export default function HistoryScreen() {
+  // insets needed only for the Modal's internal paddingTop
   const insets = useSafeAreaInsets();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -165,9 +167,9 @@ export default function HistoryScreen() {
   const fmt = (n: number) => `₩${n.toLocaleString()}`;
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <ScreenContainer scrollable={false}>
       {/* 월 네비게이터 */}
-      <View className="flex-row items-center justify-between px-screen-x py-4">
+      <View className="flex-row items-center justify-between py-4">
         <Pressable onPress={() => changeMonth(-1)} className="p-2">
           <ChevronLeft size={24} color="#191F28" />
         </Pressable>
@@ -179,7 +181,7 @@ export default function HistoryScreen() {
         </Pressable>
       </View>
 
-      <ScrollView className="flex-1 px-screen-x">
+      <ScrollView className="flex-1">
         {/* 수입/지출 총계 */}
         <View className="flex-row gap-2 mb-section-gap">
           <Card variant="default" className="flex-1">
@@ -364,6 +366,6 @@ export default function HistoryScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }

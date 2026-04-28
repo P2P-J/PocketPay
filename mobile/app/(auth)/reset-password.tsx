@@ -1,18 +1,17 @@
 import { useState } from "react";
-import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { showToast } from "@/components/ui/Toast";
 import { apiClient } from "@/api/client";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 type Step = "email" | "code" | "password";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -97,16 +96,10 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
-    >
-      <View style={{ paddingTop: insets.top }}>
-        <Header title="비밀번호 찾기" showBack />
-      </View>
-
+    <ScreenContainer scrollable={false} withTabBar={false}>
+      <Header title="비밀번호 찾기" showBack />
       <ScrollView
-        className="flex-1 px-screen-x"
+        className="flex-1"
         keyboardShouldPersistTaps="handled"
       >
         {step === "email" && (
@@ -188,6 +181,6 @@ export default function ResetPasswordScreen() {
           </View>
         )}
       </ScrollView>
-    </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }

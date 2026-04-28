@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef, useEffect, useState } from "react";
 import { View, Text, SectionList, RefreshControl, Pressable, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
 import { ChevronDown } from "lucide-react-native";
 import type { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
@@ -18,9 +17,9 @@ import { dealApi } from "@/api/deal";
 import { getTeamId } from "@/types/team";
 import type { Transaction } from "@/types/transaction";
 import { dealToTransaction } from "@/types/transaction";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 export default function HomeScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const sheetRef = useRef<BottomSheetMethods>(null);
 
@@ -152,8 +151,8 @@ export default function HomeScreen() {
 
   if (teams.length === 0 && !loading) {
     return (
-      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-        <View className="px-screen-x py-4">
+      <ScreenContainer scrollable={false}>
+        <View className="py-4">
           <Text className="text-section font-pretendard-semibold text-text-primary">
             작은 모임
           </Text>
@@ -164,14 +163,14 @@ export default function HomeScreen() {
           ctaLabel="모임 만들기"
           onCtaPress={() => router.push("/team/create")}
         />
-      </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <ScreenContainer scrollable={false}>
       {/* 헤더: 팀 선택 + 팀원 관리 */}
-      <View className="flex-row items-center justify-between px-screen-x py-4">
+      <View className="flex-row items-center justify-between py-4">
         <Pressable
           onPress={() => sheetRef.current?.snapToIndex(0)}
           className="flex-row items-center gap-1"
@@ -196,7 +195,6 @@ export default function HomeScreen() {
         sections={sections}
         keyExtractor={(item) => item.id}
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -347,6 +345,6 @@ export default function HomeScreen() {
           </Text>
         </Pressable>
       </BottomSheet>
-    </View>
+    </ScreenContainer>
   );
 }

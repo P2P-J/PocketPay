@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { showToast } from "@/components/ui/Toast";
 import { useAuthStore } from "@/store/authStore";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 export default function SignupScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const signup = useAuthStore((s) => s.signup);
   const loading = useAuthStore((s) => s.loading);
 
@@ -84,18 +83,11 @@ export default function SignupScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
-    >
-      <View style={{ paddingTop: insets.top }}>
-        <Header title="회원가입" showBack />
-      </View>
-
+    <ScreenContainer scrollable={false} withTabBar={false}>
+      <Header title="회원가입" showBack />
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
-        className="px-screen-x"
       >
         <View className="gap-3 mt-6 mb-6">
           <Input
@@ -152,6 +144,6 @@ export default function SignupScreen() {
           loading={loading}
         />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }

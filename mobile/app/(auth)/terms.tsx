@@ -6,6 +6,7 @@ import { Check, ChevronRight } from "lucide-react-native";
 import { Header } from "@/components/ui/Header";
 import { Button } from "@/components/ui/Button";
 import { PRIVACY_POLICY, TERMS_OF_SERVICE } from "@/constants/terms";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 interface Agreement {
   id: string;
@@ -69,10 +70,10 @@ export default function TermsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <ScreenContainer scrollable={false} withTabBar={false} withKeyboard={false}>
       <Header title="약관 동의" showBack />
 
-      <ScrollView className="flex-1 px-screen-x">
+      <ScrollView className="flex-1">
         {/* 전체 동의 */}
         <Pressable
           onPress={toggleAll}
@@ -133,7 +134,7 @@ export default function TermsScreen() {
 
       {/* 다음 버튼 */}
       <View
-        className="px-screen-x py-4"
+        className="py-4"
         style={{ paddingBottom: insets.bottom + 16 }}
       >
         <Button
@@ -169,6 +170,6 @@ export default function TermsScreen() {
           </ScrollView>
         </View>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }

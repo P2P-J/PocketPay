@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, SectionList, Pressable, Alert, RefreshControl } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react-native";
@@ -13,6 +12,7 @@ import { showToast } from "@/components/ui/Toast";
 import { getCategoryLabel, getCategoryEmoji } from "@/constants/categories";
 import { getTeamId } from "@/types/team";
 import type { Transaction } from "@/types/transaction";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 interface Section {
   title: string;
@@ -40,7 +40,6 @@ function groupByDate(transactions: Transaction[]): Section[] {
 }
 
 export default function TransactionsScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -122,9 +121,9 @@ export default function TransactionsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <ScreenContainer scrollable={false}>
       {/* 월 네비게이터 */}
-      <View className="flex-row items-center justify-center px-screen-x py-4 gap-4">
+      <View className="flex-row items-center justify-center py-4 gap-4">
         <Pressable onPress={() => changeMonth(-1)} className="p-2">
           <ChevronLeft size={24} color="#191F28" />
         </Pressable>
@@ -137,7 +136,7 @@ export default function TransactionsScreen() {
       </View>
 
       {loading ? (
-        <View className="px-screen-x gap-3 mt-4">
+        <View className="gap-3 mt-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <View key={i} className="flex-row items-center gap-3">
               <Skeleton circle height={40} />
@@ -159,7 +158,7 @@ export default function TransactionsScreen() {
           sections={sections}
           keyExtractor={(item) => item.id}
           renderSectionHeader={({ section }) => (
-            <View className="px-screen-x py-2 bg-background">
+            <View className="py-2 bg-background">
               <Text className="text-sub font-pretendard-semibold text-text-secondary">
                 {section.title}
               </Text>
@@ -192,6 +191,6 @@ export default function TransactionsScreen() {
           }
         />
       )}
-    </View>
+    </ScreenContainer>
   );
 }

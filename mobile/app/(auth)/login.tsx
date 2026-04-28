@@ -3,14 +3,10 @@ import {
   View,
   Text,
   Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   Pressable,
   Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -18,6 +14,7 @@ import { showToast } from "@/components/ui/Toast";
 import { useAuthStore } from "@/store/authStore";
 import { API_BASE_URL } from "@/constants/config";
 import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
+import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 // 카카오 말풍선 심볼
 function KakaoIcon() {
@@ -102,7 +99,6 @@ function SocialLoginButton({
 
 export default function LoginScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const login = useAuthStore((s) => s.login);
   const loading = useAuthStore((s) => s.loading);
   const [showEmailLogin, setShowEmailLogin] = useState(false);
@@ -148,154 +144,143 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-background"
-    >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View
-          className="flex-1 justify-center px-screen-x"
-          style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-        >
-          {/* 로고 */}
-          <View className="items-center mb-10">
-            <Image
-              source={require("../../assets/icon.png")}
-              className="w-20 h-20 rounded-2xl mb-4"
-              resizeMode="contain"
-            />
-            <Text className="text-title font-pretendard-bold text-text-primary">
-              작은 모임
-            </Text>
-            <Text className="text-sub text-text-secondary mt-1">
-              모임 회계, 이제 간편하게.
-            </Text>
-          </View>
-
-          {/* 소셜 로그인 버튼 */}
-          <View className="gap-3 mb-6">
-            <SocialLoginButton
-              icon={<KakaoIcon />}
-              label="카카오로 시작하기"
-              bgColor="#FEE500"
-              textColor="rgba(0,0,0,0.85)"
-              onPress={() => handleOAuthLogin("kakao")}
-            />
-            <SocialLoginButton
-              icon={<NaverIcon />}
-              label="네이버로 시작하기"
-              bgColor="#03C75A"
-              textColor="#FFFFFF"
-              onPress={() => handleOAuthLogin("naver")}
-            />
-            <SocialLoginButton
-              icon={<GoogleIcon />}
-              label="Google로 계속하기"
-              bgColor="#FFFFFF"
-              textColor="#1F1F1F"
-              borderColor="#DADCE0"
-              onPress={() => handleOAuthLogin("google")}
-            />
-            <AppleSignInButton />
-          </View>
-
-          {/* 구분선 */}
-          <View className="flex-row items-center mb-6">
-            <View className="flex-1 h-px bg-divider" />
-            <Text className="text-caption text-text-disabled mx-4 font-pretendard">
-              또는
-            </Text>
-            <View className="flex-1 h-px bg-divider" />
-          </View>
-
-          {showEmailLogin ? (
-            <>
-              {/* 이메일 로그인 폼 */}
-              <View className="gap-3 mb-6">
-                <Input
-                  label="이메일"
-                  placeholder="example@email.com"
-                  value={email}
-                  onChangeText={(v) => {
-                    setEmail(v);
-                    clearError("email");
-                  }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  error={errors.email}
-                />
-                <Input
-                  label="비밀번호"
-                  placeholder="비밀번호를 입력해주세요"
-                  value={password}
-                  onChangeText={(v) => {
-                    setPassword(v);
-                    clearError("password");
-                  }}
-                  secureTextEntry
-                  error={errors.password}
-                />
-              </View>
-
-              <Button
-                label="로그인"
-                variant="primary"
-                size="full"
-                onPress={handleLogin}
-                loading={loading}
-              />
-
-              <Pressable
-                onPress={() => router.push("/(auth)/reset-password")}
-                className="mt-3 items-center py-2"
-              >
-                <Text className="text-sub text-text-disabled font-pretendard">
-                  비밀번호를 잊으셨나요?
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => router.push("/(auth)/terms")}
-                className="mt-2 items-center py-3"
-              >
-                <Text className="text-sub text-text-secondary">
-                  계정이 없으신가요?{" "}
-                  <Text className="text-brand font-pretendard-semibold">
-                    회원가입
-                  </Text>
-                </Text>
-              </Pressable>
-            </>
-          ) : (
-            <>
-              {/* 이메일 로그인 / 회원가입 링크 */}
-              <Pressable
-                onPress={() => setShowEmailLogin(true)}
-                className="items-center py-3"
-              >
-                <Text className="text-sub text-text-secondary font-pretendard">
-                  이메일로 로그인
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => router.push("/(auth)/terms")}
-                className="items-center py-2"
-              >
-                <Text className="text-sub text-text-secondary">
-                  계정이 없으신가요?{" "}
-                  <Text className="text-brand font-pretendard-semibold">
-                    회원가입
-                  </Text>
-                </Text>
-              </Pressable>
-            </>
-          )}
+    <ScreenContainer scrollable withTabBar={false}>
+      <View className="flex-1 justify-center">
+        {/* 로고 */}
+        <View className="items-center mb-10">
+          <Image
+            source={require("../../assets/icon.png")}
+            className="w-20 h-20 rounded-2xl mb-4"
+            resizeMode="contain"
+          />
+          <Text className="text-title font-pretendard-bold text-text-primary">
+            작은 모임
+          </Text>
+          <Text className="text-sub text-text-secondary mt-1">
+            모임 회계, 이제 간편하게.
+          </Text>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        {/* 소셜 로그인 버튼 */}
+        <View className="gap-3 mb-6">
+          <SocialLoginButton
+            icon={<KakaoIcon />}
+            label="카카오로 시작하기"
+            bgColor="#FEE500"
+            textColor="rgba(0,0,0,0.85)"
+            onPress={() => handleOAuthLogin("kakao")}
+          />
+          <SocialLoginButton
+            icon={<NaverIcon />}
+            label="네이버로 시작하기"
+            bgColor="#03C75A"
+            textColor="#FFFFFF"
+            onPress={() => handleOAuthLogin("naver")}
+          />
+          <SocialLoginButton
+            icon={<GoogleIcon />}
+            label="Google로 계속하기"
+            bgColor="#FFFFFF"
+            textColor="#1F1F1F"
+            borderColor="#DADCE0"
+            onPress={() => handleOAuthLogin("google")}
+          />
+          <AppleSignInButton />
+        </View>
+
+        {/* 구분선 */}
+        <View className="flex-row items-center mb-6">
+          <View className="flex-1 h-px bg-divider" />
+          <Text className="text-caption text-text-disabled mx-4 font-pretendard">
+            또는
+          </Text>
+          <View className="flex-1 h-px bg-divider" />
+        </View>
+
+        {showEmailLogin ? (
+          <>
+            {/* 이메일 로그인 폼 */}
+            <View className="gap-3 mb-6">
+              <Input
+                label="이메일"
+                placeholder="example@email.com"
+                value={email}
+                onChangeText={(v) => {
+                  setEmail(v);
+                  clearError("email");
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                error={errors.email}
+              />
+              <Input
+                label="비밀번호"
+                placeholder="비밀번호를 입력해주세요"
+                value={password}
+                onChangeText={(v) => {
+                  setPassword(v);
+                  clearError("password");
+                }}
+                secureTextEntry
+                error={errors.password}
+              />
+            </View>
+
+            <Button
+              label="로그인"
+              variant="primary"
+              size="full"
+              onPress={handleLogin}
+              loading={loading}
+            />
+
+            <Pressable
+              onPress={() => router.push("/(auth)/reset-password")}
+              className="mt-3 items-center py-2"
+            >
+              <Text className="text-sub text-text-disabled font-pretendard">
+                비밀번호를 잊으셨나요?
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push("/(auth)/terms")}
+              className="mt-2 items-center py-3"
+            >
+              <Text className="text-sub text-text-secondary">
+                계정이 없으신가요?{" "}
+                <Text className="text-brand font-pretendard-semibold">
+                  회원가입
+                </Text>
+              </Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            {/* 이메일 로그인 / 회원가입 링크 */}
+            <Pressable
+              onPress={() => setShowEmailLogin(true)}
+              className="items-center py-3"
+            >
+              <Text className="text-sub text-text-secondary font-pretendard">
+                이메일로 로그인
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push("/(auth)/terms")}
+              className="items-center py-2"
+            >
+              <Text className="text-sub text-text-secondary">
+                계정이 없으신가요?{" "}
+                <Text className="text-brand font-pretendard-semibold">
+                  회원가입
+                </Text>
+              </Text>
+            </Pressable>
+          </>
+        )}
+      </View>
+    </ScreenContainer>
   );
 }
