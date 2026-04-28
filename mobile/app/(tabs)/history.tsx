@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert, Modal, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { ChevronLeft, ChevronRight, Share2, FileText } from "lucide-react-native";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
@@ -18,8 +19,10 @@ import { getTeamId } from "@/types/team";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 export default function HistoryScreen() {
-  // insets needed only for the Modal's internal paddingTop
+  // insets needed for the Modal's internal paddingTop + 탭바 회피 패딩 계산
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
+  const contentBottomPad = tabBarHeight + insets.bottom + 16;
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -181,7 +184,10 @@ export default function HistoryScreen() {
         </Pressable>
       </View>
 
-      <ScrollView className="flex-1">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: contentBottomPad }}
+      >
         {/* 수입/지출 총계 */}
         <View className="flex-row gap-2 mb-section-gap">
           <Card variant="default" className="flex-1">

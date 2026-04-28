@@ -2,6 +2,8 @@ import { useCallback, useMemo, useRef, useEffect, useState } from "react";
 import { View, Text, SectionList, RefreshControl, Pressable, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronDown } from "lucide-react-native";
 import type { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import { Users } from "lucide-react-native";
@@ -22,6 +24,9 @@ import { ScreenContainer } from "@/components/layout/ScreenContainer";
 export default function HomeScreen() {
   const router = useRouter();
   const sheetRef = useRef<BottomSheetMethods>(null);
+  const tabBarHeight = useBottomTabBarHeight();
+  const insets = useSafeAreaInsets();
+  const contentBottomPad = tabBarHeight + insets.bottom + 16;
 
   const user = useAuthStore((s) => s.user);
   const teams = useTeamStore((s) => s.teams);
@@ -195,6 +200,7 @@ export default function HomeScreen() {
         sections={sections}
         keyExtractor={(item) => item.id}
         className="flex-1"
+        contentContainerStyle={{ paddingBottom: contentBottomPad }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

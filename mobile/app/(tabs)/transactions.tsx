@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, SectionList, Pressable, Alert, RefreshControl } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { useTeamStore } from "@/store/teamStore";
@@ -41,6 +43,9 @@ function groupByDate(transactions: Transaction[]): Section[] {
 
 export default function TransactionsScreen() {
   const router = useRouter();
+  const tabBarHeight = useBottomTabBarHeight();
+  const insets = useSafeAreaInsets();
+  const contentBottomPad = tabBarHeight + insets.bottom + 16;
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -157,6 +162,7 @@ export default function TransactionsScreen() {
         <SectionList
           sections={sections}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: contentBottomPad }}
           renderSectionHeader={({ section }) => (
             <View className="py-2 bg-background">
               <Text className="text-sub font-pretendard-semibold text-text-secondary">
