@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { showToast } from "@/components/ui/Toast";
 import { useAuthStore } from "@/store/authStore";
 import { API_BASE_URL } from "@/constants/config";
+import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 
 // 카카오 말풍선 심볼
 function KakaoIcon() {
@@ -198,6 +199,7 @@ export default function LoginScreen() {
               borderColor="#DADCE0"
               onPress={() => handleOAuthLogin("google")}
             />
+            <AppleSignInButton />
           </View>
 
           {/* 구분선 */}
