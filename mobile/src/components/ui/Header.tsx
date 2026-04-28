@@ -2,6 +2,7 @@ import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
 import { colors } from "@/tokens/colors";
+import { useResponsiveTokens } from "@/hooks/useResponsiveTokens";
 
 interface HeaderProps {
   title: string;
@@ -11,9 +12,13 @@ interface HeaderProps {
 
 export function Header({ title, showBack = false, rightAction }: HeaderProps) {
   const router = useRouter();
+  const t = useResponsiveTokens();
 
   return (
-    <View className="flex-row items-center h-header px-screen-x border-b border-divider bg-background">
+    <View
+      className="flex-row items-center border-b border-divider bg-background"
+      style={{ paddingHorizontal: t.screenX, height: t.headerHeight }}
+    >
       {/* 좌측: 뒤로가기 */}
       <View className="w-11 h-11 items-center justify-center">
         {showBack && (

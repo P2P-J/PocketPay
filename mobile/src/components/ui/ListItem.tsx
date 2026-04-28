@@ -1,5 +1,6 @@
 import { View, Text, Pressable } from "react-native";
 import { cn } from "@/lib/cn";
+import { useResponsiveTokens } from "@/hooks/useResponsiveTokens";
 
 interface ListItemProps {
   icon?: React.ReactNode;
@@ -24,6 +25,7 @@ export function ListItem({
   showDivider = true,
   className,
 }: ListItemProps) {
+  const t = useResponsiveTokens();
   const isIncome = amount !== undefined && amount > 0;
   const isExpense = amount !== undefined && amount < 0;
   const formattedAmount = amount !== undefined
@@ -38,6 +40,7 @@ export function ListItem({
           "flex-row items-center px-screen-x h-list-item active:bg-card/50",
           className
         )}
+        style={{ minHeight: t.listItemHeight }}
       >
         {/* 아이콘 (40px 원형) */}
         <View

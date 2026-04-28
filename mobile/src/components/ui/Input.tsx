@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { View, Text, TextInput, type TextInputProps } from "react-native";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
+import { useResponsiveTokens } from "@/hooks/useResponsiveTokens";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -12,6 +13,7 @@ interface InputProps extends TextInputProps {
 export const Input = forwardRef<TextInput, InputProps>(
   ({ label, error, containerClassName, className, ...props }, ref) => {
     const [focused, setFocused] = useState(false);
+    const t = useResponsiveTokens();
 
     const borderColor = error
       ? "border-expense"
@@ -44,6 +46,7 @@ export const Input = forwardRef<TextInput, InputProps>(
             props.editable === false && "opacity-50",
             className
           )}
+          style={[{ height: t.inputHeight, fontSize: t.fontBody }, props.style]}
         />
         {error && (
           <Text className="text-caption text-expense mt-1 font-pretendard">

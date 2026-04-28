@@ -1,5 +1,6 @@
 import { Pressable, Text, ActivityIndicator } from "react-native";
 import { tv, type VariantProps } from "tailwind-variants";
+import { useResponsiveTokens } from "@/hooks/useResponsiveTokens";
 
 const button = tv({
   base: "items-center justify-center rounded-button flex-row",
@@ -64,11 +65,18 @@ export function Button({
   icon,
   className,
 }: ButtonProps) {
+  const t = useResponsiveTokens();
+  const heightOverride =
+    size === "lg" || size === "full" ? { height: t.buttonHeight } : null;
+  const fontSizeOverride =
+    size === "lg" || size === "full" ? { fontSize: t.fontBody } : null;
+
   return (
     <Pressable
       onPress={onPress}
       disabled={!!disabled || loading}
       className={button({ variant, size, disabled: !!disabled || loading, className })}
+      style={[heightOverride]}
     >
       {loading ? (
         <ActivityIndicator
@@ -80,7 +88,10 @@ export function Button({
           {icon}
           <Text
             className={buttonText({ variant, size })}
-            style={variant === "danger" || variant === "primary" ? { color: "#FFFFFF" } : undefined}
+            style={[
+              variant === "danger" || variant === "primary" ? { color: "#FFFFFF" } : undefined,
+              fontSizeOverride,
+            ]}
           >
             {label}
           </Text>

@@ -8,6 +8,7 @@ import GorhomBottomSheet, {
 import type { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import { X } from "lucide-react-native";
 import { colors } from "@/tokens/colors";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 interface BottomSheetProps {
   title?: string;
@@ -26,6 +27,12 @@ export const BottomSheet = forwardRef<BottomSheetMethods, BottomSheetProps>(
       () => customSnapPoints || ["50%", "85%"],
       [customSnapPoints]
     );
+
+    const bp = useBreakpoint();
+    const sheetStyle =
+      bp !== "phone"
+        ? { maxWidth: 600, alignSelf: "center" as const, width: "100%" as const }
+        : undefined;
 
     const renderBackdrop = useCallback(
       (props: BottomSheetBackdropProps) => (
@@ -62,7 +69,7 @@ export const BottomSheet = forwardRef<BottomSheetMethods, BottomSheetProps>(
           if (index === -1) onClose?.();
         }}
       >
-        <BottomSheetView>
+        <BottomSheetView style={sheetStyle}>
           <View className="px-screen-x pb-8">
             {/* 헤더 */}
             {title && (
