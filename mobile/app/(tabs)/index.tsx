@@ -76,24 +76,26 @@ export default function HomeScreen() {
     setLoadingMore(false);
   }, [currentTeam]);
 
-  // 화면 포커스 시 팀 목록 + 거래 + 잔액 + 통계 새로고침
+  // 화면 포커스 시 팀 목록 새로고침 (초대받은 팀 즉시 반영)
   useEffect(() => {
     if (isFocused) {
-      // 팀 목록 항상 새로고침 (초대받은 팀 즉시 반영)
       fetchTeams();
-
-      if (currentTeam) {
-        const teamId = getTeamId(currentTeam);
-        const now = new Date();
-        fetchTransactions(teamId, now.getFullYear(), now.getMonth() + 1);
-        fetchSummary(teamId);
-        loadAllTransactions(teamId, 1, true);
-        dealApi.getMonthlyStats(teamId, now.getFullYear(), now.getMonth() + 1)
-          .then((res) => setStats(res.data))
-          .catch(() => setStats(null));
-      }
     }
   }, [isFocused]);
+
+  // currentTeam이 정해지거나 변경될 때, 또는 화면 포커스 시 거래/잔액/통계 새로고침
+  useEffect(() => {
+    if (isFocused && currentTeam) {
+      const teamId = getTeamId(currentTeam);
+      const now = new Date();
+      fetchTransactions(teamId, now.getFullYear(), now.getMonth() + 1);
+      fetchSummary(teamId);
+      loadAllTransactions(teamId, 1, true);
+      dealApi.getMonthlyStats(teamId, now.getFullYear(), now.getMonth() + 1)
+        .then((res) => setStats(res.data))
+        .catch(() => setStats(null));
+    }
+  }, [isFocused, currentTeam]);
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
