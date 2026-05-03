@@ -12,7 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import * as MediaLibrary from "expo-media-library";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { Download } from "lucide-react-native";
 import { transformCloudinaryUrl } from "@/utils/cloudinary";
 import { Header } from "@/components/ui/Header";

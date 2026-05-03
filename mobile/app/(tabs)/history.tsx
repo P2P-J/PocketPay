@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Share2, FileText } from "lucide-react-native
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import * as Print from "expo-print";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { generateReportHtml } from "@/utils/generateReportHtml";
 import { useTeamStore } from "@/store/teamStore";
 import { Card } from "@/components/ui/Card";
@@ -160,7 +160,8 @@ export default function HistoryScreen() {
         dialogTitle: filename,
         UTI: "com.adobe.pdf",
       });
-    } catch {
+    } catch (err) {
+      if (__DEV__) console.error("[PDF export] failed:", err);
       Alert.alert("오류", "PDF를 생성하는 중 문제가 발생했습니다.");
     } finally {
       setPdfLoading(false);
