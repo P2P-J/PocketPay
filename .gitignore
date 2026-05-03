@@ -6,6 +6,15 @@ node_modules/
 .env.*
 !.env.example
 
+# Private keys / certificates (절대 커밋 금지)
+*.p8
+*.pem
+*.key
+*.cer
+*.p12
+*.mobileprovision
+AuthKey_*.p8
+
 # Build output
 dist/
 build/

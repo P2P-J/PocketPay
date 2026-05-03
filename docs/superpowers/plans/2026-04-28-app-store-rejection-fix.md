@@ -205,7 +205,7 @@ APPLE_PRIVATE_KEY=
 APPLE_BUNDLE_ID=com.jageunmoim.app
 APPLE_TEAM_ID=47TJBU97ZL
 APPLE_KEY_ID=3G24J2DRSM
-APPLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIGTAgEA...(생략)...6DDcSZ5Q\n-----END PRIVATE KEY-----
+APPLE_PRIVATE_KEY=(.p8 파일 내용. 줄바꿈은 \n으로 인코딩하여 한 줄로. 실제 값은 git/문서에 저장 X)
 ```
 
 ⚠️ `\n`을 실제 줄바꿈 대신 문자열로 인코딩. dotenv가 한 줄로 읽음.
