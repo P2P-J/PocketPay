@@ -310,14 +310,14 @@ export default function HomeScreen() {
   if (teams.length === 0 && !loading) {
     return (
       <ScreenContainer scrollable={false}>
-        <View className="flex-row items-center py-4" style={{ gap: 12 }}>
+        <View className="flex-row items-center justify-between py-4">
+          <Text className="text-section font-pretendard-semibold text-text-primary">
+            작은 모임
+          </Text>
           <NotificationBell
             count={pendingInvitations.length}
             onPress={() => router.push("/notifications")}
           />
-          <Text className="text-section font-pretendard-semibold text-text-primary">
-            작은 모임
-          </Text>
         </View>
 
         <View className="flex-1 items-center justify-center">
@@ -367,39 +367,36 @@ export default function HomeScreen() {
 
   return (
     <ScreenContainer scrollable={false}>
-      {/* 헤더: 알림 + 팀 선택 + 팀원 관리 */}
+      {/* 헤더: 팀 선택 + (알림 + 팀원 관리) */}
       <View className="flex-row items-center justify-between py-4">
-        <View
-          className="flex-row items-center"
-          style={{ gap: 12, flexShrink: 1 }}
+        <Pressable
+          onPress={() => sheetRef.current?.snapToIndex(0)}
+          className="flex-row items-center gap-1"
+          style={{ flexShrink: 1 }}
         >
+          <Text
+            numberOfLines={1}
+            className="text-section font-pretendard-semibold text-text-primary"
+          >
+            {currentTeam?.name || "팀 선택"}
+          </Text>
+          <ChevronDown size={20} color="#191F28" />
+        </Pressable>
+
+        <View className="flex-row items-center" style={{ gap: 8 }}>
           <NotificationBell
             count={pendingInvitations.length}
             onPress={() => router.push("/notifications")}
           />
-          <Pressable
-            onPress={() => sheetRef.current?.snapToIndex(0)}
-            className="flex-row items-center gap-1"
-            style={{ flexShrink: 1 }}
-          >
-            <Text
-              numberOfLines={1}
-              className="text-section font-pretendard-semibold text-text-primary"
+          {currentTeam && (
+            <Pressable
+              onPress={() => router.push(`/team/${getTeamId(currentTeam)}`)}
+              className="w-10 h-10 rounded-full bg-card items-center justify-center"
             >
-              {currentTeam?.name || "팀 선택"}
-            </Text>
-            <ChevronDown size={20} color="#191F28" />
-          </Pressable>
+              <Users size={20} color="#8B95A1" />
+            </Pressable>
+          )}
         </View>
-
-        {currentTeam && (
-          <Pressable
-            onPress={() => router.push(`/team/${getTeamId(currentTeam)}`)}
-            className="w-10 h-10 rounded-full bg-card items-center justify-center"
-          >
-            <Users size={20} color="#8B95A1" />
-          </Pressable>
-        )}
       </View>
 
       <SectionList
