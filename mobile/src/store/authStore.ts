@@ -15,7 +15,14 @@ interface AuthState {
   checkAuth: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   loginWithOAuth: (accessToken: string, refreshToken: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  signup: (data: {
+    name: string;
+    nickname: string;
+    handle: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
+  refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -104,15 +111,37 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
     },
 
-    signup: async (name: string, email: string, password: string) => {
+    signup: async (data) => {
       set({ loading: true, error: null });
       try {
-        await authApi.signup({ name, email, password });
+        await authApi.signup(data);
         set({ loading: false });
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "회원가입에 실패했습니다.";
         set({ error: message, loading: false });
         throw err;
+      }
+    },
+
+    refreshUser: async () => {
+      try {
+        const me = await authApi.me();
+        const id = me.id || me._id;
+        set({
+          user: {
+            userId: id,
+            _id: me._id,
+            id: me.id,
+            name: me.name,
+            nickname: me.nickname,
+            handle: me.handle,
+            handleChangedAt: me.handleChangedAt,
+            email: me.email,
+            provider: me.provider,
+          },
+        });
+      } catch {
+        // 비치명적 — 조용히 실패
       }
     },
 

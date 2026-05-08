@@ -3,6 +3,9 @@ export interface User {
   _id?: string;
   id?: string;
   name?: string;
+  nickname?: string;
+  handle?: string;
+  handleChangedAt?: string;
   email?: string;
   provider?: string;
 }

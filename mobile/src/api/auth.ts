@@ -1,8 +1,24 @@
 import { apiClient } from "./client";
 
+type MeResponse = {
+  id?: string;
+  _id?: string;
+  email: string;
+  name: string;
+  nickname: string;
+  handle?: string;
+  handleChangedAt?: string;
+  provider: string;
+};
+
 export const authApi = {
-  signup: (data: { name: string; email: string; password: string }) =>
-    apiClient.post("/auth/signup/local", data),
+  signup: (data: {
+    name: string;
+    nickname: string;
+    handle: string;
+    email: string;
+    password: string;
+  }) => apiClient.post("/auth/signup/local", data),
 
   login: (data: { email: string; password: string }) =>
     apiClient.post("/auth/login/local", data) as Promise<{
@@ -15,13 +31,15 @@ export const authApi = {
       accessToken: string;
     }>,
 
-  me: () =>
-    apiClient.get("/account/me") as Promise<{
-      id?: string;
-      _id?: string;
-      email: string;
-      name: string;
-      provider: string;
+  me: () => apiClient.get("/account/me") as Promise<MeResponse>,
+
+  completeOAuthProfile: (data: {
+    name?: string;
+    nickname: string;
+    handle: string;
+  }) =>
+    apiClient.post("/auth/oauth/complete-profile", data) as Promise<{
+      data: MeResponse;
     }>,
 
   deleteAccount: () => apiClient.delete("/account/me"),
