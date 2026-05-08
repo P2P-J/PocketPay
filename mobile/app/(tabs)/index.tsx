@@ -10,6 +10,7 @@ import Animated, {
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { TAB_BAR_HEIGHT } from "@/components/navigation/TabBar";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronDown, Users, Sparkles } from "lucide-react-native";
 import type { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
@@ -183,6 +184,10 @@ export default function HomeScreen() {
   const fetchTransactions = useTeamStore((s) => s.fetchTransactions);
   const fetchSummary = useTeamStore((s) => s.fetchSummary);
   const summary = useTeamStore((s) => s.summary);
+  const pendingInvitations = useTeamStore((s) => s.pendingInvitations);
+  const fetchPendingInvitations = useTeamStore(
+    (s) => s.fetchPendingInvitations
+  );
   const isFocused = useIsFocused();
 
   interface MonthlyStats {
@@ -221,10 +226,11 @@ export default function HomeScreen() {
     setLoadingMore(false);
   }, [currentTeam]);
 
-  // 화면 포커스 시 팀 목록 새로고침 (초대받은 팀 즉시 반영)
+  // 화면 포커스 시 팀 목록 + 초대 알림 새로고침 (초대받은 팀 즉시 반영)
   useEffect(() => {
     if (isFocused) {
       fetchTeams();
+      fetchPendingInvitations();
     }
   }, [isFocused]);
 
@@ -304,7 +310,11 @@ export default function HomeScreen() {
   if (teams.length === 0 && !loading) {
     return (
       <ScreenContainer scrollable={false}>
-        <View className="py-4">
+        <View className="flex-row items-center py-4" style={{ gap: 12 }}>
+          <NotificationBell
+            count={pendingInvitations.length}
+            onPress={() => router.push("/notifications")}
+          />
           <Text className="text-section font-pretendard-semibold text-text-primary">
             작은 모임
           </Text>
@@ -357,17 +367,30 @@ export default function HomeScreen() {
 
   return (
     <ScreenContainer scrollable={false}>
-      {/* 헤더: 팀 선택 + 팀원 관리 */}
+      {/* 헤더: 알림 + 팀 선택 + 팀원 관리 */}
       <View className="flex-row items-center justify-between py-4">
-        <Pressable
-          onPress={() => sheetRef.current?.snapToIndex(0)}
-          className="flex-row items-center gap-1"
+        <View
+          className="flex-row items-center"
+          style={{ gap: 12, flexShrink: 1 }}
         >
-          <Text className="text-section font-pretendard-semibold text-text-primary">
-            {currentTeam?.name || "팀 선택"}
-          </Text>
-          <ChevronDown size={20} color="#191F28" />
-        </Pressable>
+          <NotificationBell
+            count={pendingInvitations.length}
+            onPress={() => router.push("/notifications")}
+          />
+          <Pressable
+            onPress={() => sheetRef.current?.snapToIndex(0)}
+            className="flex-row items-center gap-1"
+            style={{ flexShrink: 1 }}
+          >
+            <Text
+              numberOfLines={1}
+              className="text-section font-pretendard-semibold text-text-primary"
+            >
+              {currentTeam?.name || "팀 선택"}
+            </Text>
+            <ChevronDown size={20} color="#191F28" />
+          </Pressable>
+        </View>
 
         {currentTeam && (
           <Pressable
