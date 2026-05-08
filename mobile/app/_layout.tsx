@@ -154,6 +154,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="setup-profile" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="profile" />
           <Stack.Screen name="add" />
           <Stack.Screen name="notifications" />
           <Stack.Screen name="team" />
