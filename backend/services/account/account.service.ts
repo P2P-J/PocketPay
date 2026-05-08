@@ -1,8 +1,12 @@
 const { User, Team, WithdrawnOauth } = require("../../models/index");
 const providers = require("../auth/providers");
 const { comparePassword, hashPassword } = require("../../utils/bcrypt.util");
+const { validateHandleFormat } = require("../../utils/handle.util");
 const { default: mongoose } = require("mongoose");
 const AppError = require("../../utils/AppError");
+
+const HANDLE_CHANGE_COOLDOWN_DAYS = 30;
+const HANDLE_CHANGE_COOLDOWN_MS = HANDLE_CHANGE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
 const getMyAccount = async (userId) => {
   const user = await User.findById(userId);
@@ -79,4 +83,75 @@ const changeMyPassword = async (userId, currentPassword, newPassword) => {
   await user.save();
 };
 
-module.exports = { getMyAccount, deleteMyAccount, changeMyPassword };
+const checkHandleAvailable = async (handle) => {
+  const lowered = (handle || "").toLowerCase().trim();
+
+  if (!validateHandleFormat(lowered)) {
+    return { available: false, reason: "format" };
+  }
+
+  const exists = await User.findOne({ handle: lowered }).lean();
+  if (exists) {
+    return { available: false, reason: "taken" };
+  }
+
+  return { available: true };
+};
+
+const updateProfile = async (userId, { name, nickname }) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw AppError.notFound("사용자를 찾을 수 없습니다.");
+  }
+  if (name !== undefined) user.name = String(name).trim();
+  if (nickname !== undefined) user.nickname = String(nickname).trim();
+  await user.save();
+  return user;
+};
+
+const updateHandle = async (userId, { handle }) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw AppError.notFound("사용자를 찾을 수 없습니다.");
+  }
+
+  // 30일 제한 체크
+  if (user.handleChangedAt) {
+    const elapsed = Date.now() - user.handleChangedAt.getTime();
+    if (elapsed < HANDLE_CHANGE_COOLDOWN_MS) {
+      const remaining = Math.ceil(
+        (HANDLE_CHANGE_COOLDOWN_MS - elapsed) / (24 * 60 * 60 * 1000)
+      );
+      throw AppError.badRequest(`${remaining}일 후에 변경 가능합니다.`);
+    }
+  }
+
+  const loweredHandle = (handle || "").toLowerCase().trim();
+  if (!validateHandleFormat(loweredHandle)) {
+    throw AppError.badRequest("올바르지 않은 ID 형식입니다.");
+  }
+
+  // 본인 handle 동일하면 패스
+  if (user.handle === loweredHandle) {
+    return user;
+  }
+
+  const handleExists = await User.findOne({ handle: loweredHandle });
+  if (handleExists) {
+    throw AppError.badRequest("이미 사용 중인 ID입니다.");
+  }
+
+  user.handle = loweredHandle;
+  user.handleChangedAt = new Date();
+  await user.save();
+  return user;
+};
+
+module.exports = {
+  getMyAccount,
+  deleteMyAccount,
+  changeMyPassword,
+  checkHandleAvailable,
+  updateProfile,
+  updateHandle,
+};

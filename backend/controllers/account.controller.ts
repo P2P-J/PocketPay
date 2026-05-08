@@ -8,6 +8,9 @@ const getMyAccount = async (req, res) => {
       id: user._id,
       email: user.email,
       name: user.name,
+      nickname: user.nickname,
+      handle: user.handle,
+      handleChangedAt: user.handleChangedAt,
       provider: user.provider,
     });
   } catch (err) {
@@ -37,4 +40,58 @@ const changeMyPassword = async (req, res) => {
   }
 };
 
-module.exports = { getMyAccount, deleteMyAccount, changeMyPassword };
+const checkHandle = async (req, res) => {
+  try {
+    const result = await AccountService.checkHandleAvailable(req.query.handle);
+    res.status(200).json({ data: result });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+const updateProfileController = async (req, res) => {
+  try {
+    const user = await AccountService.updateProfile(req.user.userId, req.body);
+    res.status(200).json({
+      data: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        nickname: user.nickname,
+        handle: user.handle,
+        handleChangedAt: user.handleChangedAt,
+        provider: user.provider,
+      },
+    });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+const updateHandleController = async (req, res) => {
+  try {
+    const user = await AccountService.updateHandle(req.user.userId, req.body);
+    res.status(200).json({
+      data: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        nickname: user.nickname,
+        handle: user.handle,
+        handleChangedAt: user.handleChangedAt,
+        provider: user.provider,
+      },
+    });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+module.exports = {
+  getMyAccount,
+  deleteMyAccount,
+  changeMyPassword,
+  checkHandle,
+  updateProfileController,
+  updateHandleController,
+};
