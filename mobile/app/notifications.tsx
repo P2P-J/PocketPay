@@ -39,7 +39,7 @@ function InvitationCard({
         {invitation.teamName}
       </Text>
       <Text className="text-sub text-text-secondary mb-4">
-        {invitation.invitedBy?.name ?? "알 수 없음"}님이 초대했어요 ·{" "}
+        {invitation.invitedBy?.nickname ?? invitation.invitedBy?.name ?? "알 수 없음"}님이 초대했어요 ·{" "}
         {formatRelativeTime(invitation.invitedAt)}
       </Text>
       <View className="flex-row" style={{ gap: 8 }}>

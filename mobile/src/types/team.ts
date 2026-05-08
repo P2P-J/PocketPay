@@ -3,7 +3,15 @@ import { getUserId } from "./user";
 
 export interface Member {
   _id?: string;
-  user: { _id: string; name?: string; email?: string } | string;
+  user:
+    | {
+        _id: string;
+        name?: string;
+        nickname?: string;
+        handle?: string;
+        email?: string;
+      }
+    | string;
   role: string;
   joinedAt?: string;
 }

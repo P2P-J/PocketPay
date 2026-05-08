@@ -4,6 +4,8 @@ export type Invitation = {
   invitedBy: {
     _id: string;
     name: string;
+    nickname?: string;
+    handle?: string;
     email?: string;
   };
   invitedAt: string; // ISO string

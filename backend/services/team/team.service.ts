@@ -44,7 +44,7 @@ const getTeam = async (teamId, userId) => {
   const team = await Team.findOne({
     _id: teamId,
     "members.user": userId,
-  }).populate("members.user", "name email");
+  }).populate("members.user", "name nickname handle email");
 
   if (!team) {
     throw AppError.notFound("팀을 찾을 수 없습니다.");
@@ -268,7 +268,7 @@ const getPendingInvitations = async (userId) => {
   const teams = await Team.find({
     "pendingInvites.user": userId,
   })
-    .populate("pendingInvites.invitedBy", "name email")
+    .populate("pendingInvites.invitedBy", "name nickname handle email")
     .lean();
 
   const invitations = teams.flatMap((team) =>

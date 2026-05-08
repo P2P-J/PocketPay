@@ -323,7 +323,7 @@ export default function TeamDetailScreen() {
                 }
               />
               <Button
-                label="이메일 초대"
+                label="ID로 초대"
                 variant="ghost"
                 size="sm"
                 icon={<UserPlus size={16} color="#3DD598" />}
@@ -335,12 +335,18 @@ export default function TeamDetailScreen() {
 
         {team?.members?.map((member, i) => {
           const memberUser = typeof member.user === "string"
-            ? { _id: member.user, name: "알 수 없음", email: "" }
+            ? { _id: member.user, name: "알 수 없음", nickname: "", handle: "", email: "" }
             : member.user;
           const memberId = memberUser._id;
           const isSelf = memberId === getUserId(user);
 
           const canRemove = isOwner && !isSelf && member.role !== "owner";
+          const displayName = memberUser.nickname || memberUser.name || "알 수 없음";
+          const displaySubtitle = member.role === "owner"
+            ? "팀장"
+            : memberUser.handle
+              ? `@${memberUser.handle}`
+              : memberUser.email;
 
           return (
             <View key={memberId} className="flex-row items-center">
@@ -348,12 +354,12 @@ export default function TeamDetailScreen() {
                 <ListItem
                   icon={
                     <Text className="text-body font-pretendard-bold text-brand">
-                      {memberUser.name?.charAt(0) || "?"}
+                      {displayName.charAt(0) || "?"}
                     </Text>
                   }
                   iconBgColor="#E8FAF2"
-                  title={memberUser.name || "알 수 없음"}
-                  subtitle={member.role === "owner" ? "팀장" : memberUser.email}
+                  title={displayName}
+                  subtitle={displaySubtitle}
                   amountLabel=""
                   showDivider={i < (team.members?.length || 0) - 1}
                 />
