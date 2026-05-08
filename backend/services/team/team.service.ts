@@ -259,6 +259,81 @@ const leaveTeam = async (teamId, userId) => {
   await team.save();
 };
 
+const getPendingInvitations = async (userId) => {
+  if (!isValidObjectId(userId)) {
+    throw AppError.badRequest("올바른 사용자 ID가 아닙니다.");
+  }
+
+  const teams = await Team.find({
+    "pendingInvites.user": userId,
+  })
+    .populate("pendingInvites.invitedBy", "name email")
+    .lean();
+
+  const invitations = teams.flatMap((team) =>
+    team.pendingInvites
+      .filter((p) => p.user.toString() === userId.toString())
+      .map((p) => ({
+        teamId: team._id,
+        teamName: team.name,
+        invitedBy: p.invitedBy,
+        invitedAt: p.invitedAt,
+      }))
+  );
+
+  return invitations;
+};
+
+const acceptInvitation = async (teamId, userId) => {
+  if (!isValidObjectId(teamId) || !isValidObjectId(userId)) {
+    throw AppError.badRequest("올바른 ID가 아닙니다.");
+  }
+
+  const team = await Team.findOne({
+    _id: teamId,
+    "pendingInvites.user": userId,
+  });
+
+  if (!team) {
+    throw AppError.notFound("초대를 찾을 수 없습니다.");
+  }
+
+  team.pendingInvites = team.pendingInvites.filter(
+    (p) => p.user.toString() !== userId.toString()
+  );
+
+  team.members.push({
+    user: userId,
+    role: "member",
+    joinedAt: new Date(),
+  });
+
+  await team.save();
+  return team;
+};
+
+const rejectInvitation = async (teamId, userId) => {
+  if (!isValidObjectId(teamId) || !isValidObjectId(userId)) {
+    throw AppError.badRequest("올바른 ID가 아닙니다.");
+  }
+
+  const team = await Team.findOne({
+    _id: teamId,
+    "pendingInvites.user": userId,
+  });
+
+  if (!team) {
+    throw AppError.notFound("초대를 찾을 수 없습니다.");
+  }
+
+  team.pendingInvites = team.pendingInvites.filter(
+    (p) => p.user.toString() !== userId.toString()
+  );
+
+  await team.save();
+  return { success: true };
+};
+
 module.exports = {
   createTeam,
   getMyTeams,
@@ -270,4 +345,7 @@ module.exports = {
   leaveTeam,
   generateInviteToken,
   joinByToken,
+  getPendingInvitations,
+  acceptInvitation,
+  rejectInvitation,
 };
