@@ -194,8 +194,10 @@ export default function EditTransactionScreen() {
         {/* 입력 폼 */}
         <View className="gap-3">
           <Input
-            label="상점명"
-            placeholder="상점명을 입력해주세요"
+            label={type === "expense" ? "지출처" : "수입처"}
+            placeholder={
+              type === "expense" ? "예: 스타벅스, 회식비" : "예: 회비, 후원"
+            }
             value={merchant}
             onChangeText={setMerchant}
           />

@@ -192,8 +192,12 @@ export default function AddScreen() {
         <View className="gap-3 mt-4">
           <Input
             ref={merchantRef}
-            label="상점명"
-            placeholder="상점명을 입력해주세요"
+            label={type === TRANSACTION_TYPE.EXPENSE ? "지출처" : "수입처"}
+            placeholder={
+              type === TRANSACTION_TYPE.EXPENSE
+                ? "예: 스타벅스, 회식비"
+                : "예: 회비, 후원"
+            }
             value={merchant}
             onChangeText={setMerchant}
           />
