@@ -6,6 +6,12 @@ interface ITeamMember {
   joinedAt: Date;
 }
 
+interface ITeamPendingInvite {
+  user: Types.ObjectId;
+  invitedBy: Types.ObjectId;
+  invitedAt: Date;
+}
+
 /**
  * Team 모델
  * - owner: 팀 소유자 (수정/삭제 권한 확인용)
@@ -20,6 +26,7 @@ interface ITeam extends Document {
   description: string;
   owner: Types.ObjectId;
   members: ITeamMember[];
+  pendingInvites: ITeamPendingInvite[];
   inviteToken?: string;
   inviteTokenExpiry?: Date;
   feeAmount: number;
@@ -36,6 +43,11 @@ const TeamSchema = new mongoose.Schema<ITeam>({
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         role: { type: String, enum: ["owner", "member"], default: "member" },
         joinedAt: { type: Date, default: Date.now },
+    }],
+    pendingInvites: [{
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        invitedAt: { type: Date, default: Date.now },
     }],
     inviteToken: { type: String, index: true, sparse: true },
     inviteTokenExpiry: { type: Date },
