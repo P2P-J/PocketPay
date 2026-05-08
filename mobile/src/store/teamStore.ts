@@ -1,9 +1,11 @@
 import { create } from "zustand";
 import { teamApi } from "@/api/team";
 import { dealApi } from "@/api/deal";
+import { invitationApi } from "@/api/invitation";
 import type { Team } from "@/types/team";
 import { getTeamId } from "@/types/team";
 import type { Transaction, DealPayload } from "@/types/transaction";
+import type { Invitation } from "@/types/invitation";
 import { dealToTransaction, transactionToDealPayload } from "@/types/transaction";
 
 interface Summary {
@@ -18,6 +20,7 @@ interface TeamState {
   transactions: Transaction[];
   summary: Summary;
   loading: boolean;
+  pendingInvitations: Invitation[];
 
   fetchTeams: () => Promise<void>;
   createTeam: (name: string, description?: string) => Promise<void>;
@@ -31,6 +34,10 @@ interface TeamState {
   updateTransaction: (transactionId: string, data: Partial<DealPayload>) => Promise<void>;
   deleteTransaction: (transactionId: string) => Promise<void>;
 
+  fetchPendingInvitations: () => Promise<void>;
+  acceptInvitation: (teamId: string) => Promise<void>;
+  rejectInvitation: (teamId: string) => Promise<void>;
+
   reset: () => void;
 }
 
@@ -40,6 +47,7 @@ export const useTeamStore = create<TeamState>((set, get) => ({
   transactions: [],
   summary: { income: 0, expense: 0, balance: 0 },
   loading: false,
+  pendingInvitations: [],
 
   fetchTeams: async () => {
     set({ loading: true });
@@ -173,7 +181,32 @@ export const useTeamStore = create<TeamState>((set, get) => ({
     if (currentTeam) await get().fetchSummary(getTeamId(currentTeam));
   },
 
+  fetchPendingInvitations: async () => {
+    try {
+      const res = await invitationApi.list();
+      set({ pendingInvitations: res.data || [] });
+    } catch (e) {
+      // 비치명적, 조용히 실패
+      console.warn("Failed to fetch pending invitations", e);
+    }
+  },
+
+  acceptInvitation: async (teamId: string) => {
+    await invitationApi.accept(teamId);
+    set((s) => ({
+      pendingInvitations: s.pendingInvitations.filter((p) => p.teamId !== teamId),
+    }));
+    await get().fetchTeams();
+  },
+
+  rejectInvitation: async (teamId: string) => {
+    await invitationApi.reject(teamId);
+    set((s) => ({
+      pendingInvitations: s.pendingInvitations.filter((p) => p.teamId !== teamId),
+    }));
+  },
+
   reset: () => {
-    set({ teams: [], currentTeam: null, transactions: [], summary: { income: 0, expense: 0, balance: 0 }, loading: false });
+    set({ teams: [], currentTeam: null, transactions: [], summary: { income: 0, expense: 0, balance: 0 }, loading: false, pendingInvitations: [] });
   },
 }));
