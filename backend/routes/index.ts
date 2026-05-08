@@ -7,5 +7,6 @@ router.use("/teams", require("./team.route"));
 router.use("/fees", require("./fee.route"));
 router.use("/ocr", require("./ocr.route"));
 router.use("/account", require("./account.route"));
+router.use("/invitations", require("./invitation.route"));
 
 module.exports = router;
