@@ -407,6 +407,7 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         className="flex-1"
         contentContainerStyle={{ paddingBottom: contentBottomPad }}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

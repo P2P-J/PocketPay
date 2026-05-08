@@ -188,6 +188,7 @@ export default function HistoryScreen() {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: contentBottomPad }}
+        showsVerticalScrollIndicator={false}
       >
         {/* 수입/지출 총계 */}
         <View className="flex-row gap-2 mb-section-gap">

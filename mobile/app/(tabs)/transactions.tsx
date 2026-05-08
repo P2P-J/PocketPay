@@ -163,6 +163,7 @@ export default function TransactionsScreen() {
           sections={sections}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: contentBottomPad }}
+          showsVerticalScrollIndicator={false}
           renderSectionHeader={({ section }) => (
             <View className="py-2 bg-background">
               <Text className="text-sub font-pretendard-semibold text-text-secondary">
