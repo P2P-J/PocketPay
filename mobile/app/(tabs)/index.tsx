@@ -1,18 +1,25 @@
 import { useCallback, useMemo, useRef, useEffect, useState } from "react";
-import { View, Text, SectionList, RefreshControl, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, SectionList, RefreshControl, Pressable, ActivityIndicator, StyleSheet } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChevronDown } from "lucide-react-native";
+import { ChevronDown, Users, Sparkles } from "lucide-react-native";
 import type { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
-import { Users } from "lucide-react-native";
 import { useTeamStore } from "@/store/teamStore";
 import { useAuthStore } from "@/store/authStore";
 import { ListItem } from "@/components/ui/ListItem";
 import { Card } from "@/components/ui/Card";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
 import { getCategoryLabel, getCategoryEmoji } from "@/constants/categories";
 import { TrendingUp, TrendingDown } from "lucide-react-native";
 import { dealApi } from "@/api/deal";
@@ -20,6 +27,94 @@ import { getTeamId } from "@/types/team";
 import type { Transaction } from "@/types/transaction";
 import { dealToTransaction } from "@/types/transaction";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
+
+/**
+ * 신규 사용자(팀 없음) 첫 화면용 부드러운 배경 모션.
+ * 두 개의 큰 원이 호흡하듯 위아래로 천천히 움직임.
+ */
+function AnimatedBlobBackground() {
+  const blob1Y = useSharedValue(0);
+  const blob2Y = useSharedValue(0);
+  const blob3Y = useSharedValue(0);
+
+  useEffect(() => {
+    blob1Y.value = withRepeat(
+      withTiming(40, { duration: 4500, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+    blob2Y.value = withRepeat(
+      withTiming(-35, { duration: 5500, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+    blob3Y.value = withRepeat(
+      withTiming(25, { duration: 6500, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, [blob1Y, blob2Y, blob3Y]);
+
+  const blob1Style = useAnimatedStyle(() => ({
+    transform: [{ translateY: blob1Y.value }],
+  }));
+  const blob2Style = useAnimatedStyle(() => ({
+    transform: [{ translateY: blob2Y.value }],
+  }));
+  const blob3Style = useAnimatedStyle(() => ({
+    transform: [{ translateY: blob3Y.value }],
+  }));
+
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 60,
+            left: -70,
+            width: 260,
+            height: 260,
+            borderRadius: 130,
+            backgroundColor: "#3DD598",
+            opacity: 0.18,
+          },
+          blob1Style,
+        ]}
+      />
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            top: 220,
+            right: -80,
+            width: 220,
+            height: 220,
+            borderRadius: 110,
+            backgroundColor: "#3182F6",
+            opacity: 0.13,
+          },
+          blob2Style,
+        ]}
+      />
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            bottom: 120,
+            left: 40,
+            width: 180,
+            height: 180,
+            borderRadius: 90,
+            backgroundColor: "#FF8C42",
+            opacity: 0.1,
+          },
+          blob3Style,
+        ]}
+      />
+    </View>
+  );
+}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -164,12 +259,48 @@ export default function HomeScreen() {
             작은 모임
           </Text>
         </View>
-        <EmptyState
-          title="아직 모임이 없어요"
-          description="첫 모임을 만들어보세요"
-          ctaLabel="모임 만들기"
-          onCtaPress={() => router.push("/team/create")}
-        />
+
+        <View className="flex-1 items-center justify-center">
+          <AnimatedBlobBackground />
+
+          {/* 본문 (모션 위에 떠 있음) */}
+          <View className="items-center px-4" style={{ zIndex: 1 }}>
+            <View className="w-20 h-20 rounded-full bg-white items-center justify-center mb-6"
+              style={{
+                shadowColor: "#3DD598",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.25,
+                shadowRadius: 16,
+                elevation: 8,
+              }}
+            >
+              <Sparkles size={36} color="#3DD598" />
+            </View>
+
+            <Text className="text-title font-pretendard-bold text-text-primary text-center mb-2">
+              아직 모임이 없어요
+            </Text>
+            <Text className="text-body text-text-secondary text-center mb-8">
+              첫 모임을 만들거나{"\n"}초대 코드로 참가해보세요
+            </Text>
+
+            <View className="w-full" style={{ maxWidth: 320 }}>
+              <Button
+                label="모임 만들기"
+                variant="primary"
+                size="full"
+                onPress={() => router.push("/team/create")}
+              />
+              <View className="h-3" />
+              <Button
+                label="초대 코드로 참가"
+                variant="secondary"
+                size="full"
+                onPress={() => router.push("/team/join")}
+              />
+            </View>
+          </View>
+        </View>
       </ScreenContainer>
     );
   }
