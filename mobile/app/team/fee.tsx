@@ -6,7 +6,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Settings, Send, Trash2 } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, Send, Trash2 } from "lucide-react-native";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
@@ -188,17 +188,7 @@ export default function FeeScreen() {
 
   return (
     <ScreenContainer scrollable={false} withKeyboard={false}>
-      <Header
-        title="회비 현황"
-        showBack
-        rightAction={
-          isOwner ? (
-            <Pressable onPress={openRuleModal} className="p-2">
-              <Settings size={20} color="#8B95A1" />
-            </Pressable>
-          ) : undefined
-        }
-      />
+      <Header title="회비 현황" showBack />
 
       {/* 월 네비게이터 */}
       <View className="flex-row items-center justify-center py-3 gap-4">
