@@ -146,6 +146,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
+          <Stack.Screen name="add" />
           <Stack.Screen name="team" />
           <Stack.Screen name="transaction" />
           <Stack.Screen name="change-password" />

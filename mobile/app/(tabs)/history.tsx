@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert, Modal, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { TAB_BAR_HEIGHT } from "@/components/navigation/TabBar";
 import { ChevronLeft, ChevronRight, Share2, FileText } from "lucide-react-native";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
@@ -21,7 +21,7 @@ import { ScreenContainer } from "@/components/layout/ScreenContainer";
 export default function HistoryScreen() {
   // insets needed for the Modal's internal paddingTop + 탭바 회피 패딩 계산
   const insets = useSafeAreaInsets();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = TAB_BAR_HEIGHT;
   const contentBottomPad = tabBarHeight + insets.bottom + 16;
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());

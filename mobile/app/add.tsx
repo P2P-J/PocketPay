@@ -10,7 +10,6 @@ import {
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Camera } from "lucide-react-native";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
@@ -30,9 +29,8 @@ import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 export default function AddScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
-  const contentBottomPad = tabBarHeight + insets.bottom + 16;
+  const contentBottomPad = insets.bottom + 16;
   const createTransaction = useTeamStore((s) => s.createTransaction);
   const currentTeam = useTeamStore((s) => s.currentTeam);
   const merchantRef = useRef<RNTextInput>(null);

@@ -26,7 +26,7 @@ const button = tv({
 });
 
 const buttonText = tv({
-  base: "font-pretendard-semibold",
+  base: "font-pretendard-semibold text-center flex-1",
   variants: {
     variant: {
       primary: "text-white",

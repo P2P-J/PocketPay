@@ -1,9 +1,8 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { View, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import PagerView from "react-native-pager-view";
 import { useSharedValue } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import HomeScreen from "./index";
 import TransactionsScreen from "./transactions";
@@ -18,8 +17,13 @@ export default function TabLayout() {
   const router = useRouter();
   const pagerRef = useRef<PagerView>(null);
   const progress = useSharedValue(0);
+  // 방문한 적 있는 페이지만 마운트 (4개 동시 마운트로 인한 중복 API 호출 방지)
+  const [visited, setVisited] = useState<Set<number>>(() => new Set([0]));
+  const markVisited = (idx: number) =>
+    setVisited((prev) => (prev.has(idx) ? prev : new Set(prev).add(idx)));
 
   const onTabPress = (index: number) => {
+    markVisited(index);
     pagerRef.current?.setPage(index);
   };
 
@@ -30,14 +34,11 @@ export default function TabLayout() {
       router.push("/team/create");
       return;
     }
-    router.push("/(tabs)/add");
+    router.push("/add");
   };
 
   return (
-    <SafeAreaView
-      edges={["bottom"]}
-      style={{ flex: 1, backgroundColor: "#FFFFFF" }}
-    >
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <PagerView
         ref={pagerRef}
         style={{ flex: 1 }}
@@ -47,19 +48,23 @@ export default function TabLayout() {
         onPageScroll={(e) => {
           const { position, offset } = e.nativeEvent;
           progress.value = position + offset;
+          // 스와이프가 시작되면 인접 페이지를 미리 마운트해 깜빡임 방지
+          if (offset > 0.05) markVisited(position + 1);
+          if (offset < -0.05) markVisited(position - 1);
         }}
+        onPageSelected={(e) => markVisited(e.nativeEvent.position)}
       >
         <View key="0" collapsable={false} style={{ flex: 1 }}>
-          <HomeScreen />
+          {visited.has(0) ? <HomeScreen /> : null}
         </View>
         <View key="1" collapsable={false} style={{ flex: 1 }}>
-          <TransactionsScreen />
+          {visited.has(1) ? <TransactionsScreen /> : null}
         </View>
         <View key="2" collapsable={false} style={{ flex: 1 }}>
-          <HistoryScreen />
+          {visited.has(2) ? <HistoryScreen /> : null}
         </View>
         <View key="3" collapsable={false} style={{ flex: 1 }}>
-          <MoreScreen />
+          {visited.has(3) ? <MoreScreen /> : null}
         </View>
       </PagerView>
       <TabBar
@@ -67,6 +72,6 @@ export default function TabLayout() {
         onTabPress={onTabPress}
         onAddPress={onAddPress}
       />
-    </SafeAreaView>
+    </View>
   );
 }

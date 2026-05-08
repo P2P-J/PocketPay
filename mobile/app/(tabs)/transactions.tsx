@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, SectionList, Pressable, Alert, RefreshControl } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { TAB_BAR_HEIGHT } from "@/components/navigation/TabBar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react-native";
 import { Swipeable } from "react-native-gesture-handler";
@@ -43,7 +43,7 @@ function groupByDate(transactions: Transaction[]): Section[] {
 
 export default function TransactionsScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = TAB_BAR_HEIGHT;
   const insets = useSafeAreaInsets();
   const contentBottomPad = tabBarHeight + insets.bottom + 16;
   const now = new Date();

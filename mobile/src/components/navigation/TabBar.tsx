@@ -16,6 +16,8 @@ import Animated, {
 const ACTIVE_COLOR = "#3DD598";
 const INACTIVE_COLOR = "#B0B8C1";
 
+export const TAB_BAR_HEIGHT = Platform.OS === "ios" ? 83 : 64;
+
 type TabItem = {
   index: number;
   label: string;
@@ -40,7 +42,7 @@ function TabBarInner({ progress, onTabPress, onAddPress }: Props) {
     <View
       style={{
         flexDirection: "row",
-        height: Platform.OS === "ios" ? 83 : 64,
+        height: TAB_BAR_HEIGHT,
         paddingBottom: Platform.OS === "ios" ? 34 : 10,
         paddingTop: 8,
         borderTopWidth: 1,

@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { TAB_BAR_HEIGHT } from "@/components/navigation/TabBar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronDown, Users, Sparkles } from "lucide-react-native";
 import type { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
@@ -29,87 +29,137 @@ import { dealToTransaction } from "@/types/transaction";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 /**
- * 신규 사용자(팀 없음) 첫 화면용 부드러운 배경 모션.
- * 두 개의 큰 원이 호흡하듯 위아래로 천천히 움직임.
+ * 신규 사용자(팀 없음) 첫 화면용 메시 그라디언트 배경.
+ * 5개의 큰 컬러 오브가 매우 낮은 투명도로 겹쳐 부드럽게 흐르듯 움직임.
  */
-function AnimatedBlobBackground() {
-  const blob1Y = useSharedValue(0);
-  const blob2Y = useSharedValue(0);
-  const blob3Y = useSharedValue(0);
+function MeshGradientBackground() {
+  const orb1X = useSharedValue(0);
+  const orb1Y = useSharedValue(0);
+  const orb2X = useSharedValue(0);
+  const orb2Y = useSharedValue(0);
+  const orb3X = useSharedValue(0);
+  const orb3Y = useSharedValue(0);
+  const orb4X = useSharedValue(0);
+  const orb4Y = useSharedValue(0);
+  const orb5X = useSharedValue(0);
+  const orb5Y = useSharedValue(0);
 
   useEffect(() => {
-    blob1Y.value = withRepeat(
-      withTiming(40, { duration: 4500, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true
-    );
-    blob2Y.value = withRepeat(
-      withTiming(-35, { duration: 5500, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true
-    );
-    blob3Y.value = withRepeat(
-      withTiming(25, { duration: 6500, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true
-    );
-  }, [blob1Y, blob2Y, blob3Y]);
+    const drift = (sv: typeof orb1X, to: number, duration: number) =>
+      withRepeat(
+        withTiming(to, { duration, easing: Easing.inOut(Easing.sin) }),
+        -1,
+        true
+      );
 
-  const blob1Style = useAnimatedStyle(() => ({
-    transform: [{ translateY: blob1Y.value }],
+    orb1X.value = drift(orb1X, 30, 9000);
+    orb1Y.value = drift(orb1Y, 40, 11000);
+    orb2X.value = drift(orb2X, -25, 10500);
+    orb2Y.value = drift(orb2Y, -35, 12500);
+    orb3X.value = drift(orb3X, 20, 13000);
+    orb3Y.value = drift(orb3Y, 25, 8500);
+    orb4X.value = drift(orb4X, -30, 11500);
+    orb4Y.value = drift(orb4Y, 30, 14000);
+    orb5X.value = drift(orb5X, 15, 9500);
+    orb5Y.value = drift(orb5Y, -20, 10000);
+  }, [orb1X, orb1Y, orb2X, orb2Y, orb3X, orb3Y, orb4X, orb4Y, orb5X, orb5Y]);
+
+  const orb1Style = useAnimatedStyle(() => ({
+    transform: [{ translateX: orb1X.value }, { translateY: orb1Y.value }],
   }));
-  const blob2Style = useAnimatedStyle(() => ({
-    transform: [{ translateY: blob2Y.value }],
+  const orb2Style = useAnimatedStyle(() => ({
+    transform: [{ translateX: orb2X.value }, { translateY: orb2Y.value }],
   }));
-  const blob3Style = useAnimatedStyle(() => ({
-    transform: [{ translateY: blob3Y.value }],
+  const orb3Style = useAnimatedStyle(() => ({
+    transform: [{ translateX: orb3X.value }, { translateY: orb3Y.value }],
   }));
+  const orb4Style = useAnimatedStyle(() => ({
+    transform: [{ translateX: orb4X.value }, { translateY: orb4Y.value }],
+  }));
+  const orb5Style = useAnimatedStyle(() => ({
+    transform: [{ translateX: orb5X.value }, { translateY: orb5Y.value }],
+  }));
+
+  const orbBase = {
+    position: "absolute" as const,
+    borderRadius: 999,
+  };
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {/* 좌상단 그린 — 가장 큼, 브랜드 컬러 베이스 */}
       <Animated.View
         style={[
+          orbBase,
           {
-            position: "absolute",
-            top: 60,
-            left: -70,
-            width: 260,
-            height: 260,
-            borderRadius: 130,
+            top: -80,
+            left: -120,
+            width: 360,
+            height: 360,
             backgroundColor: "#3DD598",
-            opacity: 0.18,
+            opacity: 0.12,
           },
-          blob1Style,
+          orb1Style,
         ]}
       />
+      {/* 우상단 코랄 핑크 — 따뜻한 톤 */}
       <Animated.View
         style={[
+          orbBase,
           {
-            position: "absolute",
-            top: 220,
-            right: -80,
-            width: 220,
-            height: 220,
-            borderRadius: 110,
+            top: -40,
+            right: -120,
+            width: 320,
+            height: 320,
+            backgroundColor: "#FFB8D1",
+            opacity: 0.10,
+          },
+          orb2Style,
+        ]}
+      />
+      {/* 중앙 좌측 라벤더 — 트렌디 컬러 */}
+      <Animated.View
+        style={[
+          orbBase,
+          {
+            top: 280,
+            left: -100,
+            width: 300,
+            height: 300,
+            backgroundColor: "#A78BFA",
+            opacity: 0.09,
+          },
+          orb3Style,
+        ]}
+      />
+      {/* 중앙 우측 블루 */}
+      <Animated.View
+        style={[
+          orbBase,
+          {
+            top: 320,
+            right: -90,
+            width: 280,
+            height: 280,
             backgroundColor: "#3182F6",
-            opacity: 0.13,
+            opacity: 0.08,
           },
-          blob2Style,
+          orb4Style,
         ]}
       />
+      {/* 하단 중앙 피치 — 마무리 톤 */}
       <Animated.View
         style={[
+          orbBase,
           {
-            position: "absolute",
-            bottom: 120,
-            left: 40,
-            width: 180,
-            height: 180,
-            borderRadius: 90,
+            bottom: -60,
+            alignSelf: "center",
+            width: 340,
+            height: 340,
             backgroundColor: "#FF8C42",
-            opacity: 0.1,
+            opacity: 0.08,
           },
-          blob3Style,
+          orb5Style,
         ]}
       />
     </View>
@@ -119,7 +169,7 @@ function AnimatedBlobBackground() {
 export default function HomeScreen() {
   const router = useRouter();
   const sheetRef = useRef<BottomSheetMethods>(null);
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = TAB_BAR_HEIGHT;
   const insets = useSafeAreaInsets();
   const contentBottomPad = tabBarHeight + insets.bottom + 16;
 
@@ -261,7 +311,7 @@ export default function HomeScreen() {
         </View>
 
         <View className="flex-1 items-center justify-center">
-          <AnimatedBlobBackground />
+          <MeshGradientBackground />
 
           {/* 본문 (모션 위에 떠 있음) */}
           <View className="items-center px-4" style={{ zIndex: 1 }}>
@@ -284,7 +334,7 @@ export default function HomeScreen() {
               첫 모임을 만들거나{"\n"}초대 코드로 참가해보세요
             </Text>
 
-            <View className="w-full" style={{ maxWidth: 320 }}>
+            <View className="w-full self-center" style={{ maxWidth: 320 }}>
               <Button
                 label="모임 만들기"
                 variant="primary"
@@ -294,7 +344,7 @@ export default function HomeScreen() {
               <View className="h-3" />
               <Button
                 label="초대 코드로 참가"
-                variant="secondary"
+                variant="outline"
                 size="full"
                 onPress={() => router.push("/team/join")}
               />
