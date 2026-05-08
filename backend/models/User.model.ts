@@ -11,6 +11,9 @@ interface IUser extends Document {
   email: string;
   password?: string;
   name: string;
+  nickname: string;
+  handle?: string;
+  handleChangedAt?: Date;
   provider: "local" | "google" | "naver" | "kakao" | "apple";
   providerId?: string;
   oauthTokens?: IOauthTokens;
@@ -22,6 +25,16 @@ const UserSchema = new mongoose.Schema<IUser>({
     email: { type: String, required: true, index: true },
     password: { type: String },
     name: { type: String, required: true },
+    nickname: { type: String, required: true, trim: true, minlength: 1, maxlength: 20 },
+    handle: {
+        type: String,
+        unique: true,
+        sparse: true,
+        lowercase: true,
+        trim: true,
+        match: /^[a-z0-9_]{3,20}$/,
+    },
+    handleChangedAt: { type: Date },
     provider: { type: String, enum: ["local", "google", "naver", "kakao", "apple"], required: true },
     providerId: { type: String },
     oauthTokens: {
