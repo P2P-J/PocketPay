@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View, Text, ScrollView, Pressable, Modal, TextInput,
   ActivityIndicator, Alert, Share, RefreshControl,
+  KeyboardAvoidingView, Platform, Keyboard,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -403,9 +404,16 @@ export default function FeeScreen() {
 
       {/* 납부 기록 모달 */}
       <Modal visible={payModal.visible} transparent animationType="slide" onRequestClose={() => setPayModal({ visible: false, member: null })}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
         <Pressable
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}
-          onPress={() => setPayModal({ visible: false, member: null })}
+          onPress={() => {
+            Keyboard.dismiss();
+            setPayModal({ visible: false, member: null });
+          }}
         >
           <Pressable
             onPress={(e) => e.stopPropagation()}
@@ -487,13 +495,21 @@ export default function FeeScreen() {
             </Pressable>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* 회비 규칙 설정 모달 */}
       <Modal visible={ruleModal} transparent animationType="slide" onRequestClose={() => setRuleModal(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
         <Pressable
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}
-          onPress={() => setRuleModal(false)}
+          onPress={() => {
+            Keyboard.dismiss();
+            setRuleModal(false);
+          }}
         >
           <Pressable
             onPress={(e) => e.stopPropagation()}
@@ -571,6 +587,7 @@ export default function FeeScreen() {
             </Pressable>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </ScreenContainer>
   );
