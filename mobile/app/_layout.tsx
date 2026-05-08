@@ -147,6 +147,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="add" />
+          <Stack.Screen name="notifications" />
           <Stack.Screen name="team" />
           <Stack.Screen name="transaction" />
           <Stack.Screen name="change-password" />
