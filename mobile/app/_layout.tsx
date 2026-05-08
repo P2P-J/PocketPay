@@ -112,10 +112,17 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!isReady) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    const inSetup = segments[0] === "setup-profile";
 
     if (!user && !inAuthGroup) {
       router.replace("/(auth)/login");
     } else if (user && inAuthGroup) {
+      router.replace("/(tabs)");
+    } else if (user && !user.handle && !inSetup) {
+      // 로그인 됐지만 handle 없으면 (OAuth 신규 가입 등) setup으로 강제
+      router.replace("/setup-profile");
+    } else if (user && user.handle && inSetup) {
+      // 이미 handle 있는 사용자가 setup으로 들어왔으면 홈으로
       router.replace("/(tabs)");
     }
   }, [user, segments, isReady]);
@@ -146,6 +153,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
+          <Stack.Screen name="setup-profile" options={{ gestureEnabled: false }} />
           <Stack.Screen name="add" />
           <Stack.Screen name="notifications" />
           <Stack.Screen name="team" />
