@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import {
   Users,
   PlusCircle,
+  Ticket,
   Lock,
   LogOut,
   Trash2,
@@ -141,6 +142,11 @@ export default function MoreScreen() {
         icon={<PlusCircle size={20} color="#3182F6" />}
         title="새 모임 만들기"
         onPress={() => router.push("/team/create")}
+      />
+      <ListItem
+        icon={<Ticket size={20} color="#FF8C42" />}
+        title="초대 코드로 참가"
+        onPress={() => router.push("/team/join")}
       />
 
       <View className="h-6" />
