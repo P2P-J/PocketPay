@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { Header } from "@/components/ui/Header";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { showToast } from "@/components/ui/Toast";
 import { HandleInput } from "@/components/profile/HandleInput";
 import { useAuthStore } from "@/store/authStore";
+import { authApi } from "@/api/auth";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
 export default function SignupScreen() {
@@ -21,6 +22,77 @@ export default function SignupScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // 이메일 인증 상태
+  const [verificationCode, setVerificationCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+
+  // 60초 재발송 카운트다운
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const t = setInterval(() => {
+      setResendCountdown((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [resendCountdown]);
+
+  const handleSendCode = async () => {
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setErrors((prev) => ({ ...prev, email: "올바른 이메일을 입력해주세요" }));
+      return;
+    }
+    setSendingCode(true);
+    try {
+      await authApi.sendCode({ email: email.trim(), purpose: "회원가입" });
+      setCodeSent(true);
+      setResendCountdown(60);
+      showToast("success", "인증코드 발송", "이메일을 확인해주세요");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "인증코드 발송 실패";
+      showToast("error", "발송 실패", message);
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (verificationCode.length !== 6) {
+      showToast("error", "인증코드 6자리를 입력해주세요");
+      return;
+    }
+    setVerifyingCode(true);
+    try {
+      await authApi.verifyCode({
+        email: email.trim(),
+        code: verificationCode,
+        purpose: "회원가입",
+      });
+      setEmailVerified(true);
+      showToast("success", "인증 완료");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "인증 실패";
+      showToast("error", "인증 실패", message);
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
+  const onEmailChange = (v: string) => {
+    setEmail(v);
+    clearError("email");
+    if (emailVerified || codeSent) {
+      setEmailVerified(false);
+      setCodeSent(false);
+      setVerificationCode("");
+      setResendCountdown(0);
+    }
+  };
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -111,6 +183,72 @@ export default function SignupScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="gap-3 mt-6 mb-6">
+          {/* 이메일 + 인증 */}
+          <View>
+            <View className="flex-row items-end" style={{ gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Input
+                  label="이메일"
+                  placeholder="example@email.com"
+                  value={email}
+                  onChangeText={onEmailChange}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!emailVerified}
+                  error={errors.email}
+                />
+              </View>
+              <View style={{ width: 100 }}>
+                <Button
+                  label={
+                    resendCountdown > 0
+                      ? `${resendCountdown}초`
+                      : codeSent
+                        ? "재발송"
+                        : "인증코드"
+                  }
+                  variant="outline"
+                  size="md"
+                  onPress={handleSendCode}
+                  loading={sendingCode}
+                  disabled={resendCountdown > 0 || emailVerified}
+                />
+              </View>
+            </View>
+            {codeSent && !emailVerified && (
+              <View className="flex-row items-end mt-2" style={{ gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Input
+                    label="인증코드"
+                    placeholder="6자리 숫자"
+                    value={verificationCode}
+                    onChangeText={(v) =>
+                      setVerificationCode(v.replace(/\D/g, "").slice(0, 6))
+                    }
+                    keyboardType="number-pad"
+                    maxLength={6}
+                  />
+                </View>
+                <View style={{ width: 80 }}>
+                  <Button
+                    label="확인"
+                    variant="primary"
+                    size="md"
+                    onPress={handleVerifyCode}
+                    loading={verifyingCode}
+                    disabled={verificationCode.length !== 6}
+                  />
+                </View>
+              </View>
+            )}
+            {emailVerified && (
+              <Text className="text-sub text-brand mt-1 font-pretendard-semibold">
+                ✓ 이메일 인증 완료
+              </Text>
+            )}
+          </View>
+
+          {/* 인증 후 활성화되는 필드들 */}
           <Input
             label="실명"
             placeholder="실명을 입력해주세요"
@@ -120,6 +258,7 @@ export default function SignupScreen() {
               clearError("realName");
             }}
             maxLength={30}
+            editable={emailVerified}
             error={errors.realName}
           />
           <Input
@@ -131,9 +270,13 @@ export default function SignupScreen() {
               clearError("nickname");
             }}
             maxLength={20}
+            editable={emailVerified}
             error={errors.nickname}
           />
-          <View>
+          <View
+            style={{ opacity: emailVerified ? 1 : 0.4 }}
+            pointerEvents={emailVerified ? "auto" : "none"}
+          >
             <HandleInput
               value={handle}
               onChange={(v) => {
@@ -146,18 +289,6 @@ export default function SignupScreen() {
             )}
           </View>
           <Input
-            label="이메일"
-            placeholder="example@email.com"
-            value={email}
-            onChangeText={(v) => {
-              setEmail(v);
-              clearError("email");
-            }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={errors.email}
-          />
-          <Input
             label="비밀번호"
             placeholder="8~20자"
             value={password}
@@ -166,6 +297,7 @@ export default function SignupScreen() {
               clearError("password");
             }}
             secureTextEntry
+            editable={emailVerified}
             error={errors.password}
           />
           <Input
@@ -177,6 +309,7 @@ export default function SignupScreen() {
               clearError("confirmPassword");
             }}
             secureTextEntry
+            editable={emailVerified}
             error={errors.confirmPassword}
           />
         </View>
@@ -187,6 +320,7 @@ export default function SignupScreen() {
           size="full"
           onPress={handleSignup}
           loading={loading}
+          disabled={!emailVerified}
         />
       </ScrollView>
     </ScreenContainer>
