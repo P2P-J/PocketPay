@@ -2,11 +2,22 @@ const { hashPassword, comparePassword } = require("../../utils/bcrypt.util");
 const { User } = require("../../models/index");
 const { issueTokenPair } = require("../../utils/jwt.util");
 const AppError = require("../../utils/AppError");
+const { validateHandleFormat } = require("../../utils/handle.util");
 
-const signupLocal = async ({ email, password, name }) => {
+const signupLocal = async ({ email, password, name, nickname, handle }) => {
   const exists = await User.findOne({ email, provider: "local" });
   if (exists) {
     throw AppError.badRequest("이미 가입된 이메일입니다.");
+  }
+
+  const loweredHandle = (handle || "").toLowerCase().trim();
+  if (!validateHandleFormat(loweredHandle)) {
+    throw AppError.badRequest("올바르지 않은 ID 형식입니다.");
+  }
+
+  const handleExists = await User.findOne({ handle: loweredHandle });
+  if (handleExists) {
+    throw AppError.badRequest("이미 사용 중인 ID입니다.");
   }
 
   const hashedPassword = await hashPassword(password);
@@ -14,6 +25,9 @@ const signupLocal = async ({ email, password, name }) => {
     email,
     password: hashedPassword,
     name,
+    nickname,
+    handle: loweredHandle,
+    handleChangedAt: new Date(),
     provider: "local",
   });
 };
