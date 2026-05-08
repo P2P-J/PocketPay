@@ -54,8 +54,8 @@ const verifyCode = async (email: string, code: string, purpose: string = "이메
     throw AppError.badRequest(`인증코드가 일치하지 않습니다. (${stored.attempts}/5회)`);
   }
 
-  // 비밀번호 재설정은 reset-password에서 직접 삭제, 그 외 즉시 삭제
-  if (purpose !== "비밀번호 재설정") {
+  // 비밀번호 재설정 + 회원가입은 본 엔드포인트(reset-password / signup)에서 직접 삭제, 그 외 즉시 삭제
+  if (purpose !== "비밀번호 재설정" && purpose !== "회원가입") {
     await VerificationCode.deleteOne({ email, purpose });
   }
 
