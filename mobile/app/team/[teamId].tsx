@@ -8,6 +8,7 @@ import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { ListItem } from "@/components/ui/ListItem";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { showToast } from "@/components/ui/Toast";
 import { teamApi } from "@/api/team";
 import { useAuthStore } from "@/store/authStore";
@@ -24,15 +25,29 @@ export default function TeamDetailScreen() {
   const teams = useTeamStore((s) => s.teams);
   const deleteTeamStore = useTeamStore((s) => s.deleteTeam);
   const leaveTeamStore = useTeamStore((s) => s.leaveTeam);
+  const fetchTeams = useTeamStore((s) => s.fetchTeams);
 
   const [selectedTeamId, setSelectedTeamId] = useState(initialTeamId || "");
   const [team, setTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTeamPicker, setShowTeamPicker] = useState(false);
+  const [isEditingInfo, setIsEditingInfo] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [savingInfo, setSavingInfo] = useState(false);
 
   useEffect(() => {
     if (selectedTeamId) loadTeam(selectedTeamId);
   }, [selectedTeamId]);
+
+  // 팀 변경 시 편집 폼 초기화
+  useEffect(() => {
+    if (team) {
+      setEditName(team.name);
+      setEditDescription(team.description || "");
+      setIsEditingInfo(false);
+    }
+  }, [team?._id ?? team?.id, team?.name, team?.description]);
 
   const loadTeam = async (tid?: string) => {
     const id = tid || selectedTeamId;
@@ -49,6 +64,43 @@ export default function TeamDetailScreen() {
   };
 
   const isOwner = isTeamOwner(team?.members, user);
+
+  const handleSaveInfo = async () => {
+    const trimmedName = editName.trim();
+    if (!trimmedName) {
+      showToast("error", "모임 이름을 입력해주세요");
+      return;
+    }
+    if (trimmedName.length > 30) {
+      showToast("error", "모임 이름은 30자 이하로 입력해주세요");
+      return;
+    }
+    setSavingInfo(true);
+    try {
+      await teamApi.update(selectedTeamId, {
+        name: trimmedName,
+        description: editDescription.trim(),
+      });
+      showToast("success", "모임 정보 수정 완료");
+      await fetchTeams();
+      await loadTeam(selectedTeamId);
+      setIsEditingInfo(false);
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === "object" && "message" in e
+          ? String((e as { message: unknown }).message)
+          : "다시 시도해주세요";
+      showToast("error", "수정 실패", msg);
+    } finally {
+      setSavingInfo(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditName(team?.name ?? "");
+    setEditDescription(team?.description ?? "");
+    setIsEditingInfo(false);
+  };
 
   const handleRemoveMember = (member: Member) => {
     const memberUser = typeof member.user === "string" ? null : member.user;
@@ -194,6 +246,59 @@ export default function TeamDetailScreen() {
                 </Pressable>
               );
             })}
+          </Card>
+        )}
+
+        {/* 모임 정보 수정 (모임장만) */}
+        {isOwner && !isEditingInfo && (
+          <Pressable
+            onPress={() => setIsEditingInfo(true)}
+            className="self-end mt-2 mb-1"
+            hitSlop={8}
+          >
+            <Text className="text-sub font-pretendard-semibold text-brand">
+              모임 정보 수정
+            </Text>
+          </Pressable>
+        )}
+
+        {isOwner && isEditingInfo && (
+          <Card variant="default" className="mt-2 mb-4">
+            <View style={{ gap: 12 }}>
+              <Input
+                label="모임 이름"
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="예: 주말 동호회"
+                maxLength={30}
+              />
+              <Input
+                label="설명"
+                value={editDescription}
+                onChangeText={setEditDescription}
+                placeholder="모임에 대한 간단한 설명"
+                maxLength={100}
+              />
+              <View className="flex-row" style={{ gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="취소"
+                    variant="outline"
+                    size="md"
+                    onPress={handleCancelEdit}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="저장"
+                    variant="primary"
+                    size="md"
+                    loading={savingInfo}
+                    onPress={handleSaveInfo}
+                  />
+                </View>
+              </View>
+            </View>
           </Card>
         )}
 
