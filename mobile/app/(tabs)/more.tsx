@@ -1,95 +1,25 @@
-import { View, Text, Alert } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import {
   Users,
   PlusCircle,
   Ticket,
-  Lock,
-  LogOut,
-  Trash2,
   Calculator,
+  ChevronRight,
 } from "lucide-react-native";
 import { useAuthStore } from "@/store/authStore";
 import { useTeamStore } from "@/store/teamStore";
-import { authApi } from "@/api/auth";
 import { Card } from "@/components/ui/Card";
 import { ListItem } from "@/components/ui/ListItem";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { showToast } from "@/components/ui/Toast";
-import { isLocalUser } from "@/types/user";
 import { getTeamId } from "@/types/team";
 
 export default function MoreScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
   const currentTeam = useTeamStore((s) => s.currentTeam);
   const teams = useTeamStore((s) => s.teams);
-  const reset = useTeamStore((s) => s.reset);
-
-  const handleLogout = () => {
-    Alert.alert("로그아웃", "정말 로그아웃 하시겠어요?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "로그아웃",
-        onPress: () => {
-          logout();
-          reset();
-        },
-      },
-    ]);
-  };
-
-  const handleDeleteAccount = () => {
-    const userId = user?.userId || user?._id || user?.id;
-    const ownedTeams = teams.filter((t) => {
-      const members = t.members || [];
-      return members.some((m) => {
-        const mid = typeof m.user === "string" ? m.user : m.user._id;
-        return mid === userId && m.role === "owner";
-      });
-    });
-
-    const ownedNames = ownedTeams.map((t) => t.name).join(", ");
-    const teamWarning = ownedTeams.length > 0
-      ? `\n\n팀장으로 있는 모임 [${ownedNames}]이(가) 모든 거래 내역, 팀원 정보와 함께 영구 삭제됩니다.`
-      : "";
-
-    Alert.alert(
-      "⚠️ 회원 탈퇴",
-      `탈퇴하면 계정 정보가 영구적으로 삭제됩니다.${teamWarning}\n\n삭제된 데이터는 복구할 수 없습니다.`,
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "탈퇴",
-          style: "destructive",
-          onPress: () => {
-            Alert.alert(
-              "🚨 마지막 확인",
-              "정말 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.",
-              [
-                { text: "취소", style: "cancel" },
-                {
-                  text: "영구 탈퇴",
-                  style: "destructive",
-                  onPress: async () => {
-                    try {
-                      await authApi.deleteAccount();
-                      logout();
-                      reset();
-                      showToast("success", "탈퇴가 완료되었습니다");
-                    } catch {
-                      showToast("error", "탈퇴 실패");
-                    }
-                  },
-                },
-              ]
-            );
-          },
-        },
-      ]
-    );
-  };
 
   return (
     <ScreenContainer scrollable>
@@ -99,22 +29,27 @@ export default function MoreScreen() {
         </Text>
       </View>
 
-      {/* 프로필 카드 */}
-      <Card variant="elevated" className="mb-section-gap">
-        <View className="flex-row items-center">
-          <View className="w-12 h-12 rounded-full bg-brand items-center justify-center mr-3">
-            <Text className="text-title font-pretendard-bold text-white">
-              {user?.name?.charAt(0) || "?"}
-            </Text>
+      {/* 프로필 카드 — 탭하면 /profile */}
+      <Pressable onPress={() => router.push("/profile")}>
+        <Card variant="elevated" className="mb-section-gap">
+          <View className="flex-row items-center">
+            <View className="w-12 h-12 rounded-full bg-brand items-center justify-center mr-3">
+              <Text className="text-title font-pretendard-bold text-white">
+                {user?.nickname?.charAt(0) || user?.name?.charAt(0) || "?"}
+              </Text>
+            </View>
+            <View className="flex-1">
+              <Text className="text-body font-pretendard-bold text-text-primary">
+                {user?.nickname || user?.name || "사용자"}
+              </Text>
+              <Text className="text-sub text-text-secondary">
+                {user?.handle ? `@${user.handle}` : user?.email || ""}
+              </Text>
+            </View>
+            <ChevronRight size={20} color="#B0B8C1" />
           </View>
-          <View>
-            <Text className="text-body font-pretendard-bold text-text-primary">
-              {user?.name || "사용자"}
-            </Text>
-            <Text className="text-sub text-text-secondary">{user?.email || ""}</Text>
-          </View>
-        </View>
-      </Card>
+        </Card>
+      </Pressable>
 
       {/* 도구 */}
       <Text className="text-sub font-pretendard-semibold text-text-secondary mb-2">도구</Text>
@@ -147,26 +82,6 @@ export default function MoreScreen() {
         icon={<Ticket size={20} color="#FF8C42" />}
         title="초대 코드로 참가"
         onPress={() => router.push("/team/join")}
-      />
-
-      <View className="h-6" />
-      <Text className="text-sub font-pretendard-semibold text-text-secondary mb-2">계정</Text>
-      {isLocalUser(user) && (
-        <ListItem
-          icon={<Lock size={20} color="#8B95A1" />}
-          title="비밀번호 변경"
-          onPress={() => router.push("/change-password")}
-        />
-      )}
-      <ListItem
-        icon={<LogOut size={20} color="#8B95A1" />}
-        title="로그아웃"
-        onPress={handleLogout}
-      />
-      <ListItem
-        icon={<Trash2 size={20} color="#F04452" />}
-        title="회원 탈퇴"
-        onPress={handleDeleteAccount}
         showDivider={false}
       />
     </ScreenContainer>
