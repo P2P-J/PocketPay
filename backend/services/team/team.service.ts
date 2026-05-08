@@ -104,7 +104,7 @@ const deleteTeam = async (teamId, userId) => {
   }
 };
 
-const inviteMember = async (teamId, ownerId, email) => {
+const inviteMember = async (teamId, ownerId, handle) => {
   if (!isValidObjectId(teamId)) {
     throw AppError.badRequest("올바른 팀 ID가 아닙니다.");
   }
@@ -118,10 +118,11 @@ const inviteMember = async (teamId, ownerId, email) => {
     throw AppError.forbidden("팀원 초대 권한이 없습니다.");
   }
 
-    const user = await User.findOne({ email, provider: { $in: ["local", "google", "naver", "kakao"] } });
+  const loweredHandle = (handle || "").toLowerCase().trim();
+  const user = await User.findOne({ handle: loweredHandle });
 
   if (!user) {
-    throw AppError.notFound("초대할 사용자를 찾을 수 없습니다.");
+    throw AppError.notFound("해당 ID의 사용자를 찾을 수 없습니다.");
   }
 
   const alreadyMember = team.members.some(

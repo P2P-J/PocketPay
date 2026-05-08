@@ -48,7 +48,7 @@ const deleteTeam = async (req, res) => {
 
 const inviteMember = async (req, res) => {
   try {
-    const team = await teamService.inviteMember(req.params.teamId, req.user.userId, req.body.email);
+    const team = await teamService.inviteMember(req.params.teamId, req.user.userId, req.body.handle);
     res.status(201).json({ data: team });
   } catch (err) {
     handleError(res, err);

@@ -31,7 +31,11 @@ const teamIdParamSchema = {
 
 const inviteMemberSchema = {
   body: z.object({
-    email: z.string().email("올바른 이메일 형식이 아닙니다."),
+    handle: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9_]{3,20}$/, "ID는 영문 소문자, 숫자, 언더스코어 3~20자로 입력해주세요."),
   }),
   params: z.object({
     teamId: z.string().regex(objectIdRegex, "올바른 팀 ID가 아닙니다."),
