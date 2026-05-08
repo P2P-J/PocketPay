@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { View, ScrollView } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { Header } from "@/components/ui/Header";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { showToast } from "@/components/ui/Toast";
+import { HandleInput } from "@/components/profile/HandleInput";
 import { useAuthStore } from "@/store/authStore";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 
@@ -13,7 +14,9 @@ export default function SignupScreen() {
   const signup = useAuthStore((s) => s.signup);
   const loading = useAuthStore((s) => s.loading);
 
-  const [name, setName] = useState("");
+  const [realName, setRealName] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [handle, setHandle] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,14 +24,24 @@ export default function SignupScreen() {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    const trimmedName = name.trim();
+    const trimmedRealName = realName.trim();
+    const trimmedNickname = nickname.trim();
+    const trimmedHandle = handle.trim().toLowerCase();
 
-    // 닉네임: 2~20자, 한글/영문/숫자만
-    if (!trimmedName) e.name = "닉네임을 입력해주세요";
-    else if (trimmedName.length < 2 || trimmedName.length > 20)
-      e.name = "닉네임은 2~20자 사이여야 합니다";
-    else if (!/^[가-힣a-zA-Z0-9]+$/.test(trimmedName))
-      e.name = "닉네임은 한글, 영문, 숫자만 사용 가능합니다";
+    // 실명: 1~30자
+    if (!trimmedRealName) e.realName = "실명을 입력해주세요";
+    else if (trimmedRealName.length > 30)
+      e.realName = "실명은 30자 이하로 입력해주세요";
+
+    // 닉네임: 1~20자
+    if (!trimmedNickname) e.nickname = "닉네임을 입력해주세요";
+    else if (trimmedNickname.length > 20)
+      e.nickname = "닉네임은 20자 이하로 입력해주세요";
+
+    // ID: 영문 소문자/숫자/언더스코어 3~20자
+    if (!trimmedHandle) e.handle = "ID를 입력해주세요";
+    else if (!/^[a-z0-9_]{3,20}$/.test(trimmedHandle))
+      e.handle = "ID는 영문 소문자, 숫자, 언더스코어 3~20자";
 
     // 이메일
     if (!email) e.email = "이메일을 입력해주세요";
@@ -63,14 +76,22 @@ export default function SignupScreen() {
   const handleSignup = async () => {
     if (!validate()) return;
     try {
-      await signup(name.trim(), email.trim(), password);
+      await signup({
+        name: realName.trim(),
+        nickname: nickname.trim(),
+        handle: handle.trim().toLowerCase(),
+        email: email.trim(),
+        password,
+      });
       showToast("success", "가입 완료", "로그인해주세요!");
       router.replace("/(auth)/login");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "회원가입에 실패했습니다.";
       // 백엔드 에러 메시지에 따라 필드별 에러 표시
-      if (
+      if (message.includes("ID") || message.includes("handle"))
+        setErrors((prev) => ({ ...prev, handle: message }));
+      else if (
         message.includes("이메일") ||
         message.includes("email") ||
         message.includes("이미 존재")
@@ -91,15 +112,39 @@ export default function SignupScreen() {
       >
         <View className="gap-3 mt-6 mb-6">
           <Input
-            label="닉네임"
-            placeholder="한글, 영문, 숫자 (2~20자)"
-            value={name}
+            label="실명"
+            placeholder="실명을 입력해주세요"
+            value={realName}
             onChangeText={(v) => {
-              setName(v);
-              clearError("name");
+              setRealName(v);
+              clearError("realName");
             }}
-            error={errors.name}
+            maxLength={30}
+            error={errors.realName}
           />
+          <Input
+            label="닉네임"
+            placeholder="모임에서 보일 이름 (1~20자)"
+            value={nickname}
+            onChangeText={(v) => {
+              setNickname(v);
+              clearError("nickname");
+            }}
+            maxLength={20}
+            error={errors.nickname}
+          />
+          <View>
+            <HandleInput
+              value={handle}
+              onChange={(v) => {
+                setHandle(v);
+                clearError("handle");
+              }}
+            />
+            {errors.handle && (
+              <Text className="text-sub text-expense mt-1">{errors.handle}</Text>
+            )}
+          </View>
           <Input
             label="이메일"
             placeholder="example@email.com"
