@@ -132,7 +132,19 @@ const inviteMember = async (teamId, ownerId, email) => {
     throw AppError.badRequest("이미 팀원으로 등록된 사용자입니다.");
   }
 
-  team.members.push({ user: user._id, role: "member" });
+  const alreadyInvited = team.pendingInvites.some(
+    (invite) => invite.user.toString() === user._id.toString()
+  );
+
+  if (alreadyInvited) {
+    throw AppError.badRequest("이미 초대한 사용자입니다.");
+  }
+
+  team.pendingInvites.push({
+    user: user._id,
+    invitedBy: ownerId,
+    invitedAt: new Date(),
+  });
   await team.save();
   return team;
 };
