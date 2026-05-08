@@ -12,9 +12,16 @@ const {
   verifyCodeController,
   resetPasswordController,
   loginAppleNativeController,
+  completeOAuthProfileController,
 } = require("../controllers/auth.controller");
 const { validate } = require("../middleware/validate.middleware");
-const { signupSchema, loginSchema, appleNativeSchema } = require("../validators/auth.validator");
+const {
+  signupSchema,
+  loginSchema,
+  appleNativeSchema,
+  completeOAuthProfileSchema,
+} = require("../validators/auth.validator");
+const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
 
 // 이메일 발송 rate limit (IP당 분당 3회)
 const emailLimiter = rateLimit({
@@ -46,6 +53,14 @@ router.get("/login/oauth/:provider", redirectToOAuthProvider);
 router.get("/login/oauth/:provider/callback", loginOauthController);
 router.get("/oauth-tokens", getOAuthTokensController);
 router.post("/login/oauth/apple/native", validate(appleNativeSchema), loginAppleNativeController);
+
+// OAuth profile completion (handle 등 입력)
+router.post(
+  "/oauth/complete-profile",
+  loginUserVerify,
+  validate(completeOAuthProfileSchema),
+  completeOAuthProfileController
+);
 
 // Email Verification (rate limited)
 router.post("/send-code", emailLimiter, sendVerificationCodeController);

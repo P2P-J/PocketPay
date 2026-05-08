@@ -5,6 +5,7 @@ const {
 const {
   loginOauth,
   loginAppleNative,
+  completeOAuthProfile,
 } = require("../services/auth/auth.oauth.service");
 const providers = require("../services/auth/providers");
 const { handleError } = require("../utils/errorHandler");
@@ -216,6 +217,25 @@ const loginAppleNativeController = async (req, res) => {
   }
 };
 
+const completeOAuthProfileController = async (req, res) => {
+  try {
+    const user = await completeOAuthProfile(req.user.userId, req.body);
+    res.status(200).json({
+      data: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        nickname: user.nickname,
+        handle: user.handle,
+        handleChangedAt: user.handleChangedAt,
+        provider: user.provider,
+      },
+    });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
 module.exports = {
   signupLocalController,
   loginLocalController,
@@ -227,4 +247,5 @@ module.exports = {
   verifyCodeController,
   resetPasswordController,
   loginAppleNativeController,
+  completeOAuthProfileController,
 };
