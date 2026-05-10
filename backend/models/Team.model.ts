@@ -12,6 +12,12 @@ interface ITeamPendingInvite {
   invitedAt: Date;
 }
 
+interface ITeamAccount {
+  bank: string;
+  number: string;
+  holder: string;
+}
+
 /**
  * Team 모델
  * - owner: 팀 소유자 (수정/삭제 권한 확인용)
@@ -29,6 +35,11 @@ interface ITeam extends Document {
   pendingInvites: ITeamPendingInvite[];
   inviteToken?: string;
   inviteTokenExpiry?: Date;
+  category: "friend" | "club";
+  displayMode: "nickname" | "realName";
+  accountMode: "personal" | "team";
+  feeEnabled: boolean;
+  account?: ITeamAccount;
   feeAmount: number;
   feeDueDay: number;
   createdAt: Date;
@@ -51,6 +62,15 @@ const TeamSchema = new mongoose.Schema<ITeam>({
     }],
     inviteToken: { type: String, index: true, sparse: true },
     inviteTokenExpiry: { type: Date },
+    category: { type: String, enum: ["friend", "club"], default: "friend" },
+    displayMode: { type: String, enum: ["nickname", "realName"], default: "nickname" },
+    accountMode: { type: String, enum: ["personal", "team"], default: "personal" },
+    feeEnabled: { type: Boolean, default: false },
+    account: {
+        bank: { type: String, trim: true },
+        number: { type: String, trim: true },
+        holder: { type: String, trim: true },
+    },
     feeAmount: { type: Number, default: 0 },
     feeDueDay: { type: Number, default: 1, min: 1, max: 31 },
 }, {
