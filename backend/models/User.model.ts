@@ -7,6 +7,12 @@ interface IOauthTokens {
   apple?: { refreshToken?: string };
 }
 
+interface IUserAccount {
+  bank: string;
+  number: string;
+  holder: string;
+}
+
 interface IUser extends Document {
   email: string;
   password?: string;
@@ -14,6 +20,7 @@ interface IUser extends Document {
   nickname: string;
   handle?: string;
   handleChangedAt?: Date;
+  account?: IUserAccount;
   provider: "local" | "google" | "naver" | "kakao" | "apple";
   providerId?: string;
   oauthTokens?: IOauthTokens;
@@ -35,6 +42,11 @@ const UserSchema = new mongoose.Schema<IUser>({
         match: /^[a-z0-9_]{3,20}$/,
     },
     handleChangedAt: { type: Date },
+    account: {
+        bank: { type: String, trim: true },
+        number: { type: String, trim: true },
+        holder: { type: String, trim: true },
+    },
     provider: { type: String, enum: ["local", "google", "naver", "kakao", "apple"], required: true },
     providerId: { type: String },
     oauthTokens: {
