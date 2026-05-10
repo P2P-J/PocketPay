@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { ListItem } from "@/components/ui/ListItem";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { ToggleChip } from "@/components/ui/ToggleChip";
 import { showToast } from "@/components/ui/Toast";
 import { teamApi } from "@/api/team";
 import { useAuthStore } from "@/store/authStore";
@@ -34,6 +35,15 @@ export default function TeamDetailScreen() {
   const [isEditingInfo, setIsEditingInfo] = useState(false);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editCategory, setEditCategory] = useState<"friend" | "club">("friend");
+  const [editDisplayMode, setEditDisplayMode] = useState<"nickname" | "realName">("nickname");
+  const [editAccountMode, setEditAccountMode] = useState<"personal" | "team">("personal");
+  const [editFeeEnabled, setEditFeeEnabled] = useState(false);
+  const [editAccount, setEditAccount] = useState<{ bank: string; number: string; holder: string }>({
+    bank: "",
+    number: "",
+    holder: "",
+  });
   const [savingInfo, setSavingInfo] = useState(false);
 
   useEffect(() => {
@@ -45,6 +55,15 @@ export default function TeamDetailScreen() {
     if (team) {
       setEditName(team.name);
       setEditDescription(team.description || "");
+      setEditCategory(team.category || "friend");
+      setEditDisplayMode(team.displayMode || "nickname");
+      setEditAccountMode(team.accountMode || "personal");
+      setEditFeeEnabled(!!team.feeEnabled);
+      setEditAccount({
+        bank: team.account?.bank || "",
+        number: team.account?.number || "",
+        holder: team.account?.holder || "",
+      });
       setIsEditingInfo(false);
     }
   }, [team?._id ?? team?.id, team?.name, team?.description]);
@@ -77,10 +96,30 @@ export default function TeamDetailScreen() {
     }
     setSavingInfo(true);
     try {
-      await teamApi.update(selectedTeamId, {
+      const payload: Parameters<typeof teamApi.update>[1] = {
         name: trimmedName,
         description: editDescription.trim(),
-      });
+        category: editCategory,
+        displayMode: editDisplayMode,
+        accountMode: editAccountMode,
+        feeEnabled: editFeeEnabled,
+      };
+
+      // 모임 통장 모드일 때만 account 전송
+      if (editAccountMode === "team") {
+        const hasAccount =
+          editAccount.bank.trim() && editAccount.number.trim() && editAccount.holder.trim();
+        if (hasAccount) {
+          payload.account = {
+            bank: editAccount.bank.trim(),
+            number: editAccount.number.trim(),
+            holder: editAccount.holder.trim(),
+          };
+        }
+        // 비어있으면 보내지 않음 (기존 값 유지). 명시적 삭제는 별도 UI에서.
+      }
+
+      await teamApi.update(selectedTeamId, payload);
       showToast("success", "모임 정보 수정 완료");
       await fetchTeams();
       await loadTeam(selectedTeamId);
@@ -270,15 +309,118 @@ export default function TeamDetailScreen() {
                 value={editName}
                 onChangeText={setEditName}
                 placeholder="예: 주말 동호회"
-                maxLength={30}
+                maxLength={50}
               />
               <Input
                 label="설명"
                 value={editDescription}
                 onChangeText={setEditDescription}
                 placeholder="모임에 대한 간단한 설명"
-                maxLength={100}
+                maxLength={200}
               />
+
+              <View>
+                <Text className="text-sub text-text-secondary mb-2">카테고리</Text>
+                <View className="flex-row" style={{ gap: 8 }}>
+                  <ToggleChip
+                    label="친구 모임"
+                    selected={editCategory === "friend"}
+                    onPress={() => setEditCategory("friend")}
+                  />
+                  <ToggleChip
+                    label="동호회·동아리"
+                    selected={editCategory === "club"}
+                    onPress={() => setEditCategory("club")}
+                  />
+                </View>
+              </View>
+
+              <View>
+                <Text className="text-sub text-text-secondary mb-2">멤버 표시</Text>
+                <View className="flex-row" style={{ gap: 8 }}>
+                  <ToggleChip
+                    label="닉네임"
+                    selected={editDisplayMode === "nickname"}
+                    onPress={() => setEditDisplayMode("nickname")}
+                  />
+                  <ToggleChip
+                    label="실명"
+                    selected={editDisplayMode === "realName"}
+                    onPress={() => setEditDisplayMode("realName")}
+                  />
+                </View>
+              </View>
+
+              <View>
+                <Text className="text-sub text-text-secondary mb-2">더치페이 계좌</Text>
+                <View className="flex-row" style={{ gap: 8 }}>
+                  <ToggleChip
+                    label="개인 통장"
+                    selected={editAccountMode === "personal"}
+                    onPress={() => setEditAccountMode("personal")}
+                  />
+                  <ToggleChip
+                    label="모임 통장"
+                    selected={editAccountMode === "team"}
+                    onPress={() => setEditAccountMode("team")}
+                  />
+                </View>
+              </View>
+
+              <View>
+                <Text className="text-sub text-text-secondary mb-2">회비 사용</Text>
+                <View className="flex-row" style={{ gap: 8 }}>
+                  <ToggleChip
+                    label="사용 안 함"
+                    selected={!editFeeEnabled}
+                    onPress={() => setEditFeeEnabled(false)}
+                  />
+                  <ToggleChip
+                    label="사용"
+                    selected={editFeeEnabled}
+                    onPress={() => setEditFeeEnabled(true)}
+                  />
+                </View>
+              </View>
+
+              {editAccountMode === "team" && (
+                <View
+                  style={{
+                    borderTopWidth: 1,
+                    borderTopColor: "#F2F4F6",
+                    paddingTop: 12,
+                    marginTop: 4,
+                    gap: 8,
+                  }}
+                >
+                  <Text className="text-sub font-pretendard-semibold text-text-primary">
+                    모임 통장
+                  </Text>
+                  <Input
+                    label="은행"
+                    value={editAccount.bank}
+                    onChangeText={(v) => setEditAccount({ ...editAccount, bank: v })}
+                    placeholder="예: 국민, 신한, 토스뱅크"
+                    maxLength={30}
+                  />
+                  <Input
+                    label="계좌번호"
+                    value={editAccount.number}
+                    onChangeText={(v) => setEditAccount({ ...editAccount, number: v })}
+                    placeholder="123-456-789012"
+                    maxLength={50}
+                    keyboardType="number-pad"
+                  />
+                  <Input
+                    label="예금주"
+                    value={editAccount.holder}
+                    onChangeText={(v) => setEditAccount({ ...editAccount, holder: v })}
+                    placeholder="홍길동"
+                    maxLength={30}
+                  />
+                </View>
+              )}
+
               <View className="flex-row" style={{ gap: 8 }}>
                 <View style={{ flex: 1 }}>
                   <Button
