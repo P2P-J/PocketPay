@@ -1,19 +1,22 @@
 const AccountService = require("../services/account/account.service");
 const { handleError } = require("../utils/errorHandler");
 
+// User 객체를 클라이언트 응답 형식으로 직렬화 (모든 me/profile/handle/account 응답 공통)
+const serializeUser = (user) => ({
+  id: user._id,
+  email: user.email,
+  name: user.name,
+  nickname: user.nickname,
+  handle: user.handle,
+  handleChangedAt: user.handleChangedAt,
+  account: user.account,
+  provider: user.provider,
+});
+
 const getMyAccount = async (req, res) => {
   try {
     const user = await AccountService.getMyAccount(req.user.userId);
-    res.status(200).json({
-      id: user._id,
-      email: user.email,
-      name: user.name,
-      nickname: user.nickname,
-      handle: user.handle,
-      handleChangedAt: user.handleChangedAt,
-      account: user.account,
-      provider: user.provider,
-    });
+    res.status(200).json(serializeUser(user));
   } catch (err) {
     return handleError(res, err);
   }
@@ -53,18 +56,7 @@ const checkHandle = async (req, res) => {
 const updateProfileController = async (req, res) => {
   try {
     const user = await AccountService.updateProfile(req.user.userId, req.body);
-    res.status(200).json({
-      data: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        nickname: user.nickname,
-        handle: user.handle,
-        handleChangedAt: user.handleChangedAt,
-        account: user.account,
-        provider: user.provider,
-      },
-    });
+    res.status(200).json({ data: serializeUser(user) });
   } catch (err) {
     return handleError(res, err);
   }
@@ -73,18 +65,7 @@ const updateProfileController = async (req, res) => {
 const updateHandleController = async (req, res) => {
   try {
     const user = await AccountService.updateHandle(req.user.userId, req.body);
-    res.status(200).json({
-      data: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        nickname: user.nickname,
-        handle: user.handle,
-        handleChangedAt: user.handleChangedAt,
-        account: user.account,
-        provider: user.provider,
-      },
-    });
+    res.status(200).json({ data: serializeUser(user) });
   } catch (err) {
     return handleError(res, err);
   }
@@ -96,18 +77,7 @@ const updateMyAccountController = async (req, res) => {
       req.user.userId,
       req.body.account
     );
-    res.status(200).json({
-      data: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        nickname: user.nickname,
-        handle: user.handle,
-        handleChangedAt: user.handleChangedAt,
-        account: user.account,
-        provider: user.provider,
-      },
-    });
+    res.status(200).json({ data: serializeUser(user) });
   } catch (err) {
     return handleError(res, err);
   }

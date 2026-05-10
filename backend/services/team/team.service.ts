@@ -102,7 +102,7 @@ const updateTeam = async (teamId, userId, data) => {
   // account는 객체 또는 null 허용
   if (data.account !== undefined) {
     if (data.account === null) {
-      team.account = undefined;
+      team.set("account", undefined);
     } else {
       team.account = {
         bank: String(data.account.bank || "").trim(),

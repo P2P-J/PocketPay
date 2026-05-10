@@ -154,7 +154,8 @@ const updateMyAccount = async (userId, account) => {
   }
 
   if (account === null) {
-    user.account = undefined;
+    // mongoose에서 임베디드 객체 안전하게 unset
+    user.set("account", undefined);
   } else {
     user.account = {
       bank: String(account.bank || "").trim(),
