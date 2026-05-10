@@ -483,7 +483,11 @@ export default function TeamDetailScreen() {
           const isSelf = memberId === getUserId(user);
 
           const canRemove = isOwner && !isSelf && member.role !== "owner";
-          const displayName = memberUser.nickname || memberUser.name || "알 수 없음";
+          const displayMode = team?.displayMode ?? "nickname";
+          const displayName =
+            displayMode === "realName"
+              ? memberUser.name || memberUser.nickname || "알 수 없음"
+              : memberUser.nickname || memberUser.name || "알 수 없음";
           const displaySubtitle = member.role === "owner"
             ? "팀장"
             : memberUser.handle
