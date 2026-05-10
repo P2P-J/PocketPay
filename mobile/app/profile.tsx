@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { showToast } from "@/components/ui/Toast";
 import { HandleInput } from "@/components/profile/HandleInput";
+import { AccountForm, type AccountValue } from "@/components/account/AccountForm";
 import { useAuthStore } from "@/store/authStore";
 import { accountApi } from "@/api/account";
 import { authApi } from "@/api/auth";
@@ -34,6 +35,44 @@ export default function ProfileScreen() {
   const [draftNickname, setDraftNickname] = useState(user?.nickname ?? "");
   const [draftHandle, setDraftHandle] = useState(user?.handle ?? "");
   const [saving, setSaving] = useState(false);
+
+  const [isEditingAccount, setIsEditingAccount] = useState(false);
+  const [savingAccount, setSavingAccount] = useState(false);
+
+  const handleSaveAccount = async (account: AccountValue) => {
+    setSavingAccount(true);
+    try {
+      await accountApi.updateMyAccount(account);
+      await refreshUser();
+      showToast("success", "계좌 등록 완료");
+      setIsEditingAccount(false);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "다시 시도해주세요";
+      showToast("error", "저장 실패", msg);
+    } finally {
+      setSavingAccount(false);
+    }
+  };
+
+  const handleDeleteMyAccountAction = () => {
+    Alert.alert("내 계좌 삭제", "등록된 계좌 정보를 삭제하시겠어요?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await accountApi.updateMyAccount(null);
+            await refreshUser();
+            showToast("success", "삭제됨");
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : "다시 시도해주세요";
+            showToast("error", "삭제 실패", msg);
+          }
+        },
+      },
+    ]);
+  };
 
   const handleDaysLeft = getDaysUntilHandleChangeable(user?.handleChangedAt);
   const canChangeHandle = handleDaysLeft === 0;
@@ -198,6 +237,66 @@ export default function ProfileScreen() {
             <Text className="text-body text-text-primary">{user?.email}</Text>
             <Lock size={14} color="#B0B8C1" />
           </View>
+        </View>
+
+        {/* 내 계좌 */}
+        <View className="mt-section-gap px-4">
+          <Text className="text-sub font-pretendard-semibold text-text-secondary mb-2">
+            내 계좌 (선택)
+          </Text>
+          {isEditingAccount ? (
+            <AccountForm
+              initial={user?.account}
+              saving={savingAccount}
+              onSave={handleSaveAccount}
+              onCancel={() => setIsEditingAccount(false)}
+            />
+          ) : user?.account ? (
+            <View>
+              <View className="py-2 flex-row justify-between">
+                <Text className="text-body text-text-secondary">은행</Text>
+                <Text className="text-body text-text-primary">{user.account.bank}</Text>
+              </View>
+              <View className="py-2 flex-row justify-between">
+                <Text className="text-body text-text-secondary">계좌번호</Text>
+                <Text className="text-body text-text-primary">{user.account.number}</Text>
+              </View>
+              <View className="py-2 flex-row justify-between">
+                <Text className="text-body text-text-secondary">예금주</Text>
+                <Text className="text-body text-text-primary">{user.account.holder}</Text>
+              </View>
+              <View className="flex-row mt-2" style={{ gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="수정"
+                    variant="outline"
+                    size="md"
+                    onPress={() => setIsEditingAccount(true)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="삭제"
+                    variant="outline"
+                    size="md"
+                    onPress={handleDeleteMyAccountAction}
+                  />
+                </View>
+              </View>
+            </View>
+          ) : (
+            <View>
+              <Text className="text-sub text-text-secondary mb-2">
+                계좌가 없습니다. 등록하면 더치페이를 받을 수 있어요.
+              </Text>
+              <Button
+                label="계좌 등록하기"
+                variant="primary"
+                size="md"
+                onPress={() => setIsEditingAccount(true)}
+              />
+            </View>
+          )}
         </View>
 
         {/* 비밀번호 변경 (local 가입자만) */}
