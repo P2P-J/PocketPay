@@ -186,6 +186,23 @@ export default function FeeScreen() {
 
   const paidRate = data ? Math.round((data.paidCount / Math.max(data.totalCount, 1)) * 100) : 0;
 
+  // 회비 사용 안 함 모임 — 안내만 표시
+  if (currentTeam && !currentTeam.feeEnabled) {
+    return (
+      <ScreenContainer scrollable={false} withKeyboard={false}>
+        <Header title="회비 현황" showBack />
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="text-section font-pretendard-semibold text-text-primary mb-2 text-center">
+            회비를 사용하지 않는 모임이에요
+          </Text>
+          <Text className="text-body text-text-secondary text-center">
+            회비를 사용하려면{"\n"}모임 관리에서 회비 사용을 켜주세요.
+          </Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
   return (
     <ScreenContainer scrollable={false} withKeyboard={false}>
       <Header title="회비 현황" showBack />
