@@ -11,6 +11,7 @@ const getMyAccount = async (req, res) => {
       nickname: user.nickname,
       handle: user.handle,
       handleChangedAt: user.handleChangedAt,
+      account: user.account,
       provider: user.provider,
     });
   } catch (err) {
@@ -60,6 +61,7 @@ const updateProfileController = async (req, res) => {
         nickname: user.nickname,
         handle: user.handle,
         handleChangedAt: user.handleChangedAt,
+        account: user.account,
         provider: user.provider,
       },
     });
@@ -79,6 +81,30 @@ const updateHandleController = async (req, res) => {
         nickname: user.nickname,
         handle: user.handle,
         handleChangedAt: user.handleChangedAt,
+        account: user.account,
+        provider: user.provider,
+      },
+    });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+const updateMyAccountController = async (req, res) => {
+  try {
+    const user = await AccountService.updateMyAccount(
+      req.user.userId,
+      req.body.account
+    );
+    res.status(200).json({
+      data: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        nickname: user.nickname,
+        handle: user.handle,
+        handleChangedAt: user.handleChangedAt,
+        account: user.account,
         provider: user.provider,
       },
     });
@@ -94,4 +120,5 @@ module.exports = {
   checkHandle,
   updateProfileController,
   updateHandleController,
+  updateMyAccountController,
 };

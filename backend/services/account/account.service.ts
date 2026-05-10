@@ -147,6 +147,25 @@ const updateHandle = async (userId, { handle }) => {
   return user;
 };
 
+const updateMyAccount = async (userId, account) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw AppError.notFound("사용자를 찾을 수 없습니다.");
+  }
+
+  if (account === null) {
+    user.account = undefined;
+  } else {
+    user.account = {
+      bank: String(account.bank || "").trim(),
+      number: String(account.number || "").trim(),
+      holder: String(account.holder || "").trim(),
+    };
+  }
+  await user.save();
+  return user;
+};
+
 module.exports = {
   getMyAccount,
   deleteMyAccount,
@@ -154,4 +173,5 @@ module.exports = {
   checkHandleAvailable,
   updateProfile,
   updateHandle,
+  updateMyAccount,
 };

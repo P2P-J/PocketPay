@@ -6,6 +6,7 @@ const {
   changePasswordSchema,
   updateProfileSchema,
   updateHandleSchema,
+  updateMyAccountSchema,
 } = require("../validators/auth.validator");
 const AccountController = require("../controllers/account.controller");
 
@@ -28,5 +29,12 @@ router.patch("/profile", validate(updateProfileSchema), AccountController.update
 
 // handle 변경 PATCH /account/handle (30일 제한)
 router.patch("/handle", validate(updateHandleSchema), AccountController.updateHandleController);
+
+// 개인 계좌 등록/수정/삭제 PATCH /account/account
+router.patch(
+  "/account",
+  validate(updateMyAccountSchema),
+  AccountController.updateMyAccountController
+);
 
 module.exports = router;

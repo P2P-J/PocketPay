@@ -67,6 +67,18 @@ const updateHandleSchema = {
   }),
 };
 
+const updateMyAccountSchema = {
+  body: z.object({
+    account: z
+      .object({
+        bank: z.string().trim().min(1).max(30),
+        number: z.string().trim().min(1).max(50),
+        holder: z.string().trim().min(1).max(30),
+      })
+      .nullable(),
+  }),
+};
+
 const loginSchema = {
   body: z.object({
     email: z.string().email("올바른 이메일 형식이 아닙니다."),
@@ -101,4 +113,5 @@ module.exports = {
   completeOAuthProfileSchema,
   updateProfileSchema,
   updateHandleSchema,
+  updateMyAccountSchema,
 };
