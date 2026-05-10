@@ -136,6 +136,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
             nickname: me.nickname,
             handle: me.handle,
             handleChangedAt: me.handleChangedAt,
+            account: me.account,
             email: me.email,
             provider: me.provider,
           },

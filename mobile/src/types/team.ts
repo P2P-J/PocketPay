@@ -16,12 +16,29 @@ export interface Member {
   joinedAt?: string;
 }
 
+export type Account = {
+  bank: string;
+  number: string;
+  holder: string;
+};
+
+export type TeamCategory = "friend" | "club";
+export type TeamDisplayMode = "nickname" | "realName";
+export type TeamAccountMode = "personal" | "team";
+
 export interface Team {
   id?: string;
   _id?: string;
   name: string;
   description?: string;
   members?: Member[];
+  category?: TeamCategory;
+  displayMode?: TeamDisplayMode;
+  accountMode?: TeamAccountMode;
+  feeEnabled?: boolean;
+  account?: Account;
+  feeAmount?: number;
+  feeDueDay?: number;
 }
 
 export function getTeamId(team: Team): string {

@@ -5,8 +5,14 @@ import type { Team } from "@/types/team";
 type DataResponse<T> = { data: T; message?: string };
 
 export const teamApi = {
-  create: (data: { name: string; description?: string }) =>
-    apiClient.post("/teams", data) as Promise<DataResponse<Team>>,
+  create: (data: {
+    name: string;
+    description?: string;
+    category?: "friend" | "club";
+    displayMode?: "nickname" | "realName";
+    accountMode?: "personal" | "team";
+    feeEnabled?: boolean;
+  }) => apiClient.post("/teams", data) as Promise<DataResponse<Team>>,
 
   getMyTeams: () =>
     apiClient.get("/teams") as Promise<DataResponse<Team[]>>,
@@ -14,8 +20,20 @@ export const teamApi = {
   getTeam: (teamId: string) =>
     apiClient.get(`/teams/${teamId}`) as Promise<DataResponse<Team>>,
 
-  update: (teamId: string, data: { name?: string; description?: string }) =>
-    apiClient.put(`/teams/${teamId}`, data) as Promise<DataResponse<Team>>,
+  update: (
+    teamId: string,
+    data: {
+      name?: string;
+      description?: string;
+      category?: "friend" | "club";
+      displayMode?: "nickname" | "realName";
+      accountMode?: "personal" | "team";
+      feeEnabled?: boolean;
+      feeAmount?: number;
+      feeDueDay?: number;
+      account?: { bank: string; number: string; holder: string } | null;
+    }
+  ) => apiClient.put(`/teams/${teamId}`, data) as Promise<DataResponse<Team>>,
 
   delete: (teamId: string) =>
     apiClient.delete(`/teams/${teamId}`),

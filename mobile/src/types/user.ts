@@ -1,3 +1,9 @@
+export interface UserAccount {
+  bank: string;
+  number: string;
+  holder: string;
+}
+
 export interface User {
   userId?: string;
   _id?: string;
@@ -6,6 +12,7 @@ export interface User {
   nickname?: string;
   handle?: string;
   handleChangedAt?: string;
+  account?: UserAccount;
   email?: string;
   provider?: string;
 }

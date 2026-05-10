@@ -23,7 +23,14 @@ interface TeamState {
   pendingInvitations: Invitation[];
 
   fetchTeams: () => Promise<void>;
-  createTeam: (name: string, description?: string) => Promise<void>;
+  createTeam: (data: {
+    name: string;
+    description?: string;
+    category?: "friend" | "club";
+    displayMode?: "nickname" | "realName";
+    accountMode?: "personal" | "team";
+    feeEnabled?: boolean;
+  }) => Promise<void>;
   setCurrentTeam: (teamId: string) => Promise<void>;
   deleteTeam: (teamId: string) => Promise<void>;
   leaveTeam: (teamId: string) => Promise<void>;
@@ -66,8 +73,8 @@ export const useTeamStore = create<TeamState>((set, get) => ({
     }
   },
 
-  createTeam: async (name: string, description?: string) => {
-    const res = await teamApi.create({ name, description });
+  createTeam: async (data) => {
+    const res = await teamApi.create(data);
     const newTeam = res.data;
     set((state) => ({ teams: [...state.teams, newTeam] }));
     await get().setCurrentTeam(getTeamId(newTeam));

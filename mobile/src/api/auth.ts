@@ -8,6 +8,7 @@ type MeResponse = {
   nickname: string;
   handle?: string;
   handleChangedAt?: string;
+  account?: { bank: string; number: string; holder: string };
   provider: string;
 };
 

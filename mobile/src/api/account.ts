@@ -2,6 +2,8 @@ import { apiClient } from "./client";
 
 type DataResponse<T> = { data: T; message?: string };
 
+type Account = { bank: string; number: string; holder: string };
+
 type ProfileResponse = {
   id: string;
   email: string;
@@ -9,6 +11,7 @@ type ProfileResponse = {
   nickname: string;
   handle?: string;
   handleChangedAt?: string;
+  account?: Account;
   provider: string;
 };
 
@@ -27,6 +30,11 @@ export const accountApi = {
 
   updateHandle: (handle: string) =>
     apiClient.patch("/account/handle", { handle }) as Promise<
+      DataResponse<ProfileResponse>
+    >,
+
+  updateMyAccount: (account: Account | null) =>
+    apiClient.patch("/account/account", { account }) as Promise<
       DataResponse<ProfileResponse>
     >,
 };
