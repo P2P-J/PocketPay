@@ -2,12 +2,25 @@ const { Team, User, Deal } = require("../../models/index");
 const AppError = require("../../utils/AppError");
 const { isValidObjectId } = require("../../utils/validation");
 
-const createTeam = async (userId, { name, description }) => {
-  const team = await Team.create({
+const createTeam = async (userId, payload) => {
+  const {
     name,
     description,
+    category,
+    displayMode,
+    accountMode,
+    feeEnabled,
+  } = payload || {};
+
+  const team = await Team.create({
+    name,
+    description: description || "",
     owner: userId,
     members: [{ user: userId, role: "owner" }],
+    category: category || "friend",
+    displayMode: displayMode || "nickname",
+    accountMode: accountMode || "personal",
+    feeEnabled: feeEnabled === true,
   });
   return team;
 };
@@ -73,9 +86,30 @@ const updateTeam = async (teamId, userId, data) => {
   }
 
   // Mass Assignment 방지: 허용 필드만 추출
-  const ALLOWED_FIELDS = ["name", "description"];
+  const ALLOWED_FIELDS = [
+    "name",
+    "description",
+    "category",
+    "displayMode",
+    "accountMode",
+    "feeEnabled",
+    "feeAmount",
+    "feeDueDay",
+  ];
   for (const key of ALLOWED_FIELDS) {
     if (data[key] !== undefined) team[key] = data[key];
+  }
+  // account는 객체 또는 null 허용
+  if (data.account !== undefined) {
+    if (data.account === null) {
+      team.account = undefined;
+    } else {
+      team.account = {
+        bank: String(data.account.bank || "").trim(),
+        number: String(data.account.number || "").trim(),
+        holder: String(data.account.holder || "").trim(),
+      };
+    }
   }
   await team.save();
   return team;
