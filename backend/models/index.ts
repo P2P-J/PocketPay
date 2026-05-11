@@ -4,5 +4,6 @@ const Team = require("./Team.model");
 const FeePayment = require("./FeePayment.model");
 const WithdrawnOauth = require("./withdrawnOauth.model");
 const VerificationCode = require("./VerificationCode.model");
+const DutchRequest = require("./DutchRequest.model");
 
-module.exports = { User, Deal, Team, FeePayment, WithdrawnOauth, VerificationCode };
+module.exports = { User, Deal, Team, FeePayment, WithdrawnOauth, VerificationCode, DutchRequest };
