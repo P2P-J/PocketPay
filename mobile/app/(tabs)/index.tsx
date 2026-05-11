@@ -188,6 +188,10 @@ export default function HomeScreen() {
   const fetchPendingInvitations = useTeamStore(
     (s) => s.fetchPendingInvitations
   );
+  const pendingDutchRequests = useTeamStore((s) => s.pendingDutchRequests);
+  const fetchPendingDutchRequests = useTeamStore(
+    (s) => s.fetchPendingDutchRequests
+  );
   const isFocused = useIsFocused();
 
   interface MonthlyStats {
@@ -226,11 +230,12 @@ export default function HomeScreen() {
     setLoadingMore(false);
   }, [currentTeam]);
 
-  // 화면 포커스 시 팀 목록 + 초대 알림 새로고침 (초대받은 팀 즉시 반영)
+  // 화면 포커스 시 팀 목록 + 알림(초대 + 더치페이) 새로고침
   useEffect(() => {
     if (isFocused) {
       fetchTeams();
       fetchPendingInvitations();
+      fetchPendingDutchRequests();
     }
   }, [isFocused]);
 
@@ -315,7 +320,7 @@ export default function HomeScreen() {
             작은 모임
           </Text>
           <NotificationBell
-            count={pendingInvitations.length}
+            count={pendingInvitations.length + pendingDutchRequests.length}
             onPress={() => router.push("/notifications")}
           />
         </View>
@@ -385,7 +390,7 @@ export default function HomeScreen() {
 
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <NotificationBell
-            count={pendingInvitations.length}
+            count={pendingInvitations.length + pendingDutchRequests.length}
             onPress={() => router.push("/notifications")}
           />
           {currentTeam && (
