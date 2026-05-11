@@ -43,4 +43,8 @@ const DutchRequestSchema = new mongoose.Schema<IDutchRequest>({
 // 받는 사람의 pending + 미만료 빠른 조회용 복합 인덱스
 DutchRequestSchema.index({ recipient: 1, status: 1, expiresAt: 1 });
 
+// TTL 인덱스: expiresAt 도달 시 MongoDB가 자동 삭제 (DB 누적 방지)
+// 별도 cron 불필요. 7일 후 자동 정리.
+DutchRequestSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
 module.exports = mongoose.model<IDutchRequest>("DutchRequest", DutchRequestSchema);

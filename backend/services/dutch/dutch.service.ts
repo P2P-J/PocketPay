@@ -40,10 +40,10 @@ const createDutchRequests = async (
   const isMember = team.members.some((m) => m.user.toString() === requesterStr);
   if (!isMember) throw AppError.forbidden("모임 멤버가 아닙니다.");
 
-  // 본인 자동 제외
-  const filteredRecipients = recipientIds.filter(
-    (id) => String(id) !== requesterStr
-  );
+  // 본인 자동 제외 + 중복 제거 (방어적)
+  const filteredRecipients = Array.from(
+    new Set(recipientIds.map((id) => String(id)))
+  ).filter((id) => id !== requesterStr);
   if (filteredRecipients.length === 0) {
     throw AppError.badRequest("받는 사람이 없습니다.");
   }
