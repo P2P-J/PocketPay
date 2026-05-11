@@ -27,6 +27,8 @@ export default function TeamDetailScreen() {
   const deleteTeamStore = useTeamStore((s) => s.deleteTeam);
   const leaveTeamStore = useTeamStore((s) => s.leaveTeam);
   const fetchTeams = useTeamStore((s) => s.fetchTeams);
+  const setCurrentTeamStore = useTeamStore((s) => s.setCurrentTeam);
+  const currentTeam = useTeamStore((s) => s.currentTeam);
 
   const [selectedTeamId, setSelectedTeamId] = useState(initialTeamId || "");
   const [team, setTeam] = useState<Team | null>(null);
@@ -123,6 +125,11 @@ export default function TeamDetailScreen() {
       showToast("success", "모임 정보 수정 완료");
       await fetchTeams();
       await loadTeam(selectedTeamId);
+      // 현재 보고 있는 팀이면 store의 currentTeam도 갱신 (회비 페이지 등 다른 화면 동기화)
+      const cid = currentTeam?._id || currentTeam?.id;
+      if (cid === selectedTeamId) {
+        await setCurrentTeamStore(selectedTeamId);
+      }
       setIsEditingInfo(false);
     } catch (e: unknown) {
       const msg =
