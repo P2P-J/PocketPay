@@ -2,10 +2,12 @@ import { create } from "zustand";
 import { teamApi } from "@/api/team";
 import { dealApi } from "@/api/deal";
 import { invitationApi } from "@/api/invitation";
+import { dutchApi } from "@/api/dutch";
 import type { Team } from "@/types/team";
 import { getTeamId } from "@/types/team";
 import type { Transaction, DealPayload } from "@/types/transaction";
 import type { Invitation } from "@/types/invitation";
+import type { DutchRequestNotification } from "@/types/dutch";
 import { dealToTransaction, transactionToDealPayload } from "@/types/transaction";
 
 interface Summary {
@@ -21,6 +23,7 @@ interface TeamState {
   summary: Summary;
   loading: boolean;
   pendingInvitations: Invitation[];
+  pendingDutchRequests: DutchRequestNotification[];
 
   fetchTeams: () => Promise<void>;
   createTeam: (data: {
@@ -45,6 +48,9 @@ interface TeamState {
   acceptInvitation: (teamId: string) => Promise<void>;
   rejectInvitation: (teamId: string) => Promise<void>;
 
+  fetchPendingDutchRequests: () => Promise<void>;
+  dismissDutchRequest: (id: string) => Promise<void>;
+
   reset: () => void;
 }
 
@@ -55,6 +61,7 @@ export const useTeamStore = create<TeamState>((set, get) => ({
   summary: { income: 0, expense: 0, balance: 0 },
   loading: false,
   pendingInvitations: [],
+  pendingDutchRequests: [],
 
   fetchTeams: async () => {
     set({ loading: true });
@@ -213,7 +220,31 @@ export const useTeamStore = create<TeamState>((set, get) => ({
     }));
   },
 
+  fetchPendingDutchRequests: async () => {
+    try {
+      const res = await dutchApi.list();
+      set({ pendingDutchRequests: res.data || [] });
+    } catch (e) {
+      console.warn("Failed to fetch dutch requests", e);
+    }
+  },
+
+  dismissDutchRequest: async (id: string) => {
+    await dutchApi.dismiss(id);
+    set((s) => ({
+      pendingDutchRequests: s.pendingDutchRequests.filter((r) => r._id !== id),
+    }));
+  },
+
   reset: () => {
-    set({ teams: [], currentTeam: null, transactions: [], summary: { income: 0, expense: 0, balance: 0 }, loading: false, pendingInvitations: [] });
+    set({
+      teams: [],
+      currentTeam: null,
+      transactions: [],
+      summary: { income: 0, expense: 0, balance: 0 },
+      loading: false,
+      pendingInvitations: [],
+      pendingDutchRequests: [],
+    });
   },
 }));
