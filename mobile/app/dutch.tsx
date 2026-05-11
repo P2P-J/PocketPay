@@ -14,8 +14,12 @@ import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { showToast } from "@/components/ui/Toast";
 import { useTeamStore } from "@/store/teamStore";
+import { useAuthStore } from "@/store/authStore";
+import { dutchApi } from "@/api/dutch";
+import { getTeamId } from "@/types/team";
 
 type SplitMode = "equal" | "custom";
 
@@ -43,6 +47,7 @@ function calcEqualSplit(total: number, participants: Participant[]) {
 export default function DutchScreen() {
   const insets = useSafeAreaInsets();
   const currentTeam = useTeamStore((s) => s.currentTeam);
+  const currentUser = useAuthStore((s) => s.user);
   const { amount: prefillAmount } = useLocalSearchParams<{ amount?: string }>();
 
   // 거래 상세에서 진입 시 ?amount=15000 형태로 받아 초기값 설정
@@ -57,6 +62,9 @@ export default function DutchScreen() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   // 팀 없을 때 수동 인원 수
   const [manualCount, setManualCount] = useState(2);
+  // 메모 (선택) + 공유 중 상태
+  const [memo, setMemo] = useState("");
+  const [sharing, setSharing] = useState(false);
 
   // 팀 멤버 초기 로드 — 이미 로드된 경우 재초기화 방지 (체크박스 선택 유지)
   useEffect(() => {
@@ -134,8 +142,8 @@ export default function DutchScreen() {
     selectedCount > 0 &&
     (splitMode === "equal" || customDiff === 0);
 
-  // 공유 텍스트 생성
-  const buildShareText = () => {
+  // 팀 없을 때(수동 인원) 또는 fallback용 단순 텍스트
+  const buildShareTextLegacy = () => {
     const lines: string[] = [
       `[작은 모임] 더치페이 계산 결과`,
       `총액 ${formatAmount(total)} / ${selectedCount}명`,
@@ -165,6 +173,39 @@ export default function DutchScreen() {
     return lines.join("\n");
   };
 
+  // 옵션 C 풍성 텍스트 (팀 모임 + 계좌 정보 있을 때)
+  const buildRichShareText = (params: {
+    teamName: string;
+    requesterName: string;
+    memo?: string;
+    totalAmount: number;
+    perPerson: number;
+    recipientNames: string[];
+    account: { bank: string; number: string; holder: string };
+  }) => {
+    const titleLine = params.memo
+      ? `🍽️ ${params.memo} ₩${params.totalAmount.toLocaleString()}원 더치페이`
+      : `🍽️ 더치페이 ₩${params.totalAmount.toLocaleString()}원`;
+
+    return [
+      titleLine,
+      "",
+      `📍 모임: ${params.teamName}`,
+      `👤 결제: ${params.requesterName}`,
+      `👥 받는 사람: ${params.recipientNames.join(", ")}`,
+      `💵 1인당 금액: ₩${params.perPerson.toLocaleString()}`,
+      "",
+      "━━━━━━━━━━━━━━━",
+      "💳 송금하실 계좌",
+      `${params.account.bank} ${params.account.number}`,
+      `예금주: ${params.account.holder}`,
+      "━━━━━━━━━━━━━━━",
+      "",
+      "📱 작은 모임으로 정산",
+    ].join("\n");
+  };
+
+  // "납부 공유하기" — 백엔드 알림 생성 + 공유 시트
   const handleShare = async () => {
     if (!isValid) {
       if (total <= 0) return showToast("error", "금액을 입력해주세요");
@@ -173,11 +214,72 @@ export default function DutchScreen() {
         return showToast("error", `합계가 ${customDiff > 0 ? "초과" : "부족"}합니다`);
       return;
     }
+
+    // 팀 없을 때(수동 인원) — 기존처럼 단순 공유만
+    if (!hasTeam || !currentTeam) {
+      try {
+        await Share.share({ message: buildShareTextLegacy() });
+      } catch {}
+      return;
+    }
+
+    // 팀 모임: 본인 제외 recipients
+    const myUserId =
+      currentUser?.userId || currentUser?._id || currentUser?.id;
+    const recipients = selectedParticipants.filter(
+      (p) => p.userId !== myUserId
+    );
+    if (recipients.length === 0) {
+      return showToast("error", "본인 외에 받는 사람이 없습니다");
+    }
+
+    const teamId = getTeamId(currentTeam);
+    if (!teamId) {
+      return showToast("error", "모임 정보가 없습니다");
+    }
+
+    setSharing(true);
     try {
-      await Share.share({ message: buildShareText() });
-    } catch {}
+      // 1. 백엔드에 알림 일괄 생성
+      const res = await dutchApi.create({
+        teamId,
+        recipientIds: recipients.map((p) => p.userId),
+        amount: equalPerPerson,
+        totalAmount: total,
+        participantCount: selectedCount,
+        memo: memo.trim() || undefined,
+      });
+
+      // 2. 공유 시트 텍스트 (옵션 C, 응답의 account 사용)
+      const displayMode = currentTeam.displayMode || "nickname";
+      const requesterDisplayName =
+        displayMode === "realName"
+          ? currentUser?.name || currentUser?.nickname || "나"
+          : currentUser?.nickname || currentUser?.name || "나";
+
+      const shareText = buildRichShareText({
+        teamName: currentTeam.name,
+        requesterName: requesterDisplayName,
+        memo: memo.trim() || undefined,
+        totalAmount: total,
+        perPerson: equalPerPerson,
+        recipientNames: recipients.map((p) => p.name),
+        account: res.data.account,
+      });
+
+      // 3. OS 공유 시트
+      await Share.share({ message: shareText });
+
+      showToast("success", "납부 요청 보냈어요");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "공유에 실패했어요";
+      showToast("error", "공유 실패", msg);
+    } finally {
+      setSharing(false);
+    }
   };
 
+  // "결과 복사" — 기존처럼 단순 텍스트 공유
   const handleCopy = async () => {
     if (!isValid) {
       if (total <= 0) return showToast("error", "금액을 입력해주세요");
@@ -185,7 +287,7 @@ export default function DutchScreen() {
       return;
     }
     try {
-      await Share.share({ message: buildShareText() });
+      await Share.share({ message: buildShareTextLegacy() });
     } catch {}
   };
 
@@ -592,6 +694,23 @@ export default function DutchScreen() {
             </Card>
           </View>
 
+          {/* ── 메모 (선택) ── */}
+          {hasTeam && (
+            <View className="mb-4">
+              <Text className="text-sub font-pretendard-semibold text-text-secondary mb-2">
+                메모 (선택)
+              </Text>
+              <Card variant="elevated">
+                <Input
+                  placeholder="예: 회식비, 택시비"
+                  value={memo}
+                  onChangeText={setMemo}
+                  maxLength={50}
+                />
+              </Card>
+            </View>
+          )}
+
         {/* 하단 여백 */}
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -617,11 +736,12 @@ export default function DutchScreen() {
           className="flex-1"
         />
         <Button
-          label="공유하기"
+          label="납부 공유하기"
           variant="primary"
           size="md"
           onPress={handleShare}
-          disabled={!isValid}
+          loading={sharing}
+          disabled={!isValid || sharing}
           className="flex-1"
         />
       </View>
