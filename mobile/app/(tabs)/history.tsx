@@ -9,7 +9,7 @@ import * as Sharing from "expo-sharing";
 import * as Print from "expo-print";
 import * as FileSystem from "expo-file-system/legacy";
 import { generateReportHtml } from "@/utils/generateReportHtml";
-import { useTeamStore } from "@/store/teamStore";
+import { useTeamStore, monthCacheKey } from "@/store/teamStore";
 import { Card } from "@/components/ui/Card";
 import { ListItem } from "@/components/ui/ListItem";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -32,9 +32,16 @@ export default function HistoryScreen() {
   const cardRef = useRef<View>(null);
 
   const currentTeam = useTeamStore((s) => s.currentTeam);
-  const transactions = useTeamStore((s) => s.transactions);
+  const transactionsByMonth = useTeamStore((s) => s.transactionsByMonth);
   const fetchTransactions = useTeamStore((s) => s.fetchTransactions);
   const isFocused = useIsFocused();
+
+  // 현재 보고 있는 (team, year, month) 캐시만 derived → 거래탭과 독립
+  const cacheKey = currentTeam ? monthCacheKey(getTeamId(currentTeam), year, month) : "";
+  const transactions = useMemo(
+    () => transactionsByMonth[cacheKey] ?? [],
+    [transactionsByMonth, cacheKey]
+  );
 
   useEffect(() => {
     if (isFocused && currentTeam) {

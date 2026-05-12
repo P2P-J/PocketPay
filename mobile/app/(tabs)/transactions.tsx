@@ -6,7 +6,7 @@ import { TAB_BAR_HEIGHT } from "@/components/navigation/TabBar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react-native";
 import { Swipeable } from "react-native-gesture-handler";
-import { useTeamStore } from "@/store/teamStore";
+import { useTeamStore, monthCacheKey } from "@/store/teamStore";
 import { ListItem } from "@/components/ui/ListItem";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -51,10 +51,18 @@ export default function TransactionsScreen() {
   const [month, setMonth] = useState(now.getMonth() + 1);
 
   const currentTeam = useTeamStore((s) => s.currentTeam);
-  const transactions = useTeamStore((s) => s.transactions);
+  const transactionsByMonth = useTeamStore((s) => s.transactionsByMonth);
   const loading = useTeamStore((s) => s.loading);
   const fetchTransactions = useTeamStore((s) => s.fetchTransactions);
   const deleteTransaction = useTeamStore((s) => s.deleteTransaction);
+
+  // 현재 보고 있는 (team, year, month) 캐시만 derived → 다른 탭/월 영향 없음
+  const cacheKey = currentTeam ? monthCacheKey(getTeamId(currentTeam), year, month) : "";
+  const transactions = useMemo(
+    () => transactionsByMonth[cacheKey] ?? [],
+    [transactionsByMonth, cacheKey]
+  );
+  const hasCache = !!transactionsByMonth[cacheKey];
 
   const confirmDelete = (item: Transaction) => {
     const name = item.merchant || getCategoryLabel(item.category);
@@ -140,7 +148,7 @@ export default function TransactionsScreen() {
         </Pressable>
       </View>
 
-      {loading ? (
+      {loading && !hasCache ? (
         <View className="gap-3 mt-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <View key={i} className="flex-row items-center gap-3">

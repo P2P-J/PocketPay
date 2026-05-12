@@ -15,7 +15,7 @@ import { usePushPermission } from "@/hooks/usePushPermission";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronDown, Users, Sparkles } from "lucide-react-native";
 import type { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
-import { useTeamStore } from "@/store/teamStore";
+import { useTeamStore, monthCacheKey } from "@/store/teamStore";
 import { useAuthStore } from "@/store/authStore";
 import { ListItem } from "@/components/ui/ListItem";
 import { Card } from "@/components/ui/Card";
@@ -178,7 +178,7 @@ export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const teams = useTeamStore((s) => s.teams);
   const currentTeam = useTeamStore((s) => s.currentTeam);
-  const transactions = useTeamStore((s) => s.transactions);
+  const transactionsByMonth = useTeamStore((s) => s.transactionsByMonth);
   const loading = useTeamStore((s) => s.loading);
   const fetchTeams = useTeamStore((s) => s.fetchTeams);
   const setCurrentTeam = useTeamStore((s) => s.setCurrentTeam);
@@ -317,16 +317,20 @@ export default function HomeScreen() {
     });
   }, [allTransactions]);
 
-  // 이번 달 수입/지출 (거래 탭 데이터 기반)
+  // 이번 달 수입/지출 (월별 캐시에서 이번 달만 derived)
   const { monthIncome, monthExpense } = useMemo(() => {
+    if (!currentTeam) return { monthIncome: 0, monthExpense: 0 };
+    const now = new Date();
+    const key = monthCacheKey(getTeamId(currentTeam), now.getFullYear(), now.getMonth() + 1);
+    const monthList = transactionsByMonth[key] ?? [];
     let inc = 0;
     let exp = 0;
-    for (const t of transactions) {
+    for (const t of monthList) {
       if (t.type === "income") inc += t.amount;
       else exp += t.amount;
     }
     return { monthIncome: inc, monthExpense: exp };
-  }, [transactions]);
+  }, [transactionsByMonth, currentTeam]);
 
   // 전체 기간 잔액 (summary API)
   const { balance } = summary;

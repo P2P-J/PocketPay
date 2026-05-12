@@ -16,10 +16,15 @@ interface Summary {
   balance: number;
 }
 
+// 월별 거래 캐시 키: `${teamId}:${year}-${month}` (월은 1~12 그대로)
+export const monthCacheKey = (teamId: string, year: number, month: number) =>
+  `${teamId}:${year}-${month}`;
+
 interface TeamState {
   teams: Team[];
   currentTeam: Team | null;
-  transactions: Transaction[];
+  // 월별 거래 캐시. 화면은 자기 (teamId, year, month) 키로 직접 조회.
+  transactionsByMonth: Record<string, Transaction[]>;
   summary: Summary;
   loading: boolean;
   pendingInvitations: Invitation[];
@@ -57,7 +62,7 @@ interface TeamState {
 export const useTeamStore = create<TeamState>((set, get) => ({
   teams: [],
   currentTeam: null,
-  transactions: [],
+  transactionsByMonth: {},
   summary: { income: 0, expense: 0, balance: 0 },
   loading: false,
   pendingInvitations: [],
@@ -107,7 +112,12 @@ export const useTeamStore = create<TeamState>((set, get) => ({
   deleteTeam: async (teamId: string) => {
     await teamApi.delete(teamId);
     const remaining = get().teams.filter((t) => getTeamId(t) !== teamId);
-    set({ teams: remaining, currentTeam: null, transactions: [], summary: { income: 0, expense: 0, balance: 0 } });
+    // 삭제된 팀의 월별 캐시만 정리 (다른 팀 캐시는 유지)
+    const byMonth = { ...get().transactionsByMonth };
+    for (const k of Object.keys(byMonth)) {
+      if (k.startsWith(`${teamId}:`)) delete byMonth[k];
+    }
+    set({ teams: remaining, currentTeam: null, transactionsByMonth: byMonth, summary: { income: 0, expense: 0, balance: 0 } });
 
     // 남은 팀이 있으면 첫 번째 팀으로 자동 전환
     if (remaining.length > 0) {
@@ -118,7 +128,11 @@ export const useTeamStore = create<TeamState>((set, get) => ({
   leaveTeam: async (teamId: string) => {
     await teamApi.leaveTeam(teamId);
     const remaining = get().teams.filter((t) => getTeamId(t) !== teamId);
-    set({ teams: remaining, currentTeam: null, transactions: [], summary: { income: 0, expense: 0, balance: 0 } });
+    const byMonth = { ...get().transactionsByMonth };
+    for (const k of Object.keys(byMonth)) {
+      if (k.startsWith(`${teamId}:`)) delete byMonth[k];
+    }
+    set({ teams: remaining, currentTeam: null, transactionsByMonth: byMonth, summary: { income: 0, expense: 0, balance: 0 } });
 
     if (remaining.length > 0) {
       await get().setCurrentTeam(getTeamId(remaining[0]));
@@ -139,14 +153,22 @@ export const useTeamStore = create<TeamState>((set, get) => ({
     const now = new Date();
     const y = year || now.getFullYear();
     const m = month || now.getMonth() + 1;
+    const key = monthCacheKey(teamId, y, m);
 
-    set({ loading: true });
+    // 캐시 hit: 백그라운드 갱신 (loading false 유지, 스켈레톤 깜빡임 방지)
+    // 캐시 miss: loading true 켜고 스켈레톤 노출
+    const hasCache = !!get().transactionsByMonth[key];
+    if (!hasCache) set({ loading: true });
+
     try {
       const res = await dealApi.getMonthly(teamId, y, m);
-      const transactions = (res.data || []).map(dealToTransaction);
-      set({ transactions, loading: false });
+      const list = (res.data || []).map(dealToTransaction);
+      set((state) => ({
+        transactionsByMonth: { ...state.transactionsByMonth, [key]: list },
+        loading: false,
+      }));
     } catch (err) {
-      // 실패 시 이전 transactions 유지 — 빈 배열로 덮어쓰면 "거래 사라짐"으로 보임
+      // 실패 시 캐시 유지 — 빈 배열로 덮어쓰면 "거래 사라짐"으로 보임
       set({ loading: false });
       if (__DEV__) console.warn("[fetchTransactions] failed:", err);
     }
@@ -175,21 +197,34 @@ export const useTeamStore = create<TeamState>((set, get) => ({
     await dealApi.update(transactionId, data);
 
     const currentTeam = get().currentTeam;
-    if (currentTeam) {
-      const teamId = getTeamId(currentTeam);
-      const now = new Date();
-      await Promise.all([
-        get().fetchTransactions(teamId, now.getFullYear(), now.getMonth() + 1),
-        get().fetchSummary(teamId),
-      ]);
-    }
+    if (!currentTeam) return;
+
+    const teamId = getTeamId(currentTeam);
+    // 수정 시 month 이동 가능 → 해당 팀의 모든 월 캐시 무효화 후 현재 달 재조회
+    set((state) => {
+      const byMonth = { ...state.transactionsByMonth };
+      for (const k of Object.keys(byMonth)) {
+        if (k.startsWith(`${teamId}:`)) delete byMonth[k];
+      }
+      return { transactionsByMonth: byMonth };
+    });
+    const now = new Date();
+    await Promise.all([
+      get().fetchTransactions(teamId, now.getFullYear(), now.getMonth() + 1),
+      get().fetchSummary(teamId),
+    ]);
   },
 
   deleteTransaction: async (transactionId: string) => {
     await dealApi.delete(transactionId);
-    set((state) => ({
-      transactions: state.transactions.filter((t) => t.id !== transactionId),
-    }));
+    // 모든 월 캐시에서 낙관적으로 제거 (어느 월에 있는지 모르므로)
+    set((state) => {
+      const byMonth: Record<string, Transaction[]> = {};
+      for (const [k, list] of Object.entries(state.transactionsByMonth)) {
+        byMonth[k] = list.filter((t) => t.id !== transactionId);
+      }
+      return { transactionsByMonth: byMonth };
+    });
 
     const currentTeam = get().currentTeam;
     if (currentTeam) await get().fetchSummary(getTeamId(currentTeam));
@@ -240,7 +275,7 @@ export const useTeamStore = create<TeamState>((set, get) => ({
     set({
       teams: [],
       currentTeam: null,
-      transactions: [],
+      transactionsByMonth: {},
       summary: { income: 0, expense: 0, balance: 0 },
       loading: false,
       pendingInvitations: [],
