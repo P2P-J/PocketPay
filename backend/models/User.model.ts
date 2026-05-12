@@ -21,6 +21,8 @@ interface IUser extends Document {
   handle?: string;
   handleChangedAt?: Date;
   account?: IUserAccount;
+  pushTokens?: string[];
+  notificationsLastViewedAt?: Date;
   provider: "local" | "google" | "naver" | "kakao" | "apple";
   providerId?: string;
   oauthTokens?: IOauthTokens;
@@ -47,6 +49,8 @@ const UserSchema = new mongoose.Schema<IUser>({
         number: { type: String, trim: true },
         holder: { type: String, trim: true },
     },
+    pushTokens: { type: [String], default: [] },
+    notificationsLastViewedAt: { type: Date },
     provider: { type: String, enum: ["local", "google", "naver", "kakao", "apple"], required: true },
     providerId: { type: String },
     oauthTokens: {
