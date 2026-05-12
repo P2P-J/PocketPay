@@ -35,15 +35,25 @@ app.set("trust proxy", 1);
 // 보안 헤더
 app.use(helmet());
 
-// CORS 설정 (개발: 모바일 앱 허용, 프로덕션: 화이트리스트)
+// CORS 설정 — dev에서도 명시적 allowlist + credentials true 조합의 origin:true는 보안 위험
 const isDev = process.env.NODE_ENV !== "production";
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
-  : ["http://localhost:3000", "http://localhost:5173"];
+  : ["http://localhost:3000", "http://localhost:5173", "http://localhost:8081"];
+
+// dev: localhost/127.0.0.1 패턴 + LAN IP는 허용. 모바일 앱(origin 없는 fetch)도 통과.
+const devOriginCheck = (origin, callback) => {
+  if (!origin) return callback(null, true); // 모바일 앱 fetch는 origin 헤더 없음
+  if (allowedOrigins.includes(origin)) return callback(null, true);
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin)) {
+    return callback(null, true);
+  }
+  callback(new Error("CORS 거절"));
+};
 
 app.use(
   cors({
-    origin: isDev ? true : allowedOrigins, // 개발 환경: 모든 origin 허용
+    origin: isDev ? devOriginCheck : allowedOrigins,
     credentials: true,
   })
 );
@@ -97,14 +107,14 @@ app.use((err, req, res, _next) => {
   res.status(500).json({ message: "서버 내부 오류가 발생했습니다." });
 });
 
-// JWT_SECRET 강도 체크
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-  console.error(
-    "⚠️  경고: JWT_SECRET이 설정되지 않았거나 너무 짧습니다. (최소 32자 이상 권장)"
-  );
-  if (process.env.NODE_ENV === "production") {
-    process.exit(1);
-  }
+// JWT_SECRET 강도 체크 — undefined인 채로 서버 켜지면 jwt.sign이 런타임 500으로 새므로 항상 fail-fast
+if (!process.env.JWT_SECRET) {
+  console.error("❌ JWT_SECRET 환경변수가 없습니다. 서버를 시작할 수 없습니다.");
+  process.exit(1);
+}
+if (process.env.JWT_SECRET.length < 32) {
+  console.error("❌ JWT_SECRET이 너무 짧습니다. 최소 32자 이상 필요합니다.");
+  process.exit(1);
 }
 
 // DB 연결 후 서버 시작
