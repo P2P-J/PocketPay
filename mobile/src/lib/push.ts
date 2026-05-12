@@ -36,7 +36,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
     );
     return tokenData.data;
   } catch (e) {
-    console.warn("getExpoPushTokenAsync failed", e);
+    if (__DEV__) console.warn("getExpoPushTokenAsync failed", e);
     return null;
   }
 }
@@ -51,7 +51,7 @@ export async function registerAndUploadToken(): Promise<string | null> {
     await accountApi.registerPushToken(token);
     return token;
   } catch (e) {
-    console.warn("registerPushToken upload failed", e);
+    if (__DEV__) console.warn("registerPushToken upload failed", e);
     return null;
   }
 }

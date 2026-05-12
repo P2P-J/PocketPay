@@ -236,7 +236,7 @@ export const useTeamStore = create<TeamState>((set, get) => ({
       set({ pendingInvitations: res.data || [] });
     } catch (e) {
       // 비치명적, 조용히 실패
-      console.warn("Failed to fetch pending invitations", e);
+      if (__DEV__) console.warn("Failed to fetch pending invitations", e);
     }
   },
 
@@ -260,7 +260,7 @@ export const useTeamStore = create<TeamState>((set, get) => ({
       const res = await dutchApi.list();
       set({ pendingDutchRequests: res.data || [] });
     } catch (e) {
-      console.warn("Failed to fetch dutch requests", e);
+      if (__DEV__) console.warn("Failed to fetch dutch requests", e);
     }
   },
 

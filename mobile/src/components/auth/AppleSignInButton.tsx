@@ -77,7 +77,7 @@ export function AppleSignInButton({ onSuccess }: Props) {
       onSuccess?.();
     } catch (err: any) {
       if (err?.code === "ERR_REQUEST_CANCELED") return; // 사용자 취소
-      console.error("[Apple Sign-In] failed:", err);
+      if (__DEV__) console.error("[Apple Sign-In] failed:", err);
       showToast(
         "error",
         "Apple 로그인 실패",

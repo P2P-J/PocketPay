@@ -63,7 +63,12 @@ const getMonthlyDeals = async (req, res) => {
     const deals = await dealService.getMonthlyDeals(teamId, Number(year), Number(month));
     return res.status(200).json({ data: deals });
   } catch (error: any) {
-    console.error("[getMonthlyDeals ERROR]", error?.message, error?.stack?.split("\n")[1]);
+    // production에서는 stack trace 제외 (로그 수집 비용 + 민감 경로 노출 방지)
+    if (process.env.NODE_ENV === "production") {
+      console.error("[getMonthlyDeals ERROR]", error?.message);
+    } else {
+      console.error("[getMonthlyDeals ERROR]", error?.message, error?.stack?.split("\n")[1]);
+    }
     return handleError(res, error);
   }
 };
