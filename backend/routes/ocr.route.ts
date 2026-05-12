@@ -1,8 +1,19 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
+const rateLimit = require("express-rate-limit");
 const ocrController = require("../controllers/ocr.controller");
 const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
+
+// OCR은 Naver Clova 비용 + CPU 부담 발생 — 사용자당 분당 10회 (loginUserVerify 통과 후 user 기준)
+const ocrLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { message: "OCR 요청이 너무 많아요. 잠시 후 다시 시도해주세요." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: any) => req.user?.userId || req.ip,
+});
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -68,6 +79,6 @@ const handleUpload = (req, res, next) => {
   });
 };
 
-router.post("/analyze", loginUserVerify, handleUpload, ocrController.analyzeImage);
+router.post("/analyze", loginUserVerify, ocrLimiter, handleUpload, ocrController.analyzeImage);
 
 module.exports = router;

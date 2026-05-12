@@ -42,12 +42,21 @@ const verifyLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// refresh token 갈취 시 무한 갱신 방어 — IP당 분당 20회
+const refreshLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { message: "너무 많은 토큰 갱신 요청입니다. 잠시 후 다시 시도해주세요." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Local Auth
 router.post("/signup/local", validate(signupSchema), signupLocalController);
 router.post("/login/local", validate(loginSchema), loginLocalController);
 
-// Token Refresh
-router.post("/refresh", refreshTokenController);
+// Token Refresh (refresh 토큰 갈취 방어 위해 rate limit 적용)
+router.post("/refresh", refreshLimiter, refreshTokenController);
 
 // OAuth
 router.get("/login/oauth/:provider", redirectToOAuthProvider);
