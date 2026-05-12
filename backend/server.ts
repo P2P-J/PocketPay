@@ -13,6 +13,7 @@ const Sentry = require("@sentry/node");
 const express = require("express");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
+const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const { connectDB } = require("./config/db");
 const cors = require("cors");
@@ -34,6 +35,9 @@ app.set("trust proxy", 1);
 
 // 보안 헤더
 app.use(helmet());
+
+// gzip 응답 압축 — JSON 응답을 평균 70~80% 줄임 (팀 목록/거래 리스트 등 큰 페이로드에 효과적)
+app.use(compression());
 
 // CORS 설정 — dev에서도 명시적 allowlist + credentials true 조합의 origin:true는 보안 위험
 const isDev = process.env.NODE_ENV !== "production";

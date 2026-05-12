@@ -16,9 +16,11 @@
   "license": "ISC",
   "dependencies": {
     "@sentry/node": "^10.44.0",
+    "@types/compression": "^1.8.1",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.9.0",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
