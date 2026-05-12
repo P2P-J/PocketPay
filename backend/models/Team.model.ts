@@ -77,4 +77,10 @@ const TeamSchema = new mongoose.Schema<ITeam>({
     timestamps: true
 });
 
+// getMyTeams / getTeam / fee / push 등 다수 쿼리가 "내가 속한 팀" 검색을 위해
+// { "members.user": userId } 로 조회 → multi-key index 필수
+TeamSchema.index({ "members.user": 1 });
+// pendingInvites도 invitation 라우트에서 자주 조회됨
+TeamSchema.index({ "pendingInvites.user": 1 });
+
 module.exports = mongoose.model<ITeam>("Team", TeamSchema);

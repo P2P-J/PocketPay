@@ -32,5 +32,9 @@ const DealSchema = new mongoose.Schema<IDeal>({
 
 // 월별 조회 성능을 위한 복합 인덱스
 DealSchema.index({ teamId: 1, date: -1 });
+// 카테고리별 통계 (홈 화면 monthly stats $group) 성능
+DealSchema.index({ teamId: 1, category: 1 });
+// 수익/지출 구분 통계 ($match: division 활용)
+DealSchema.index({ teamId: 1, division: 1 });
 
 module.exports = mongoose.model<IDeal>("Deal", DealSchema);
