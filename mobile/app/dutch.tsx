@@ -20,6 +20,7 @@ import { useTeamStore } from "@/store/teamStore";
 import { useAuthStore } from "@/store/authStore";
 import { dutchApi } from "@/api/dutch";
 import { getTeamId } from "@/types/team";
+import { usePushPermission } from "@/hooks/usePushPermission";
 
 type SplitMode = "equal" | "custom";
 
@@ -65,6 +66,9 @@ export default function DutchScreen() {
   // 메모 (선택) + 공유 중 상태
   const [memo, setMemo] = useState("");
   const [sharing, setSharing] = useState(false);
+
+  // 푸시 권한 — 납부 공유하기 누르는 시점이 가치 인지 시점
+  const { checkAndPromptIfNeeded } = usePushPermission();
 
   // 팀 멤버 초기 로드 — 이미 로드된 경우 재초기화 방지 (체크박스 선택 유지)
   useEffect(() => {
@@ -237,6 +241,9 @@ export default function DutchScreen() {
     if (!teamId) {
       return showToast("error", "모임 정보가 없습니다");
     }
+
+    // 푸시 권한 안내 — 가치 인지 시점 (납부 공유하기 = 알림 가치 명확)
+    checkAndPromptIfNeeded();
 
     setSharing(true);
     try {
