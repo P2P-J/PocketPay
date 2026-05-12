@@ -1,6 +1,7 @@
 const { Team, User, Deal } = require("../../models/index");
 const AppError = require("../../utils/AppError");
 const { isValidObjectId } = require("../../utils/validation");
+const pushService = require("../push/push.service");
 
 const createTeam = async (userId, payload) => {
   const {
@@ -181,6 +182,32 @@ const inviteMember = async (teamId, ownerId, handle) => {
     invitedAt: new Date(),
   });
   await team.save();
+
+  // 푸시 알림 발송 (실패해도 invite는 성공 — fire-and-forget)
+  try {
+    const inviter = await User.findById(ownerId).select("name nickname");
+    const displayMode = team.displayMode || "nickname";
+    const inviterName =
+      displayMode === "realName"
+        ? inviter?.name || inviter?.nickname || "누군가"
+        : inviter?.nickname || inviter?.name || "누군가";
+
+    pushService
+      .sendPushToUser(user._id, {
+        title: `${team.name} 모임 초대`,
+        body: `${inviterName}님이 초대했어요`,
+        data: {
+          type: "invite",
+          notificationId: String(team._id),
+        },
+      })
+      .catch((err) => {
+        console.warn("Push send failed (invite)", err);
+      });
+  } catch (e) {
+    console.warn("Push setup failed (invite)", e);
+  }
+
   return team;
 };
 

@@ -1,6 +1,7 @@
 const { DutchRequest, Team, User } = require("../../models/index");
 const AppError = require("../../utils/AppError");
 const { isValidObjectId } = require("../../utils/validation");
+const pushService = require("../push/push.service");
 
 const EXPIRY_DAYS = 7;
 const EXPIRY_MS = EXPIRY_DAYS * 24 * 60 * 60 * 1000;
@@ -86,7 +87,35 @@ const createDutchRequests = async (
     expiresAt,
   }));
 
-  await DutchRequest.insertMany(docs);
+  const created = await DutchRequest.insertMany(docs);
+
+  // 푸시 알림 발송 (각 recipient마다, fire-and-forget)
+  try {
+    const displayMode = team.displayMode || "nickname";
+    const requesterDisplayName =
+      displayMode === "realName"
+        ? requester.name || requester.nickname || "누군가"
+        : requester.nickname || requester.name || "누군가";
+
+    const title = memo ? `${memo} 더치페이 요청` : "더치페이 요청";
+
+    for (const doc of created) {
+      pushService
+        .sendPushToUser(doc.recipient, {
+          title,
+          body: `${requesterDisplayName}님이 ₩${amount.toLocaleString()} 요청`,
+          data: {
+            type: "dutch",
+            notificationId: String(doc._id),
+          },
+        })
+        .catch((err) => {
+          console.warn("Push send failed (dutch)", err);
+        });
+    }
+  } catch (e) {
+    console.warn("Push setup failed (dutch)", e);
+  }
 
   return {
     count: docs.length,
