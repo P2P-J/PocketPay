@@ -158,7 +158,10 @@ export default function ProfileScreen() {
   return (
     <ScreenContainer scrollable={false}>
       <Header title="프로필" showBack />
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* 프로필 헤더 */}
         <View className="items-center py-6">
           <View className="w-24 h-24 rounded-full bg-brand items-center justify-center mb-4">

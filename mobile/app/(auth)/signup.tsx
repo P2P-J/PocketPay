@@ -181,6 +181,7 @@ export default function SignupScreen() {
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <View className="gap-3 mt-6 mb-6">
           {/* 이메일 + 인증 */}

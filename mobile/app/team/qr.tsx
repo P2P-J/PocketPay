@@ -82,6 +82,7 @@ export default function TeamQRScreen() {
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+          showsVerticalScrollIndicator={false}
         >
           {/* 안내 텍스트 */}
           <View className="items-center mt-6 mb-8">

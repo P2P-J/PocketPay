@@ -244,6 +244,7 @@ export default function TeamDetailScreen() {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+        showsVerticalScrollIndicator={false}
       >
         {/* 모임 선택 드롭다운 */}
         <Pressable

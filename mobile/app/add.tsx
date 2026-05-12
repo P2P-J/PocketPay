@@ -157,6 +157,7 @@ export default function AddScreen() {
         className="flex-1"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: contentBottomPad }}
+        showsVerticalScrollIndicator={false}
       >
         {/* 수입/지출 토글 */}
         <View className="flex-row gap-2 my-4">

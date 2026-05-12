@@ -306,6 +306,7 @@ export default function DutchScreen() {
         className="flex-1"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: 16 }}
+        showsVerticalScrollIndicator={false}
       >
           {/* ── 총 금액 ── */}
           <View className="mt-4 mb-3">

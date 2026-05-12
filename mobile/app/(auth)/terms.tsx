@@ -73,7 +73,7 @@ export default function TermsScreen() {
     <ScreenContainer scrollable={false} withTabBar={false} withKeyboard={false}>
       <Header title="약관 동의" showBack />
 
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* 전체 동의 */}
         <Pressable
           onPress={toggleAll}
@@ -163,7 +163,7 @@ export default function TermsScreen() {
               </Text>
             </Pressable>
           </View>
-          <ScrollView className="flex-1 px-screen-x">
+          <ScrollView className="flex-1 px-screen-x" showsVerticalScrollIndicator={false}>
             <Text className="text-sub font-pretendard text-text-secondary leading-6 mb-8">
               {modalContent?.content}
             </Text>

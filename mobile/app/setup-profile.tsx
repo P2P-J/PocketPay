@@ -62,7 +62,10 @@ export default function SetupProfileScreen() {
   return (
     <ScreenContainer scrollable={false}>
       <Header title="프로필 설정" />
-      <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+      >
         <Text className="text-body text-text-secondary mb-6">
           작은 모임을 사용하기 전에{"\n"}프로필 정보를 입력해주세요.
         </Text>

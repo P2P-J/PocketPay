@@ -101,6 +101,7 @@ export default function ResetPasswordScreen() {
       <ScrollView
         className="flex-1"
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         {step === "email" && (
           <View className="mt-6">
