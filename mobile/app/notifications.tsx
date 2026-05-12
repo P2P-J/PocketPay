@@ -1,12 +1,15 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, FlatList, Pressable } from "react-native";
 import { Bell } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
+import { useLocalSearchParams } from "expo-router";
 import { useTeamStore } from "@/store/teamStore";
+import { useAuthStore } from "@/store/authStore";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
 import { Header } from "@/components/ui/Header";
 import { Button } from "@/components/ui/Button";
 import { showToast } from "@/components/ui/Toast";
+import { accountApi } from "@/api/account";
 import type { Invitation } from "@/types/invitation";
 import type { DutchRequestNotification } from "@/types/dutch";
 
@@ -25,17 +28,32 @@ function formatRelativeTime(iso: string): string {
 
 function InvitationCard({
   invitation,
+  isHighlighted,
   onAccept,
   onReject,
 }: {
   invitation: Invitation;
+  isHighlighted?: boolean;
   onAccept: () => void;
   onReject: () => void;
 }) {
+  const [glow, setGlow] = useState(false);
+  useEffect(() => {
+    if (isHighlighted) {
+      setGlow(true);
+      const t = setTimeout(() => setGlow(false), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [isHighlighted]);
+
   return (
     <View
-      className="bg-card rounded-2xl p-4 mb-3"
-      style={{ borderWidth: 1, borderColor: "#E5E8EB" }}
+      className="rounded-2xl p-4 mb-3"
+      style={{
+        backgroundColor: glow ? "#E8FAF2" : "#FFFFFF",
+        borderWidth: 1,
+        borderColor: glow ? "#3DD598" : "#E5E8EB",
+      }}
     >
       <Text className="text-lg font-pretendard-bold text-text-primary mb-1">
         {invitation.teamName}
@@ -58,12 +76,23 @@ function InvitationCard({
 
 function DutchRequestCard({
   request,
+  isHighlighted,
   onDismiss,
 }: {
   request: DutchRequestNotification;
+  isHighlighted?: boolean;
   onDismiss: () => void;
 }) {
   const title = request.memo || "더치페이 요청";
+  const [glow, setGlow] = useState(false);
+
+  useEffect(() => {
+    if (isHighlighted) {
+      setGlow(true);
+      const t = setTimeout(() => setGlow(false), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [isHighlighted]);
 
   const handleCopyAccount = async () => {
     await Clipboard.setStringAsync(request.accountSnapshot.number);
@@ -72,8 +101,12 @@ function DutchRequestCard({
 
   return (
     <View
-      className="bg-card rounded-2xl p-4 mb-3"
-      style={{ borderWidth: 1, borderColor: "#E5E8EB" }}
+      className="rounded-2xl p-4 mb-3"
+      style={{
+        backgroundColor: glow ? "#E8FAF2" : "#FFFFFF",
+        borderWidth: 1,
+        borderColor: glow ? "#3DD598" : "#E5E8EB",
+      }}
     >
       <Text className="text-lg font-pretendard-bold text-text-primary mb-1">
         {title}
@@ -129,6 +162,9 @@ type UnifiedItem =
   | { type: "dutch"; data: DutchRequestNotification; createdAt: string };
 
 export default function NotificationsScreen() {
+  const { highlight } = useLocalSearchParams<{ highlight?: string }>();
+  const flatListRef = useRef<FlatList<UnifiedItem>>(null);
+
   const invitations = useTeamStore((s) => s.pendingInvitations);
   const dutchRequests = useTeamStore((s) => s.pendingDutchRequests);
   const fetchPendingInvitations = useTeamStore((s) => s.fetchPendingInvitations);
@@ -136,11 +172,15 @@ export default function NotificationsScreen() {
   const acceptInvitation = useTeamStore((s) => s.acceptInvitation);
   const rejectInvitation = useTeamStore((s) => s.rejectInvitation);
   const dismissDutchRequestAction = useTeamStore((s) => s.dismissDutchRequest);
+  const refreshUser = useAuthStore((s) => s.refreshUser);
 
   useEffect(() => {
     fetchPendingInvitations();
     fetchPendingDutchRequests();
-  }, [fetchPendingInvitations, fetchPendingDutchRequests]);
+    // 알림 화면 진입 — 미확인 카운트 리셋
+    accountApi.markNotificationsViewed().catch(() => {});
+    refreshUser();
+  }, [fetchPendingInvitations, fetchPendingDutchRequests, refreshUser]);
 
   const unified = useMemo<UnifiedItem[]>(() => {
     const items: UnifiedItem[] = [
@@ -159,6 +199,26 @@ export default function NotificationsScreen() {
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [invitations, dutchRequests]);
+
+  // highlight 자동 스크롤
+  useEffect(() => {
+    if (!highlight || unified.length === 0) return;
+    const index = unified.findIndex((item) => {
+      const id =
+        item.type === "invite" ? item.data.teamId : item.data._id;
+      return String(id) === String(highlight);
+    });
+    if (index >= 0) {
+      const t = setTimeout(() => {
+        flatListRef.current?.scrollToIndex({
+          index,
+          animated: true,
+          viewPosition: 0.3,
+        });
+      }, 300);
+      return () => clearTimeout(t);
+    }
+  }, [highlight, unified]);
 
   const onAccept = async (inv: Invitation) => {
     try {
@@ -196,28 +256,43 @@ export default function NotificationsScreen() {
         <EmptyView />
       ) : (
         <FlatList
+          ref={flatListRef}
           data={unified}
           keyExtractor={(item) =>
             `${item.type}-${
               item.type === "invite" ? item.data.teamId : item.data._id
             }`
           }
-          renderItem={({ item }) =>
-            item.type === "invite" ? (
+          renderItem={({ item }) => {
+            const itemId =
+              item.type === "invite" ? item.data.teamId : item.data._id;
+            const isHighlighted =
+              !!highlight && String(itemId) === String(highlight);
+            return item.type === "invite" ? (
               <InvitationCard
                 invitation={item.data}
+                isHighlighted={isHighlighted}
                 onAccept={() => onAccept(item.data)}
                 onReject={() => onReject(item.data)}
               />
             ) : (
               <DutchRequestCard
                 request={item.data}
+                isHighlighted={isHighlighted}
                 onDismiss={() => onDismissDutch(item.data._id)}
               />
-            )
-          }
+            );
+          }}
           contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}
           showsVerticalScrollIndicator={false}
+          onScrollToIndexFailed={(info) => {
+            setTimeout(() => {
+              flatListRef.current?.scrollToOffset({
+                offset: info.averageItemLength * info.index,
+                animated: true,
+              });
+            }, 100);
+          }}
         />
       )}
     </ScreenContainer>
