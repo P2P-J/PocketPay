@@ -167,6 +167,70 @@ const updateMyAccount = async (userId, account) => {
   return user;
 };
 
+const registerPushToken = async (userId, token) => {
+  if (!token || typeof token !== "string") {
+    throw AppError.badRequest("올바른 토큰이 아닙니다.");
+  }
+  const user = await User.findById(userId);
+  if (!user) throw AppError.notFound("사용자를 찾을 수 없습니다.");
+
+  if (!user.pushTokens) user.pushTokens = [];
+  if (!user.pushTokens.includes(token)) {
+    user.pushTokens.push(token);
+    await user.save();
+  }
+  return user;
+};
+
+const removePushToken = async (userId, token) => {
+  if (!token) {
+    throw AppError.badRequest("올바른 토큰이 아닙니다.");
+  }
+  await User.findByIdAndUpdate(userId, {
+    $pull: { pushTokens: token },
+  });
+  return { success: true };
+};
+
+const markNotificationsViewed = async (userId) => {
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { notificationsLastViewedAt: new Date() },
+    { new: true }
+  );
+  return user;
+};
+
+const getUnreadCount = async (userId) => {
+  const { DutchRequest } = require("../../models/index");
+  const user = await User.findById(userId).select("notificationsLastViewedAt");
+  const since = user?.notificationsLastViewedAt || new Date(0);
+
+  // 모임 초대 — pendingInvites 임베디드
+  const teams = await Team.find({ "pendingInvites.user": userId }).lean();
+  let inviteUnread = 0;
+  for (const team of teams) {
+    for (const invite of team.pendingInvites || []) {
+      if (
+        invite.user.toString() === String(userId) &&
+        new Date(invite.invitedAt).getTime() > since.getTime()
+      ) {
+        inviteUnread++;
+      }
+    }
+  }
+
+  // 더치페이
+  const dutchUnread = await DutchRequest.countDocuments({
+    recipient: userId,
+    status: "pending",
+    expiresAt: { $gt: new Date() },
+    createdAt: { $gt: since },
+  });
+
+  return { count: inviteUnread + dutchUnread };
+};
+
 module.exports = {
   getMyAccount,
   deleteMyAccount,
@@ -175,4 +239,8 @@ module.exports = {
   updateProfile,
   updateHandle,
   updateMyAccount,
+  registerPushToken,
+  removePushToken,
+  markNotificationsViewed,
+  getUnreadCount,
 };

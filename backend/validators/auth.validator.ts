@@ -79,6 +79,12 @@ const updateMyAccountSchema = {
   }),
 };
 
+const pushTokenSchema = {
+  body: z.object({
+    token: z.string().min(1).max(200),
+  }),
+};
+
 const loginSchema = {
   body: z.object({
     email: z.string().email("올바른 이메일 형식이 아닙니다."),
@@ -114,4 +120,5 @@ module.exports = {
   updateProfileSchema,
   updateHandleSchema,
   updateMyAccountSchema,
+  pushTokenSchema,
 };

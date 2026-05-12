@@ -7,6 +7,7 @@ const {
   updateProfileSchema,
   updateHandleSchema,
   updateMyAccountSchema,
+  pushTokenSchema,
 } = require("../validators/auth.validator");
 const AccountController = require("../controllers/account.controller");
 
@@ -35,6 +36,30 @@ router.patch(
   "/account",
   validate(updateMyAccountSchema),
   AccountController.updateMyAccountController
+);
+
+// 푸시 토큰 등록/제거
+router.post(
+  "/push-token",
+  validate(pushTokenSchema),
+  AccountController.registerPushTokenController
+);
+router.delete(
+  "/push-token",
+  validate(pushTokenSchema),
+  AccountController.removePushTokenController
+);
+
+// 알림 화면 진입 시 — 미확인 카운트 리셋
+router.post(
+  "/notifications-viewed",
+  AccountController.markNotificationsViewedController
+);
+
+// 미확인 카운트 조회
+router.get(
+  "/notifications-unread-count",
+  AccountController.getUnreadCountController
 );
 
 module.exports = router;

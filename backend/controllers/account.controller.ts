@@ -10,6 +10,8 @@ const serializeUser = (user) => ({
   handle: user.handle,
   handleChangedAt: user.handleChangedAt,
   account: user.account,
+  pushTokens: user.pushTokens,
+  notificationsLastViewedAt: user.notificationsLastViewedAt,
   provider: user.provider,
 });
 
@@ -83,6 +85,48 @@ const updateMyAccountController = async (req, res) => {
   }
 };
 
+const registerPushTokenController = async (req, res) => {
+  try {
+    const user = await AccountService.registerPushToken(
+      req.user.userId,
+      req.body.token
+    );
+    res.status(200).json({ data: serializeUser(user) });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+const removePushTokenController = async (req, res) => {
+  try {
+    const result = await AccountService.removePushToken(
+      req.user.userId,
+      req.body.token
+    );
+    res.status(200).json({ data: result });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+const markNotificationsViewedController = async (req, res) => {
+  try {
+    const user = await AccountService.markNotificationsViewed(req.user.userId);
+    res.status(200).json({ data: serializeUser(user) });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+const getUnreadCountController = async (req, res) => {
+  try {
+    const result = await AccountService.getUnreadCount(req.user.userId);
+    res.status(200).json({ data: result });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
 module.exports = {
   getMyAccount,
   deleteMyAccount,
@@ -91,4 +135,8 @@ module.exports = {
   updateProfileController,
   updateHandleController,
   updateMyAccountController,
+  registerPushTokenController,
+  removePushTokenController,
+  markNotificationsViewedController,
+  getUnreadCountController,
 };
