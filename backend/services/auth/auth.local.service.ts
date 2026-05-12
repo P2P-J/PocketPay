@@ -48,7 +48,8 @@ const signupLocal = async ({ email, password, name, nickname, handle }) => {
 };
 
 const loginLocal = async ({ email, password }) => {
-  const user = await User.findOne({ email, provider: "local" });
+  // password 필드는 schema의 select:false라 명시 조회 필요
+  const user = await User.findOne({ email, provider: "local" }).select("+password");
   if (!user) {
     throw AppError.unauthorized("이메일 또는 비밀번호가 올바르지 않습니다.");
   }

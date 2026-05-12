@@ -32,7 +32,8 @@ interface IUser extends Document {
 
 const UserSchema = new mongoose.Schema<IUser>({
     email: { type: String, required: true, index: true },
-    password: { type: String },
+    // 비밀번호는 기본 쿼리에서 제외 (로그인 시 .select("+password")로 명시 조회)
+    password: { type: String, select: false },
     name: { type: String, required: true },
     nickname: { type: String, required: true, trim: true, minlength: 1, maxlength: 20 },
     handle: {

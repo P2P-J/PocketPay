@@ -2,6 +2,7 @@ const AccountService = require("../services/account/account.service");
 const { handleError } = require("../utils/errorHandler");
 
 // User 객체를 클라이언트 응답 형식으로 직렬화 (모든 me/profile/handle/account 응답 공통)
+// pushTokens는 클라이언트가 알 필요 없는 백엔드 전용 필드 → 응답에서 제외 (불필요 노출 방지)
 const serializeUser = (user) => ({
   id: user._id,
   email: user.email,
@@ -10,7 +11,6 @@ const serializeUser = (user) => ({
   handle: user.handle,
   handleChangedAt: user.handleChangedAt,
   account: user.account,
-  pushTokens: user.pushTokens,
   notificationsLastViewedAt: user.notificationsLastViewedAt,
   provider: user.provider,
 });
