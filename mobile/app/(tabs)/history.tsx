@@ -43,11 +43,12 @@ export default function HistoryScreen() {
     [transactionsByMonth, cacheKey]
   );
 
+  // 화면 포커스/팀/월 변경 시 새로고침 (캐시 hit이면 store가 silent revalidate)
   useEffect(() => {
     if (isFocused && currentTeam) {
       fetchTransactions(getTeamId(currentTeam), year, month);
     }
-  }, [isFocused, currentTeam]);
+  }, [isFocused, currentTeam, year, month]);
 
   const changeMonth = (delta: number) => {
     let m = month + delta;
@@ -56,7 +57,7 @@ export default function HistoryScreen() {
     else if (m > 12) { m = 1; y++; }
     setMonth(m);
     setYear(y);
-    if (currentTeam) fetchTransactions(getTeamId(currentTeam), y, m);
+    // fetch는 useEffect가 year/month 변경 감지해서 자동 트리거
   };
 
   const { income, expense } = useMemo(() => {

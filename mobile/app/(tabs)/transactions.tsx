@@ -99,12 +99,12 @@ export default function TransactionsScreen() {
 
   const isFocused = useIsFocused();
 
-  // 화면 포커스 또는 팀 변경 시 새로고침
+  // 화면 포커스/팀/월 변경 시 새로고침 (캐시 hit이면 store가 자동으로 silent revalidate)
   useEffect(() => {
     if (isFocused && currentTeam) {
       fetchTransactions(getTeamId(currentTeam), year, month);
     }
-  }, [isFocused, currentTeam]);
+  }, [isFocused, currentTeam, year, month]);
 
   const sections = useMemo(() => groupByDate(transactions), [transactions]);
 
@@ -128,9 +128,7 @@ export default function TransactionsScreen() {
     }
     setMonth(newMonth);
     setYear(newYear);
-    if (currentTeam) {
-      fetchTransactions(getTeamId(currentTeam), newYear, newMonth);
-    }
+    // fetch는 useEffect가 year/month 변경 감지해서 자동 트리거
   };
 
   return (
