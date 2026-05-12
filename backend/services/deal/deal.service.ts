@@ -73,42 +73,50 @@ const getMonthlyStats = async (teamId, year, month) => {
   const y = Number(year);
   const m = Number(month);
 
-  // 이번 달
   const curStart = new Date(y, m - 1, 1);
   const curEnd = new Date(y, m, 1);
-  const curDeals = await Deal.find({
-    teamId,
-    date: { $gte: curStart, $lt: curEnd },
-  });
-
-  // 전월
   const prevStart = new Date(y, m - 2, 1);
   const prevEnd = new Date(y, m - 1, 1);
-  const prevDeals = await Deal.find({
-    teamId,
-    date: { $gte: prevStart, $lt: prevEnd },
-  });
 
-  // 이번 달 합계
-  let curIncome = 0, curExpense = 0;
-  const categoryMap: Record<string, number> = {};
-  for (const d of curDeals) {
-    if (d.division === "수입") curIncome += d.price;
-    else {
-      curExpense += d.price;
-      const cat = d.category || "기타";
-      categoryMap[cat] = (categoryMap[cat] || 0) + d.price;
-    }
-  }
+  // aggregate로 division/category 집계를 DB에서 처리 (in-memory 루프 제거)
+  // (teamId, date, division) 및 (teamId, category) 인덱스 활용
+  const teamObjId = new (require("mongoose").Types.ObjectId)(String(teamId));
+  const [curStats, prevStats, catStats] = await Promise.all([
+    Deal.aggregate([
+      { $match: { teamId: teamObjId, date: { $gte: curStart, $lt: curEnd } } },
+      { $group: { _id: "$division", total: { $sum: "$price" } } },
+    ]),
+    Deal.aggregate([
+      { $match: { teamId: teamObjId, date: { $gte: prevStart, $lt: prevEnd } } },
+      { $group: { _id: "$division", total: { $sum: "$price" } } },
+    ]),
+    Deal.aggregate([
+      {
+        $match: {
+          teamId: teamObjId,
+          date: { $gte: curStart, $lt: curEnd },
+          $or: [{ division: "지출" }, { division: { $exists: false } }],
+        },
+      },
+      {
+        $group: {
+          _id: { $ifNull: ["$category", "기타"] },
+          total: { $sum: "$price" },
+        },
+      },
+      { $sort: { total: -1 } },
+    ]),
+  ]);
 
-  // 전월 합계
-  let prevIncome = 0, prevExpense = 0;
-  for (const d of prevDeals) {
-    if (d.division === "수입") prevIncome += d.price;
-    else prevExpense += d.price;
-  }
+  const pickDivision = (rows, key: string): number => {
+    for (const r of rows) if (r._id === key) return r.total;
+    return 0;
+  };
+  const curIncome = pickDivision(curStats, "수입");
+  const curExpense = pickDivision(curStats, "지출");
+  const prevIncome = pickDivision(prevStats, "수입");
+  const prevExpense = pickDivision(prevStats, "지출");
 
-  // 증감률 계산
   const incomeChange = prevIncome > 0
     ? Math.round(((curIncome - prevIncome) / prevIncome) * 100)
     : curIncome > 0 ? 100 : 0;
@@ -116,10 +124,7 @@ const getMonthlyStats = async (teamId, year, month) => {
     ? Math.round(((curExpense - prevExpense) / prevExpense) * 100)
     : curExpense > 0 ? 100 : 0;
 
-  // 카테고리별 지출 (금액 내림차순)
-  const categoryBreakdown = Object.entries(categoryMap)
-    .map(([category, total]) => ({ category, total }))
-    .sort((a, b) => b.total - a.total);
+  const categoryBreakdown = catStats.map((c) => ({ category: c._id, total: c.total }));
 
   return {
     current: { income: curIncome, expense: curExpense },
