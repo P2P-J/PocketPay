@@ -1,12 +1,25 @@
 const { z } = require("zod");
 
+// 비밀번호 복잡도: 영문/숫자/특수문자 중 2가지 이상 포함
+// 단순 숫자만(예: "12345678")이나 단순 영문만으로 가입 차단
+const PASSWORD_COMPLEXITY_MESSAGE = "영문, 숫자, 특수문자 중 2가지 이상을 조합해주세요.";
+const hasMinComplexity = (v) => {
+  let count = 0;
+  if (/[a-zA-Z]/.test(v)) count++;
+  if (/[0-9]/.test(v)) count++;
+  if (/[^a-zA-Z0-9]/.test(v)) count++;
+  return count >= 2;
+};
+const passwordSchema = z
+  .string()
+  .min(8, "비밀번호는 최소 8자 이상이어야 합니다.")
+  .max(20, "비밀번호는 20자를 초과할 수 없습니다.")
+  .refine(hasMinComplexity, { message: PASSWORD_COMPLEXITY_MESSAGE });
+
 const signupSchema = {
   body: z.object({
     email: z.string().email("올바른 이메일 형식이 아닙니다."),
-    password: z
-      .string()
-      .min(8, "비밀번호는 최소 8자 이상이어야 합니다.")
-      .max(20, "비밀번호는 20자를 초과할 수 없습니다."),
+    password: passwordSchema,
     name: z
       .string()
       .min(1, "실명을 입력해주세요.")
@@ -95,10 +108,7 @@ const loginSchema = {
 const changePasswordSchema = {
   body: z.object({
     currentPassword: z.string().min(1, "현재 비밀번호는 필수입니다."),
-    newPassword: z
-      .string()
-      .min(8, "새 비밀번호는 최소 8자 이상이어야 합니다.")
-      .max(20, "새 비밀번호는 20자를 초과할 수 없습니다."),
+    newPassword: passwordSchema,
   }),
 };
 
@@ -121,4 +131,5 @@ module.exports = {
   updateHandleSchema,
   updateMyAccountSchema,
   pushTokenSchema,
+  passwordSchema,
 };

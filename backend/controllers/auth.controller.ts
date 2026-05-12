@@ -205,8 +205,11 @@ const resetPasswordController = async (req, res) => {
     if (!email || !code || !newPassword) {
       throw AppError.badRequest("이메일, 인증코드, 새 비밀번호를 모두 입력해주세요.");
     }
-    if (newPassword.length < 8 || newPassword.length > 20) {
-      throw AppError.badRequest("비밀번호는 8~20자 사이여야 합니다.");
+    // signupSchema/changePasswordSchema와 동일한 복잡도 정책 적용
+    const { passwordSchema } = require("../validators/auth.validator");
+    const result = passwordSchema.safeParse(newPassword);
+    if (!result.success) {
+      throw AppError.badRequest(result.error.issues[0]?.message || "비밀번호 형식이 올바르지 않습니다.");
     }
 
     // 인증코드 검증

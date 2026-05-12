@@ -77,7 +77,7 @@ export default function ChangePasswordScreen() {
         />
         <Input
           label="새 비밀번호"
-          placeholder="8~20자"
+          placeholder="8~20자, 영문/숫자/특수문자 중 2가지"
           value={newPassword}
           onChangeText={(v) => {
             setNewPassword(v);
