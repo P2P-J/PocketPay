@@ -7,6 +7,7 @@ const {
   refreshTokenController,
   redirectToOAuthProvider,
   loginOauthController,
+  exchangeOAuthCodeController,
   getOAuthTokensController,
   sendVerificationCodeController,
   verifyCodeController,
@@ -51,6 +52,7 @@ router.post("/refresh", refreshTokenController);
 // OAuth
 router.get("/login/oauth/:provider", redirectToOAuthProvider);
 router.get("/login/oauth/:provider/callback", loginOauthController);
+router.post("/oauth/exchange", verifyLimiter, exchangeOAuthCodeController);
 router.get("/oauth-tokens", getOAuthTokensController);
 router.post("/login/oauth/apple/native", validate(appleNativeSchema), loginAppleNativeController);
 

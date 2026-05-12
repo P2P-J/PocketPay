@@ -7,8 +7,9 @@ const oauthExchangeCodeSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true, index: true },
   accessToken: { type: String, required: true },
   refreshToken: { type: String, required: true },
-  // 모바일이 OAuth 시작 시 생성한 random nonce. exchange 요청에 같은 값이 들어와야 통과.
-  nonce: { type: String, required: true },
+  // PKCE-style challenge = SHA-256(verifier). state로 전달되어 OAuth 페이지에 노출되지만,
+  // verifier 자체는 모바일 SecureStore에만 존재. exchange 요청 시 verifier를 받아서 hash 비교.
+  challenge: { type: String, required: true },
   expiresAt: { type: Date, required: true },
 });
 

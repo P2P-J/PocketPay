@@ -12,6 +12,27 @@ const { handleError } = require("../utils/errorHandler");
 const { verifyToken, issueAccessToken } = require("../utils/jwt.util");
 const { User } = require("../models/index");
 const AppError = require("../utils/AppError");
+const {
+  createExchangeCode,
+  consumeExchangeCode,
+} = require("../services/auth/oauth-exchange.service");
+
+// state 파싱: "mobile_<challenge64hex>" → { isMobile, challenge }
+// 옛 포맷 "mobile" 단독은 거절 (nonce 없는 평문 토큰 전달 차단)
+const parseOAuthState = (raw) => {
+  const s = String(raw || "");
+  if (s.startsWith("mobile_")) {
+    const challenge = s.slice("mobile_".length);
+    if (/^[a-f0-9]{64}$/.test(challenge)) {
+      return { isMobile: true, challenge, rejoin: false };
+    }
+    return { isMobile: true, challenge: null, rejoin: false }; // 형식 깨짐 → 거절
+  }
+  if (s === "mobile" || s.includes("_mobile")) {
+    return { isMobile: true, challenge: null, rejoin: false }; // 옛 포맷 → 거절
+  }
+  return { isMobile: false, challenge: null, rejoin: s === "rejoin" };
+};
 
 const signupLocalController = async (req, res) => {
   try {
@@ -88,23 +109,23 @@ const loginOauthController = async (req, res) => {
   try {
     const { provider } = req.params;
     const { code, state } = req.query;
+    const parsed = parseOAuthState(state);
 
     const { accessToken, refreshToken } = await loginOauth(provider, code, state);
 
-    // 모바일 앱에서 온 요청인지 확인 (state에 "mobile" 포함)
-    const stateStr = String(state || "");
-    const isMobile = stateStr === "mobile" || stateStr.includes("_mobile") || req.query.platform === "mobile";
-
-    if (isMobile) {
-      // 딥링크로 앱에 토큰 전달
-      const params = new URLSearchParams({
-        accessToken,
-        refreshToken,
-      });
-      return res.redirect(`pocketpay://auth/callback?${params.toString()}`);
+    if (parsed.isMobile) {
+      // 옛 포맷(challenge 없음)은 보안 정책상 거절 — 평문 토큰 전달 차단
+      if (!parsed.challenge) {
+        return res.redirect(
+          `pocketpay://auth/callback?error=${encodeURIComponent("앱을 최신 버전으로 업데이트해주세요.")}`
+        );
+      }
+      // 일회용 exchange code 생성 → deep link에 토큰 대신 code만 노출
+      const exchangeCode = await createExchangeCode(accessToken, refreshToken, parsed.challenge);
+      return res.redirect(`pocketpay://auth/callback?code=${exchangeCode}`);
     }
 
-    // 웹: HTTP-only 쿠키로 토큰 전달
+    // 웹: HTTP-only 쿠키로 토큰 전달 (기존 흐름 유지)
     res.cookie("oauth_access_token", accessToken, COOKIE_OPTIONS);
     res.cookie("oauth_refresh_token", refreshToken, COOKIE_OPTIONS);
     res.redirect(`${process.env.FRONTEND_URL}/oauth/callback`);
@@ -112,12 +133,23 @@ const loginOauthController = async (req, res) => {
     if (err.message === "REJOIN_REQUIRED" && req.params.provider === "google") {
       return res.redirect("/auth/login/oauth/google?forceConsent=1&state=rejoin");
     }
-
-    const errState = String(req.query.state || "");
-    const isMobile = errState === "mobile" || errState.includes("_mobile") || req.query.platform === "mobile";
-    if (isMobile) {
-      return res.redirect(`pocketpay://auth/callback?error=${encodeURIComponent(err.message || "로그인 실패")}`);
+    const parsed = parseOAuthState(req.query.state);
+    if (parsed.isMobile) {
+      return res.redirect(
+        `pocketpay://auth/callback?error=${encodeURIComponent(err.message || "로그인 실패")}`
+      );
     }
+    return handleError(res, err);
+  }
+};
+
+// 모바일 deep link에서 받은 code + verifier로 토큰 교환 (1회용)
+const exchangeOAuthCodeController = async (req, res) => {
+  try {
+    const { code, verifier } = req.body;
+    const tokens = await consumeExchangeCode(code, verifier);
+    return res.status(200).json(tokens);
+  } catch (err) {
     return handleError(res, err);
   }
 };
@@ -242,6 +274,7 @@ module.exports = {
   refreshTokenController,
   redirectToOAuthProvider,
   loginOauthController,
+  exchangeOAuthCodeController,
   getOAuthTokensController,
   sendVerificationCodeController,
   verifyCodeController,
