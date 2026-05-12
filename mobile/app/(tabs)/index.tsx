@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { TAB_BAR_HEIGHT } from "@/components/navigation/TabBar";
 import { NotificationBell } from "@/components/ui/NotificationBell";
+import { usePushPermission } from "@/hooks/usePushPermission";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronDown, Users, Sparkles } from "lucide-react-native";
 import type { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
@@ -194,6 +195,9 @@ export default function HomeScreen() {
   );
   const isFocused = useIsFocused();
 
+  // 푸시 권한 — 첫 알림 수신 시점에 안내 모달 트리거
+  const { checkAndPromptIfNeeded } = usePushPermission();
+
   interface MonthlyStats {
     incomeChange: number;
     expenseChange: number;
@@ -238,6 +242,29 @@ export default function HomeScreen() {
       fetchPendingDutchRequests();
     }
   }, [isFocused]);
+
+  // 새 알림 있을 때 푸시 권한 안내 (가치 인지 시점)
+  useEffect(() => {
+    if (pendingInvitations.length > 0 || pendingDutchRequests.length > 0) {
+      checkAndPromptIfNeeded();
+    }
+  }, [pendingInvitations.length, pendingDutchRequests.length, checkAndPromptIfNeeded]);
+
+  // 미확인 카운트 = lastViewedAt 이후 생성된 알림만
+  const unreadCount = useMemo(() => {
+    const lastViewedRaw = user?.notificationsLastViewedAt;
+    if (!lastViewedRaw) {
+      return pendingInvitations.length + pendingDutchRequests.length;
+    }
+    const since = new Date(lastViewedRaw).getTime();
+    const invCount = pendingInvitations.filter(
+      (i) => new Date(i.invitedAt).getTime() > since
+    ).length;
+    const dutchCount = pendingDutchRequests.filter(
+      (d) => new Date(d.createdAt).getTime() > since
+    ).length;
+    return invCount + dutchCount;
+  }, [pendingInvitations, pendingDutchRequests, user?.notificationsLastViewedAt]);
 
   // currentTeam이 정해지거나 변경될 때, 또는 화면 포커스 시 거래/잔액/통계 새로고침
   useEffect(() => {
@@ -320,7 +347,7 @@ export default function HomeScreen() {
             작은 모임
           </Text>
           <NotificationBell
-            count={pendingInvitations.length + pendingDutchRequests.length}
+            count={unreadCount}
             onPress={() => router.push("/notifications")}
           />
         </View>
@@ -390,7 +417,7 @@ export default function HomeScreen() {
 
         <View className="flex-row items-center" style={{ gap: 8 }}>
           <NotificationBell
-            count={pendingInvitations.length + pendingDutchRequests.length}
+            count={unreadCount}
             onPress={() => router.push("/notifications")}
           />
           {currentTeam && (
