@@ -37,4 +37,24 @@ export const accountApi = {
     apiClient.patch("/account/account", { account }) as Promise<
       DataResponse<ProfileResponse>
     >,
+
+  registerPushToken: (token: string) =>
+    apiClient.post("/account/push-token", { token }) as Promise<
+      DataResponse<ProfileResponse>
+    >,
+
+  removePushToken: (token: string) =>
+    apiClient.post("/account/push-token/remove", { token }) as Promise<
+      DataResponse<{ success: boolean }>
+    >,
+
+  markNotificationsViewed: () =>
+    apiClient.post("/account/notifications-viewed", {}) as Promise<
+      DataResponse<ProfileResponse>
+    >,
+
+  getUnreadCount: () =>
+    apiClient.get("/account/notifications-unread-count") as Promise<
+      DataResponse<{ count: number }>
+    >,
 };

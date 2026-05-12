@@ -22,7 +22,8 @@
         "NSPhotoLibraryUsageDescription": "영수증 사진을 선택하여 OCR 자동 입력에 사용합니다.",
         "NSPhotoLibraryAddUsageDescription": "거래에 첨부된 영수증을 사진 앨범에 저장합니다.",
         "NSCameraUsageDescription": "영수증을 촬영하여 OCR 자동 입력에 사용합니다.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
@@ -45,7 +46,13 @@
           "cameraPermission": "영수증을 촬영하여 거래 내역을 자동으로 입력합니다."
         }
       ],
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          "color": "#3DD598"
+        }
+      ]
     ],
     "extra": {
       "router": {},

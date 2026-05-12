@@ -13,6 +13,8 @@ export interface User {
   handle?: string;
   handleChangedAt?: string;
   account?: UserAccount;
+  pushTokens?: string[];
+  notificationsLastViewedAt?: string;
   email?: string;
   provider?: string;
 }

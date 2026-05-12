@@ -9,6 +9,8 @@ type MeResponse = {
   handle?: string;
   handleChangedAt?: string;
   account?: { bank: string; number: string; holder: string };
+  pushTokens?: string[];
+  notificationsLastViewedAt?: string;
   provider: string;
 };
 

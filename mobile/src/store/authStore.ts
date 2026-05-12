@@ -137,6 +137,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
             handle: me.handle,
             handleChangedAt: me.handleChangedAt,
             account: me.account,
+            pushTokens: me.pushTokens,
+            notificationsLastViewedAt: me.notificationsLastViewedAt,
             email: me.email,
             provider: me.provider,
           },

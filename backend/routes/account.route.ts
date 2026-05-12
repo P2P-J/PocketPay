@@ -44,8 +44,8 @@ router.post(
   validate(pushTokenSchema),
   AccountController.registerPushTokenController
 );
-router.delete(
-  "/push-token",
+router.post(
+  "/push-token/remove",
   validate(pushTokenSchema),
   AccountController.removePushTokenController
 );
