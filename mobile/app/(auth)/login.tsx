@@ -15,6 +15,7 @@ import { useAuthStore } from "@/store/authStore";
 import { API_BASE_URL } from "@/constants/config";
 import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 import { ScreenContainer } from "@/components/layout/ScreenContainer";
+import { createOAuthPkce } from "@/utils/oauthPkce";
 
 // 카카오 말풍선 심볼
 function KakaoIcon() {
@@ -138,9 +139,15 @@ export default function LoginScreen() {
     }
   };
 
-  const handleOAuthLogin = (provider: string) => {
-    const url = `${API_BASE_URL}/auth/login/oauth/${provider}?state=mobile`;
-    Linking.openURL(url);
+  const handleOAuthLogin = async (provider: string) => {
+    try {
+      // verifier 생성 → SecureStore 저장. challenge만 state로 전달 (PKCE-style)
+      const { challenge } = await createOAuthPkce();
+      const url = `${API_BASE_URL}/auth/login/oauth/${provider}?state=mobile_${challenge}`;
+      await Linking.openURL(url);
+    } catch {
+      showToast("error", "로그인을 시작할 수 없어요", "잠시 후 다시 시도해주세요");
+    }
   };
 
   return (

@@ -16,4 +16,13 @@ export const oauthApi = {
       accessToken: string;
       refreshToken: string;
     }>,
+
+  /**
+   * Deep link 콜백에서 받은 code를 verifier와 함께 보내 토큰 받기 (PKCE-style 1회용 교환)
+   */
+  exchange: (data: { code: string; verifier: string }) =>
+    apiClient.post("/auth/oauth/exchange", data) as Promise<{
+      accessToken: string;
+      refreshToken: string;
+    }>,
 };

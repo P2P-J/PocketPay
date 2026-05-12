@@ -15,6 +15,8 @@ import { teamApi } from "../src/api/team";
 import { useTeamStore } from "../src/store/teamStore";
 import { usePushPermission } from "../src/hooks/usePushPermission";
 import { PushPermissionModal } from "../src/components/PushPermissionModal";
+import { oauthApi } from "../src/api/oauth";
+import { consumeOAuthVerifier, clearOAuthVerifier } from "../src/utils/oauthPkce";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -59,21 +61,34 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     const handleDeepLink = async (event: { url: string }) => {
       const url = event.url;
 
-      // OAuth 콜백: pocketpay://auth/callback?accessToken=...
+      // OAuth 콜백: pocketpay://auth/callback?code=... (PKCE-style 1회용 code 교환)
       if (url.includes("auth/callback")) {
         const params = new URLSearchParams(url.split("?")[1] || "");
-        const accessToken = params.get("accessToken");
-        const refreshToken = params.get("refreshToken");
+        const code = params.get("code");
         const error = params.get("error");
 
+        // 옛 흐름(평문 토큰)이 들어오면 보안 정책상 무시
+        if (params.get("accessToken")) {
+          await clearOAuthVerifier();
+          showToast("error", "로그인 실패", "예기치 못한 응답이에요. 다시 시도해주세요.");
+          return;
+        }
+
         if (error) {
+          await clearOAuthVerifier();
           showToast("error", "로그인 실패", decodeURIComponent(error));
           return;
         }
 
-        if (accessToken && refreshToken) {
+        if (code) {
+          const verifier = await consumeOAuthVerifier();
+          if (!verifier) {
+            showToast("error", "로그인 실패", "세션이 만료되었어요. 다시 시도해주세요.");
+            return;
+          }
           try {
-            await loginWithOAuth(accessToken, refreshToken);
+            const tokens = await oauthApi.exchange({ code, verifier });
+            await loginWithOAuth(tokens.accessToken, tokens.refreshToken);
             showToast("success", "로그인 성공");
           } catch {
             showToast("error", "로그인 실패", "다시 시도해주세요");
