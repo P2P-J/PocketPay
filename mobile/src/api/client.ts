@@ -75,7 +75,10 @@ const handleResponse = async (
   if (response.status === 401) {
     const errorData = await response.json().catch(() => ({}));
 
-    if (errorData.message === "TOKEN_EXPIRED" && retryFn) {
+    // 401이면 일단 refresh 시도 — 백엔드의 message 값(TOKEN_EXPIRED/INVALID_TOKEN/USER_NOT_FOUND 등)에
+    // 의존하지 않음. refresh 자체가 실패하면(refresh 토큰 만료/사용자 삭제 등) tryRefreshToken이 null 반환 → logout.
+    // 재시도 중에도 401이면 retryFn=null이라 다시 들어오지 않음 (무한루프 방지).
+    if (retryFn) {
       const newAccessToken = await tryRefreshToken();
       if (newAccessToken) {
         await getAuthState?.()?.setAccessToken(newAccessToken);
