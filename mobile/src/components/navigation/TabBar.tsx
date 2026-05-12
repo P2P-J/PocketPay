@@ -77,6 +77,14 @@ function TabSlot({ tab, progress, onPress }: TabSlotProps) {
     };
   });
 
+  // 활성 아이콘 opacity 보간 (비활성 아이콘 위에 겹쳐 그림)
+  const animatedActiveIconStyle = useAnimatedStyle(() => {
+    const distance = Math.min(Math.abs(progress.value - tab.index), 1);
+    return {
+      opacity: 1 - distance,
+    };
+  });
+
   return (
     <Pressable
       onPress={() => onPress(tab.index)}
@@ -84,6 +92,14 @@ function TabSlot({ tab, progress, onPress }: TabSlotProps) {
     >
       <View style={{ marginTop: 2 }}>
         <tab.Icon size={24} color={INACTIVE_COLOR} strokeWidth={2} />
+        <Animated.View
+          style={[
+            { position: "absolute", top: 0, left: 0 },
+            animatedActiveIconStyle,
+          ]}
+        >
+          <tab.Icon size={24} color={ACTIVE_COLOR} strokeWidth={2} />
+        </Animated.View>
       </View>
       <Animated.Text
         style={[
