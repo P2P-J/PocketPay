@@ -27,27 +27,35 @@ const createTeam = async (userId, payload) => {
 };
 
 const getMyTeams = async (userId) => {
-  const teams = await Team.find({ "members.user": userId });
+  // aggregate로 N+1 제거: Team + 각 팀의 최신 Deal.createdAt 단일 쿼리로 조회 후 정렬
+  // (이전: 팀 N개에 대해 Team.find 1회 + Deal.findOne N회)
+  const teams = await Team.aggregate([
+    { $match: { "members.user": userId } },
+    {
+      $lookup: {
+        from: "deals",
+        let: { tid: "$_id" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$teamId", "$$tid"] } } },
+          { $sort: { createdAt: -1 } },
+          { $limit: 1 },
+          { $project: { createdAt: 1 } },
+        ],
+        as: "latestDeal",
+      },
+    },
+    {
+      $addFields: {
+        latestActivity: {
+          $ifNull: [{ $arrayElemAt: ["$latestDeal.createdAt", 0] }, "$createdAt"],
+        },
+      },
+    },
+    { $project: { latestDeal: 0 } },
+    { $sort: { latestActivity: -1 } },
+  ]);
 
-  // 각 팀의 최신 거래 날짜를 가져와서 정렬
-  const teamsWithLatest = await Promise.all(
-    teams.map(async (team) => {
-      const latestDeal = await Deal.findOne({ teamId: team._id })
-        .sort({ createdAt: -1 })
-        .select("createdAt")
-        .lean();
-      return {
-        team,
-        latestActivity: latestDeal?.createdAt || team.createdAt,
-      };
-    })
-  );
-
-  teamsWithLatest.sort((a, b) =>
-    new Date(b.latestActivity).getTime() - new Date(a.latestActivity).getTime()
-  );
-
-  return teamsWithLatest.map((t) => t.team);
+  return teams;
 };
 
 const getTeam = async (teamId, userId) => {
