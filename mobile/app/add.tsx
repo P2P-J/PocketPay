@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import { Camera } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from "@/components/ui/Header";
@@ -55,11 +56,28 @@ export default function AddScreen() {
   const categories =
     type === TRANSACTION_TYPE.EXPENSE ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
+  // OCR 업로드 전 리사이즈 — 원본 4000x3000 (5MB+) → 1600폭 (~300KB)
+  // 네트워크/백엔드 메모리/Clova 처리 시간 모두 절감. 실패 시 원본 그대로 폴백.
+  const resizeForOcr = async (uri: string): Promise<string> => {
+    try {
+      const r = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 1600 } }],
+        { compress: 0.75, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      return r.uri;
+    } catch (err) {
+      if (__DEV__) console.warn("[OCR] resize 실패, 원본으로 업로드:", err);
+      return uri;
+    }
+  };
+
   const processOcr = async (uri: string) => {
     if (__DEV__) console.log("[OCR] 파일 URI:", uri);
     setOcrLoading(true);
     try {
-      const res = await ocrApi.analyze(uri);
+      const optimizedUri = await resizeForOcr(uri);
+      const res = await ocrApi.analyze(optimizedUri);
       if (__DEV__) console.log("[OCR] 응답:", JSON.stringify(res));
       const data = res.data;
       if (data.storeInfo) setMerchant(data.storeInfo);
