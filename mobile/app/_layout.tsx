@@ -2,6 +2,7 @@ import "../global.css";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as Linking from "expo-linking";
+import * as Notifications from "expo-notifications";
 import { useEffect } from "react";
 import { View, Image, Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -12,8 +13,21 @@ import { useAppInit } from "../src/hooks/useAppInit";
 import { useAuthStore } from "../src/store/authStore";
 import { teamApi } from "../src/api/team";
 import { useTeamStore } from "../src/store/teamStore";
+import { usePushPermission } from "../src/hooks/usePushPermission";
+import { PushPermissionModal } from "../src/components/PushPermissionModal";
 
 SplashScreen.preventAutoHideAsync();
+
+// 포그라운드에서도 시스템 배너로 알림 표시
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 function LoadingScreen() {
   return (
@@ -127,8 +141,42 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, segments, isReady]);
 
+  // 푸시 알림 권한 모달
+  const { shouldShowModal, handleAllow, handleSkip } = usePushPermission();
+
+  // 푸시 알림 탭 리스너 — /notifications로 deep link + highlight
+  useEffect(() => {
+    if (!user) return;
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const data = response.notification.request.content.data as {
+          type?: string;
+          notificationId?: string;
+        };
+        if (data?.notificationId) {
+          router.push({
+            pathname: "/notifications",
+            params: { highlight: String(data.notificationId) },
+          });
+        } else {
+          router.push("/notifications");
+        }
+      }
+    );
+    return () => subscription.remove();
+  }, [user, router]);
+
   if (!isReady) return <LoadingScreen />;
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <PushPermissionModal
+        visible={shouldShowModal}
+        onAllow={handleAllow}
+        onSkip={handleSkip}
+      />
+    </>
+  );
 }
 
 export default function RootLayout() {

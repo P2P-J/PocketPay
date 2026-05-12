@@ -149,6 +149,19 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     logout: async () => {
+      // 현재 디바이스의 push token을 백엔드에서 제거
+      // (다른 사용자가 같은 기기로 로그인 후 이전 알림 받는 것 방지)
+      try {
+        const { registerForPushNotifications } = await import("@/lib/push");
+        const { accountApi } = await import("@/api/account");
+        const token = await registerForPushNotifications();
+        if (token) {
+          await accountApi.removePushToken(token).catch(() => {});
+        }
+      } catch {
+        // 비치명적 — logout 계속 진행
+      }
+
       await SecureStore.deleteItemAsync("accessToken");
       await SecureStore.deleteItemAsync("refreshToken");
       set({
