@@ -2,7 +2,7 @@
   "expo": {
     "name": "작은 모임",
     "slug": "jageun-moim",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "scheme": "pocketpay",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
