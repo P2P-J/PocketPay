@@ -7,6 +7,7 @@ const {
   loginAppleNative,
   completeOAuthProfile,
 } = require("../services/auth/auth.oauth.service");
+const { loginToss } = require("../services/auth/auth.toss.service");
 const providers = require("../services/auth/providers");
 const { handleError } = require("../utils/errorHandler");
 const { verifyToken, issueAccessToken } = require("../utils/jwt.util");
@@ -252,6 +253,16 @@ const loginAppleNativeController = async (req, res) => {
   }
 };
 
+const loginTossController = async (req, res) => {
+  try {
+    const { authorizationCode, referrer } = req.body;
+    const { accessToken, refreshToken } = await loginToss(authorizationCode, referrer);
+    res.status(200).json({ accessToken, refreshToken });
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
 const completeOAuthProfileController = async (req, res) => {
   try {
     const user = await completeOAuthProfile(req.user.userId, req.body);
@@ -283,5 +294,6 @@ module.exports = {
   verifyCodeController,
   resetPasswordController,
   loginAppleNativeController,
+  loginTossController,
   completeOAuthProfileController,
 };

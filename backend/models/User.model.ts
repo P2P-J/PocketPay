@@ -23,7 +23,7 @@ interface IUser extends Document {
   account?: IUserAccount;
   pushTokens?: string[];
   notificationsLastViewedAt?: Date;
-  provider: "local" | "google" | "naver" | "kakao" | "apple";
+  provider: "local" | "google" | "naver" | "kakao" | "apple" | "toss";
   providerId?: string;
   oauthTokens?: IOauthTokens;
   createdAt: Date;
@@ -52,7 +52,7 @@ const UserSchema = new mongoose.Schema<IUser>({
     },
     pushTokens: { type: [String], default: [] },
     notificationsLastViewedAt: { type: Date },
-    provider: { type: String, enum: ["local", "google", "naver", "kakao", "apple"], required: true },
+    provider: { type: String, enum: ["local", "google", "naver", "kakao", "apple", "toss"], required: true },
     providerId: { type: String },
     oauthTokens: {
         naver: { refreshToken: { type: String, select: false } },

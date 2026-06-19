@@ -121,11 +121,20 @@ const appleNativeSchema = {
   }),
 };
 
+// 토스 로그인 (앱인토스 appLogin 인가코드 교환)
+const tossLoginSchema = {
+  body: z.object({
+    authorizationCode: z.string().min(1, "authorizationCode는 필수입니다."),
+    referrer: z.string().min(1, "referrer는 필수입니다."),
+  }),
+};
+
 module.exports = {
   signupSchema,
   loginSchema,
   changePasswordSchema,
   appleNativeSchema,
+  tossLoginSchema,
   completeOAuthProfileSchema,
   updateProfileSchema,
   updateHandleSchema,

@@ -13,6 +13,7 @@ const {
   verifyCodeController,
   resetPasswordController,
   loginAppleNativeController,
+  loginTossController,
   completeOAuthProfileController,
 } = require("../controllers/auth.controller");
 const { validate } = require("../middleware/validate.middleware");
@@ -20,6 +21,7 @@ const {
   signupSchema,
   loginSchema,
   appleNativeSchema,
+  tossLoginSchema,
   completeOAuthProfileSchema,
 } = require("../validators/auth.validator");
 const { loginUserVerify } = require("../middleware/loginUserVerify.middleware");
@@ -64,6 +66,9 @@ router.get("/login/oauth/:provider/callback", loginOauthController);
 router.post("/oauth/exchange", verifyLimiter, exchangeOAuthCodeController);
 router.get("/oauth-tokens", getOAuthTokensController);
 router.post("/login/oauth/apple/native", validate(appleNativeSchema), loginAppleNativeController);
+
+// 토스 로그인 (앱인토스 미니앱 전용 — appLogin 인가코드 교환)
+router.post("/login/toss", validate(tossLoginSchema), loginTossController);
 
 // OAuth profile completion (handle 등 입력)
 router.post(
