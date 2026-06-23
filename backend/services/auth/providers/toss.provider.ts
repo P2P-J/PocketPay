@@ -47,10 +47,11 @@ const getAccessToken = async (authorizationCode: string, referrer: string): Prom
 };
 
 // 토스 accessToken → 사용자 정보 (userKey + 암호화된 PII)
+// login-me도 apps-in-toss-api.toss.im 서버간 통신이라 mTLS 인증서 필요.
 const getUserInfo = async (accessToken: string) => {
   const { data } = await axios.get(
     `${TOSS_API_BASE}/api-partner/v1/apps-in-toss/user/oauth2/login-me`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
+    { headers: { Authorization: `Bearer ${accessToken}` }, httpsAgent: getHttpsAgent() }
   );
   return unwrap(data); // { userKey, scope, name(암호화), ... }
 };
