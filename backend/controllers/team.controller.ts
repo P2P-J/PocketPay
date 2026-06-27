@@ -64,6 +64,15 @@ const removeMember = async (req, res) => {
   }
 };
 
+const transferOwner = async (req, res) => {
+  try {
+    const team = await teamService.transferOwner(req.params.teamId, req.user.userId, req.body.userId);
+    res.status(200).json({ data: team });
+  } catch (err) {
+    handleError(res, err);
+  }
+};
+
 const leaveTeam = async (req, res) => {
   try {
     await teamService.leaveTeam(req.params.teamId, req.user.userId);
@@ -102,6 +111,7 @@ module.exports = {
   deleteTeam,
   inviteMember,
   removeMember,
+  transferOwner,
   leaveTeam,
   generateInviteToken,
   joinByToken,

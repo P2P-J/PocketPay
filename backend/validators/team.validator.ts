@@ -72,6 +72,15 @@ const inviteTokenParamSchema = {
   }),
 };
 
+const transferOwnerSchema = {
+  body: z.object({
+    userId: z.string().regex(objectIdRegex, "올바른 사용자 ID가 아닙니다."),
+  }),
+  params: z.object({
+    teamId: z.string().regex(objectIdRegex, "올바른 팀 ID가 아닙니다."),
+  }),
+};
+
 module.exports = {
   createTeamSchema,
   updateTeamSchema,
@@ -79,4 +88,5 @@ module.exports = {
   inviteMemberSchema,
   removeMemberSchema,
   inviteTokenParamSchema,
+  transferOwnerSchema,
 };

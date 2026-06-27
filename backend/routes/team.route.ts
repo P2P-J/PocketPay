@@ -10,6 +10,7 @@ const {
   inviteMemberSchema,
   removeMemberSchema,
   inviteTokenParamSchema,
+  transferOwnerSchema,
 } = require("../validators/team.validator");
 
 router.use(loginUserVerify);
@@ -25,5 +26,6 @@ router.post("/:teamId/invite-token", validate(teamIdParamSchema), teamController
 router.post("/:teamId/members", validate(inviteMemberSchema), teamController.inviteMember);
 router.delete("/:teamId/members/me", validate(teamIdParamSchema), teamController.leaveTeam);
 router.delete("/:teamId/members/:userId", validate(removeMemberSchema), teamController.removeMember);
+router.patch("/:teamId/owner", validate(transferOwnerSchema), teamController.transferOwner);
 
 module.exports = router;

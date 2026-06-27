@@ -249,6 +249,34 @@ const removeMember = async (teamId, ownerId, targetUserId) => {
   await team.save();
 };
 
+const transferOwner = async (teamId, ownerId, targetUserId) => {
+  if (!isValidObjectId(teamId) || !isValidObjectId(targetUserId)) {
+    throw AppError.badRequest("올바른 ID가 아닙니다.");
+  }
+
+  const team = await Team.findOne({ _id: teamId, owner: ownerId });
+  if (!team) {
+    throw AppError.forbidden("권한 위임 권한이 없습니다.");
+  }
+  if (team.owner.toString() === targetUserId) {
+    throw AppError.badRequest("이미 방장입니다.");
+  }
+
+  const target = team.members.find((m) => m.user.toString() === targetUserId);
+  if (!target) {
+    throw AppError.notFound("해당 유저는 팀 멤버가 아닙니다.");
+  }
+
+  // 소유권 이전 + members 역할 갱신
+  team.owner = targetUserId;
+  team.members.forEach((m) => {
+    if (m.user.toString() === targetUserId) m.role = "owner";
+    else if (m.user.toString() === ownerId) m.role = "member";
+  });
+  await team.save();
+  return team;
+};
+
 const generateInviteToken = async (teamId, ownerId) => {
   if (!isValidObjectId(teamId)) {
     throw AppError.badRequest("올바른 팀 ID가 아닙니다.");
@@ -412,6 +440,7 @@ module.exports = {
   deleteTeam,
   inviteMember,
   removeMember,
+  transferOwner,
   leaveTeam,
   generateInviteToken,
   joinByToken,
