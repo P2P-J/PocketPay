@@ -25,6 +25,26 @@
 
 ---
 
+## 📱 앱 미리보기
+
+> **App Store에 정식 출시된 실제 앱 화면**입니다. (모임 이름·인물명은 데모용 예시)
+
+<div align="center">
+
+| 홈 대시보드 | 거래 내역 | 월별 통계 | 정산 리포트 공유 |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/01-home.png" width="200" alt="홈 대시보드" /> | <img src="docs/screenshots/02-transactions.png" width="200" alt="거래 내역" /> | <img src="docs/screenshots/03-monthly-stats.png" width="200" alt="월별 통계" /> | <img src="docs/screenshots/04-report-share.png" width="200" alt="정산 리포트 공유" /> |
+| 잔액·이번 달 수입/지출 요약 | 날짜별 거래 타임라인 | 카테고리별 지출·수입 집계 | 정산 카드 이미지 공유 |
+
+| 모임 관리 | QR·코드 초대 | 영수증 OCR 입력 |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/05-team-manage.png" width="200" alt="모임 관리" /> | <img src="docs/screenshots/06-qr-invite.png" width="200" alt="QR 초대" /> | <img src="docs/screenshots/07-receipt-ocr.png" width="200" alt="영수증 OCR" /> |
+| 멤버·회비 현황 관리 | QR·초대 코드로 간편 참여 | 영수증 촬영 → 자동 입력 |
+
+</div>
+
+---
+
 ## 📌 한눈에 보기
 
 | | |
