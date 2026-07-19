@@ -19,7 +19,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)
 ![Express](https://img.shields.io/badge/Express_5-000000?style=flat-square&logo=express&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)
-![App Store](https://img.shields.io/badge/App_Store-출시-0D96F6?style=flat-square&logo=appstore&logoColor=white)
+[![App Store](https://img.shields.io/badge/App_Store-다운로드-0D96F6?style=flat-square&logo=appstore&logoColor=white)](https://apps.apple.com/kr/app/%EC%9E%91%EC%9D%80-%EB%AA%A8%EC%9E%84/id6763909450)
 
 </div>
 
