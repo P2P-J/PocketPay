@@ -66,3 +66,9 @@ metro-cache/
 
 # Sentry
 .sentryclirc
+
+# 이력서·포트폴리오·면접 준비 개인 산출물 (팀 레포에 커밋 불필요)
+*.pdf
+/면접공부/
+/docs/PORTFOLIO-SUMMARY.md
+/docs/STAR-*
