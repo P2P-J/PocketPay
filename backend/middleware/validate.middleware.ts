@@ -27,7 +27,7 @@ const validate = (schemas: ValidationSchemas) => {
       next();
     } catch (err) {
       if (err instanceof ZodError) {
-        const messages = (err as any).errors.map((e: any) => `${e.path.join(".")}: ${e.message}`);
+        const messages = (err as any).issues.map((e: any) => `${e.path.join(".")}: ${e.message}`);
         return res.status(400).json({
           message: "입력값이 올바르지 않습니다.",
           errors: messages,
