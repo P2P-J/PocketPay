@@ -30,7 +30,9 @@ const getMyTeams = async (userId) => {
   // aggregate로 N+1 제거: Team + 각 팀의 최신 Deal.createdAt 단일 쿼리로 조회 후 정렬
   // (이전: 팀 N개에 대해 Team.find 1회 + Deal.findOne N회)
   const teams = await Team.aggregate([
-    { $match: { "members.user": userId } },
+    // aggregate는 find/findOne과 달리 스키마 기반 자동 캐스팅을 하지 않으므로
+    // userId(JWT에서 온 문자열)를 ObjectId로 명시 변환해야 members.user(ObjectId)와 매칭된다.
+    { $match: { "members.user": new (require("mongoose").Types.ObjectId)(userId) } },
     {
       $lookup: {
         from: "deals",
